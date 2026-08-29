@@ -1,0 +1,30 @@
+id: stack_overflow
+name: StackOverflow
+task_family: short_text_clustering
+num_classes: 20
+num_docs_expected: 20000
+
+source:
+  url: https://raw.githubusercontent.com/brunoguilherme1/TopicClusterDocument/main/stack_text.txt
+  repository: https://github.com/brunoguilherme1/TopicClusterDocument
+
+citation: >
+  Question titles sampled from the Kaggle "StackOverflow" competition
+  corpus, released as a short-text-clustering benchmark by:
+  Xu, J., Xu, B., Wang, P., Zheng, S., Tian, G., & Zhao, J. (2017).
+  "Self-Taught Convolutional Neural Networks for Short Text Clustering."
+  Neural Networks, 88, 22-31. (STC^2 benchmark family)
+
+used_by_papers:
+  - GloCOM (Nguyen et al., NAACL 2025)
+
+license: unknown - no explicit redistribution license stated by original authors or any mirror; used here for academic benchmarking only
+version: "1"
+
+notes: >
+  20,000 docs / 20 classes, matching the canonical STC2 release count.
+  This is the same mirror artifact document-topic-evaluatio-arena (DTEA)
+  uses for the same corpus - see that project's own
+  configs/datasets/stack_overflow.yaml for independent confirmation of
+  the document/class counts. Checksum recorded in
+  data/raw/stack_overflow/MANIFEST.yaml once downloaded.

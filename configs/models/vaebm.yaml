@@ -1,0 +1,46 @@
+id: vaebm
+name: VAE-BM (VAE + Bag-of-Words energy decoder + KMeans)
+family: vae_clustering
+
+citation: >
+  Supplied by the project owner as
+  1_0_Baselines_&_Results.ipynb ("VAE-BM-Distill" cell / vaebm_fit.py).
+  Not a reimplementation of a published baseline - this is the model
+  being evaluated against FASTopic and GloCOM.
+
+implementation: >
+  src/vaebm_benchmark/models/vaebm.py holds the model AS SUPPLIED
+  (Encoder/Decoder/VAEBM/lossCluster/VaeBmKMeansFit), unmodified in its
+  mathematical formulation. src/vaebm_benchmark/models/vaebm_adapter.py
+  is this repo's thin ProtocolModelAdapter wrapper, adapting it to the
+  same interface used for FASTopic/GloCOM - it changes nothing about how
+  the model computes anything.
+
+default_hyperparameters:
+  voc_size: 5000
+  units: 50
+  epochs: 30
+  batch_size: 128
+  lr: 0.01
+  vectorizer_type: tfidf
+  embedder: all-MiniLM-L6-v2
+  dim: [1500, 1000, 500]
+  dim_emb: [368]
+  alpha: 0.99
+
+notes: >
+  `n_clusters` (K) is NEVER set independently here - every protocol pins
+  VAE-BM's KMeans(n_clusters=...) to the exact same K the baseline paper
+  used for that dataset (protocols/*.py `topic_count`).
+
+  `embedder` is deliberately set to all-MiniLM-L6-v2 here (rather than the
+  supplied code's own default, thenlper/gte-small) so the sentence-
+  embedding branch of VAE-BM's encoder uses the SAME pretrained embedding
+  model each baseline protocol's own embedder uses (FASTopic's
+  doc_embed_model, GloCOM's embedding_model) - a deliberate protocol-
+  matching choice by this repo, not a change to VAE-BM's own architecture
+  or math. Override per protocol if a paper's embedder differs.
+
+  mu (the encoder's latent mean) is NOT treated as p(z|d) anywhere in this
+  repo - see docs/methodological_notes.md for why, and for what that does
+  and doesn't affect for each metric this project computes.

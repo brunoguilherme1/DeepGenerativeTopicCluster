@@ -1,0 +1,32 @@
+id: nyt
+name: NYT (New York Times)
+task_family: document_classification
+num_classes: 12
+num_docs_expected: 9172
+
+source:
+  url: https://raw.githubusercontent.com/BobXWu/TopMost/master/data/NYT.zip
+  repository: https://github.com/BobXWu/TopMost
+
+citation: >
+  New York Times articles, packaged and distributed as a preprocessed
+  benchmark by the FASTopic/TopMost authors:
+  Wu, X., Nguyen, T., Zhang, D. C., Wang, W. Y., & Luu, A. T. (2024).
+  "FASTopic: Pretrained Transformer is a Fast, Adaptive, Stable, and
+  Transferable Topic Model." NeurIPS 2024.
+
+used_by_papers:
+  - FASTopic (Wu et al., NeurIPS 2024)
+
+license: unknown - no explicit redistribution license stated by the mirror; used here for academic benchmarking only
+version: "1"
+
+notes: >
+  9,172 docs total: 8,254 train / 918 test (verified by downloading and
+  counting directly), avg length 175.4 tokens, vocab_size=10,000, 12
+  classes - matches paper Table 7 exactly. Chosen as this project's
+  FASTopic smoke-test dataset because it is the smallest of the paper's
+  six datasets that is both downloadable (WoS is not - see
+  docs/methodological_notes.md) and labeled (needed for Purity/NMI).
+  Ships pre-split train/test files - this project does not generate its
+  own split for this dataset.

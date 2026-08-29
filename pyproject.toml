@@ -1,0 +1,37 @@
+[project]
+name = "vaebm-benchmark"
+version = "0.1.0"
+description = "Faithful reproduction of published topic-model baselines (FASTopic, GloCOM) under each paper's own protocol, compared against VAE-BM"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31",
+    "pyyaml>=6.0",
+    "numpy>=1.26,<2.0",
+    "scipy>=1.11",
+]
+
+[project.optional-dependencies]
+# FASTopic's own reference implementation (PyPI package), plus its own
+# transitive dependency `topmost` (also used directly to preprocess text
+# and to run GloCOM's training loop - see models/glocom_adapter.py).
+fastopic = ["fastopic>=1.0", "topmost>=1.0", "sentence-transformers>=3.0", "scikit-learn>=1.3"]
+# GloCOM has no PyPI package (plain research repo) - its model is vendored
+# in models/_glocom_source.py; topmost's BasicTrainer runs it, torch is
+# its own compute backend, sentence-transformers builds the global
+# clustering context.
+glocom = ["torch>=2.0", "topmost>=1.0", "sentence-transformers>=3.0", "scikit-learn>=1.3"]
+# VAE-BM: TF/Keras model given as-is by the user, BoW via scikit-learn,
+# sentence embeddings via sentence-transformers.
+vaebm = ["tensorflow>=2.15", "scikit-learn>=1.3", "sentence-transformers>=3.0"]
+metrics = ["gensim>=4.3", "scikit-learn>=1.3"]
+viz = ["matplotlib>=3.7", "pandas>=2.0", "tabulate>=0.9"]
+dev = ["pytest>=7.4"]
+all = ["vaebm-benchmark[fastopic,glocom,vaebm,metrics,viz,dev]"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"

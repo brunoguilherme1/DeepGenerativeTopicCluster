@@ -1,0 +1,16 @@
+protocol: glocom
+dataset: search_snippets
+baseline_seed: 42
+vaebm_seed: 42
+smoke_test: true  # epochs reduced from the paper's 200 to 20 - see protocols/glocom_protocol.py
+
+description: >
+  Smoke test only, per this project's own instructions ("test only small
+  experiments"). Expand seeds/datasets only after this succeeds and
+  produces non-degenerate results for both GloCOM and VAE-BM.
+
+run:
+  - python scripts/verify_protocol.py --baseline glocom
+  - python scripts/run_baseline.py    --baseline glocom --dataset search_snippets --seed 42
+  - python scripts/run_vaebm.py       --protocol glocom --dataset search_snippets --seed 42
+  - python scripts/compare.py         --baseline glocom --dataset search_snippets

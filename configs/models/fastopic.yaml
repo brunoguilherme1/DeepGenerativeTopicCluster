@@ -1,0 +1,27 @@
+id: fastopic
+name: FASTopic
+family: neural_topic_model
+
+citation: >
+  Wu, X., Nguyen, T., Zhang, D. C., Wang, W. Y., & Luu, A. T. (2024).
+  "FASTopic: Pretrained Transformer is a Fast, Adaptive, Stable, and
+  Transferable Topic Model." NeurIPS 2024.
+
+official_repository: https://github.com/bobxwu/FASTopic
+implementation: >
+  Executed via the official `fastopic` PyPI package (the authors' own
+  implementation) - not a reimplementation. See
+  src/vaebm_benchmark/models/fastopic_adapter.py.
+
+default_hyperparameters:
+  num_top_words: 15
+  doc_embed_model: all-MiniLM-L6-v2
+  epochs: 200
+  learning_rate: 0.002
+
+notes: >
+  Per-dataset num_topics (K) is NOT set here - it is pinned per dataset in
+  protocols/fastopic_protocol.py's `topic_count`, matching the paper's own
+  per-dataset K exactly (never independently tuned for VAE-BM). See
+  results/fastopic/protocol.json (written by scripts/verify_protocol.py)
+  for the resolved, verified values this run actually used.

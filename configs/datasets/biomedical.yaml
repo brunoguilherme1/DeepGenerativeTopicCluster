@@ -1,0 +1,28 @@
+id: biomedical
+name: Biomedical
+task_family: short_text_clustering
+num_classes: 20
+num_docs_expected: 20000
+
+source:
+  url: https://raw.githubusercontent.com/brunoguilherme1/TopicClusterDocument/main/bio_text.txt
+  repository: https://github.com/brunoguilherme1/TopicClusterDocument
+
+citation: >
+  PubMed abstract titles sampled and packaged via the BioASQ challenge
+  (Tsatsaronis, G. et al. (2015). "An overview of the BIOASQ large-scale
+  biomedical semantic indexing and question answering competition." BMC
+  Bioinformatics), released as a short-text-clustering benchmark by:
+  Xu, J., Xu, B., Wang, P., Zheng, S., Tian, G., & Zhao, J. (2017).
+  "Self-Taught Convolutional Neural Networks for Short Text Clustering."
+  Neural Networks, 88, 22-31.
+
+used_by_papers:
+  - GloCOM (Nguyen et al., NAACL 2025)
+
+license: unknown - no explicit redistribution license stated by original authors or any mirror; used here for academic benchmarking only
+version: "1"
+
+notes: >
+  20,000 docs / 20 classes, the canonical STC2 release count. Same mirror
+  artifact DTEA uses for this corpus.

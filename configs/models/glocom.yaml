@@ -1,0 +1,57 @@
+id: glocom
+name: GloCOM
+family: neural_topic_model
+
+citation: >
+  Nguyen, Q. D., Nguyen, T., Nguyen, D. A., Ngo Van, L., Dinh, S., &
+  Nguyen, T. H. (2025). "GloCOM: A Short Text Neural Topic Model via
+  Global Clustering Context." NAACL 2025.
+  https://aclanthology.org/2025.naacl-long.51/
+  DOI 10.18653/v1/2025.naacl-long.51
+
+official_repository: https://github.com/qducnguyen/GloCOM
+implementation: >
+  GloCOM is a plain research repo, not pip-installable. The model itself
+  (src/vaebm_benchmark/models/_glocom_source.py) is vendored verbatim from
+  the official repo; the surrounding data pipeline
+  (src/vaebm_benchmark/models/glocom_adapter.py) is this repo's own,
+  since the official repo's own dataloader.py/Trainer.py/run.py assume a
+  fixed on-disk dataset layout (precomputed bow.npz/global_bow.npz per
+  dataset) this project does not use. Trained via topmost's BasicTrainer
+  (a generic training loop, not GloCOM-specific). Embeddings: Reimers &
+  Gurevych (2019), Sentence-BERT (all-MiniLM-L6-v2, GloCOM's own
+  default). ECR loss: Wu, Dong, Nguyen & Luu (2023), ICML - vendored
+  alongside the GloCOM model itself.
+
+default_hyperparameters:
+  en_units: 200
+  dropout: 0.0
+  embed_size: 200
+  sinkhorn_alpha: 20.0
+  sinkhorn_max_iter: 100
+  beta_temp: 0.2
+  aug_coef: 0.5
+  prior_var: 0.01
+  weight_loss_ECR: 30.0
+  epochs: 200
+  learning_rate: 0.002
+  batch_size: 200
+  num_top_words: 15
+  embedding_model: all-MiniLM-L6-v2
+
+notes: >
+  `num_topics` (K) and `num_global_clusters` are pinned per dataset in
+  protocols/glocom_protocol.py's `topic_count` / dataset-specific config,
+  matching the paper's own per-dataset choices (the paper uses 40 global
+  clusters for StackOverflow/Biomedical/SearchSnippets, 200 for the
+  larger GoogleNews corpus - see protocol.json for exactly what this run
+  used and its MATCH/DIFFERENCE/UNKNOWN verdict against the paper).
+
+  Evaluation protocol: full-corpus, transductive - NOT a held-out
+  train/test split. The official repo's own dataloader.py reloads the
+  training bow.npz as "test" too (`self.test_bow =
+  scipy.sparse.load_npz(f'{path}/bow.npz')`), i.e. the paper's own
+  reference implementation never evaluates on genuinely unseen documents.
+  This project reproduces that same full-corpus evaluation rather than
+  inventing a split the paper never used - see
+  docs/methodological_notes.md.

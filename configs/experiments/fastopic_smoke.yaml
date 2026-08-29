@@ -1,0 +1,16 @@
+protocol: fastopic
+dataset: nyt
+baseline_seed: 42
+vaebm_seed: 42
+smoke_test: true  # epochs reduced from the paper's 200 to 20 - see protocols/fastopic_protocol.py
+
+description: >
+  Smoke test only, per this project's own instructions ("test only small
+  experiments"). Expand seeds/datasets only after this succeeds and
+  produces non-degenerate results for both FASTopic and VAE-BM.
+
+run:
+  - python scripts/verify_protocol.py --baseline fastopic
+  - python scripts/run_baseline.py    --baseline fastopic --dataset nyt --seed 42
+  - python scripts/run_vaebm.py       --protocol fastopic --dataset nyt --seed 42
+  - python scripts/compare.py         --baseline fastopic --dataset nyt

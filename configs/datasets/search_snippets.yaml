@@ -1,0 +1,42 @@
+id: search_snippets
+name: SearchSnippets
+task_family: short_text_clustering
+num_classes: 8
+num_docs_expected: 12340
+
+source:
+  url: https://raw.githubusercontent.com/brunoguilherme1/TopicClusterDocument/main/search_text.txt
+  repository: https://github.com/brunoguilherme1/TopicClusterDocument
+
+citation: >
+  Original collection: Phan, X. H., Nguyen, L. M., & Horiguchi, S. (2008).
+  "Learning to classify short and sparse text & web with hidden topics
+  from large-scale data collections." WWW 2008. Benchmark packaging used
+  by most STC papers: Xu, J., Xu, B., Wang, P., Zheng, S., Tian, G., &
+  Zhao, J. (2017). "Self-Taught Convolutional Neural Networks for Short
+  Text Clustering." Neural Networks, 88, 22-31. (STC^2, see
+  github.com/jacoxu/STC2)
+
+used_by_papers:
+  - GloCOM (Nguyen et al., NAACL 2025)
+
+license: unknown - no explicit redistribution license stated by original authors or any mirror; used here for academic benchmarking only
+version: "1"
+
+notes: >
+  12,340 docs, the canonical STC2 release count (a smaller 12,295-doc
+  variant exists, preprocessed by the S2WTM authors with additional
+  vocabulary/empty-doc filtering - not used here; the 12,340-doc version
+  is treated as canonical "raw" for this repo, matching the original
+  release count before any additional filtering).
+
+  IMPORTANT: this TCD-mirror raw-text artifact is NOT what this project's
+  GloCOM smoke test actually runs on - that uses the DIFFERENT, already
+  preprocessed 12,294-doc SearchSnippets artifact GloCOM's own official
+  repo ships directly (bow.npz/vocab.txt/texts.txt/labels.txt/
+  global_bow.npz/global_maps.txt - see
+  datasets/definitions/glocom_official.py and
+  protocols/glocom_protocol.py). This config is kept for provenance/
+  future use (e.g. a from-raw-text GloCOM reconstruction path via
+  glocom_adapter.py's `fit()` fallback) but is not currently wired to any
+  protocol's smoke test.

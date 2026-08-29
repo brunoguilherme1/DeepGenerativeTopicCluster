@@ -1,0 +1,34 @@
+id: 20ng
+name: 20 Newsgroups (raw, scikit-learn)
+task_family: document_classification
+num_classes: 20
+num_docs_expected: 18846
+
+source:
+  url: "scikit-learn: sklearn.datasets.fetch_20newsgroups(subset='all', remove=('headers','footers','quotes'))"
+  repository: https://scikit-learn.org/stable/datasets/real_world.html#the-20-newsgroups-text-dataset
+
+citation: >
+  Lang, K. (1995). "NewsWeeder: Learning to filter netnews." ICML 1995.
+  Distributed via scikit-learn's built-in dataset loader.
+
+used_by_papers:
+  - FASTopic (Wu et al., NeurIPS 2024) - one of six datasets in the paper
+    (Table 7); NOT this project's chosen FASTopic smoke-test dataset (see
+    configs/datasets/nyt.yaml, protocols/fastopic_protocol.py) since NYT
+    is smaller and equally labeled. Kept here for provenance/future use
+    if this protocol expands beyond one smoke-test dataset.
+
+license: public domain / freely redistributable Usenet archive (per scikit-learn's documented terms)
+version: "1"
+
+notes: >
+  Full, unfiltered corpus (~18,846 documents, headers/footers/quotes
+  stripped) as delivered by scikit-learn - no additional vocabulary/
+  empty-document filtering applied at the dataset-loading stage (vocab
+  capping, if any, happens inside the model adapter's own preprocessing
+  step, matching what that model's paper actually does). NOTE: FASTopic's
+  own paper actually obtains 20NG via topmost.download_dataset('20NG')
+  (a pre-tokenized/pre-split mirror), not raw scikit-learn - if this
+  dataset is wired into the FASTopic protocol later, prefer that mirror
+  over this scikit-learn loader for exact fidelity.
