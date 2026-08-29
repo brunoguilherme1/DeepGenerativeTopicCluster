@@ -1,0 +1,2 @@
+protocol,system,dataset_id,seed,k,num_documents,metric_cv,metric_topic_diversity,metric_purity,metric_nmi
+fastopic,baseline,nyt,42,50,8254,0.4578998134270102,0.969,0.545751633986928,0.26195305956997794

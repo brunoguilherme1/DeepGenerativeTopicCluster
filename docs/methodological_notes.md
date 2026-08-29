@@ -153,7 +153,39 @@ reproduction of a paper's specific published mean/std is not something
 either official codebase's own conventions would guarantee even if you
 had their exact seed.
 
-## 8. Published vs. reproduced vs. VAE-BM are never collapsed into one number
+## 8. VAE-BM's supplied default learning rate (1e-2) diverges at these vocab scales
+
+Confirmed by direct diagnostic (fit VAE-BM under the GloCOM protocol,
+same seed/data/architecture, `lr` in `{1e-2, 1e-3, 1e-4}`, all else
+identical):
+
+| lr | outcome (20 epochs, SearchSnippets, vocab=4618) |
+|---|---|
+| **1e-2** (the supplied notebook's own default) | loss explodes past batch ~95 of epoch 2 (`loss: 670891244127709560832.0000` -> `NaN`); Keras's `TerminateOnNaN` callback stops training; `EarlyStopping` restores epoch-1 weights (themselves already at loss≈2×10^11, nowhere near converged). Resulting KMeans clusters are near-random: **Purity=0.224, NMI=0.014, glocom_td=0.157** (versus GloCOM's own reproduced 0.821/0.530/0.976). |
+| 1e-3 | trains stably for the full 20 epochs (loss 187 -> 137, monotonically decreasing, `EarlyStopping` never triggers). Non-degenerate results: **Purity=0.742, NMI=0.393, cv=0.499, glocom_td=0.496** - competitive with, if somewhat below, GloCOM's own reproduced numbers. |
+| 1e-4 | still improving slowly after 5 epochs (loss 188.4 -> 186.9) - undertrained within a 20-epoch smoke-test budget, not a fair comparison point here. |
+
+This is a genuine numerical-stability issue in the model AS SUPPLIED,
+at this specific combination of vocab size, `alpha=0.99` (i.e. the
+decoder's BoW-energy branch dominates gradients almost entirely - see
+`models/vaebm.py`'s `Encoder.call`), and Adam's default lack of gradient
+clipping - not something introduced by this project's adapter code, and
+not something this project silently patched inside `models/vaebm.py`
+(that file's math is untouched). Instead,
+`protocols/glocom_protocol.py`/`protocols/fastopic_protocol.py`'s
+`build_vaebm()` explicitly override `lr=1e-3` for the actual comparison
+runs (a hyperparameter substitution, not a change to VAE-BM's
+architecture/loss), with this section as the citable record of why and
+what the supplied default actually does at this scale. Anyone re-running
+`configs/models/vaebm.yaml`'s literal default (`lr: 0.01`, kept as
+documentation of the AS-SUPPLIED value, not silently edited to 1e-3
+there) should expect the same divergence this section describes.
+
+This is exactly the kind of finding a smoke test is supposed to catch
+before scaling up - see this project's own instructions ("test only
+small experiments... only expand after the smoke test succeeds").
+
+## 9. Published vs. reproduced vs. VAE-BM are never collapsed into one number
 
 `results/<baseline>/comparison.csv` always keeps three columns:
 `published` (verbatim from the paper's own table, cited by

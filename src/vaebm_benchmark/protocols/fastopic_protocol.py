@@ -174,7 +174,12 @@ class FASTopicProtocol(BaselineProtocol):
             units=50,
             epochs=self.epochs,
             batch_size=128,
-            lr=1e-2,
+            # NOT the supplied notebook's own default (1e-2) - see
+            # protocols/glocom_protocol.py's identical comment and
+            # docs/methodological_notes.md: diverges to inf/NaN within a
+            # couple of epochs at this vocab scale (10,000 words for
+            # NYT), confirmed by direct diagnostic. 1e-3 trains stably.
+            lr=1e-3,
             random_state=seed,
             vectorizer_type="tfidf",
             embedder="all-MiniLM-L6-v2",  # matches FASTopic's own doc_embed_model

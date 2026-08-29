@@ -315,8 +315,21 @@ class VaeBmKMeansFit:
 
             self.model.decoder.R.assign(R_init)
 
+        import shutil
         import tempfile
-        ckpt_path = f"{checkpoint_dir or tempfile.gettempdir()}/vaebm_best.weights.h5"
+
+        # A unique directory per fit_predict() call - NOT a fixed filename
+        # in the shared system temp dir (what the model as originally
+        # supplied used, and what this wrapper used until this fix). A
+        # fixed path collides across runs with different vocab sizes /
+        # architectures (e.g. this project's GloCOM protocol, vocab=4618,
+        # then FASTopic protocol, vocab=10000, sharing one machine's temp
+        # dir): the second run's `load_weights` would try to load the
+        # first run's incompatible checkpoint and fail with a shape
+        # mismatch. This is a real bug in the checkpoint path, not a
+        # change to the model's math - see docs/methodological_notes.md.
+        run_ckpt_dir = checkpoint_dir or tempfile.mkdtemp(prefix="vaebm_ckpt_")
+        ckpt_path = f"{run_ckpt_dir}/vaebm_best.weights.h5"
         callbacks = [
             tf.keras.callbacks.EarlyStopping(monitor="loss", patience=1, restore_best_weights=True, mode="min", verbose=1),
             tf.keras.callbacks.ModelCheckpoint(filepath=ckpt_path, monitor="loss", save_best_only=True,
@@ -327,8 +340,16 @@ class VaeBmKMeansFit:
                        epochs=self.epochs, batch_size=self.batch_size,
                        shuffle=True, callbacks=callbacks, verbose=1)
 
+        # EarlyStopping(restore_best_weights=True) already restored the
+        # in-memory model to its best epoch; reloading from disk here is
+        # redundant but harmless (same weights) EXCEPT when the run never
+        # improved past epoch 1 (e.g. loss went straight to NaN) and
+        # ModelCheckpoint therefore never wrote a file - guard on that
+        # rather than assuming ckpt_path always exists.
         if tf.io.gfile.exists(ckpt_path):
             self.model.load_weights(ckpt_path)
+        if checkpoint_dir is None:
+            shutil.rmtree(run_ckpt_dir, ignore_errors=True)
 
         mu, _, _ = self.model.encoder([X_bow, E], training=False)
         Z = mu.numpy()

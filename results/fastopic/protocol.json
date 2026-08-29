@@ -1,0 +1,66 @@
+{
+  "paper": "Wu, X., Nguyen, T., Zhang, D. C., Wang, W. Y., & Luu, A. T. (2024). \"FASTopic: Pretrained Transformer is a Fast, Adaptive, Stable, and Transferable Topic Model.\" NeurIPS 2024. arXiv:2405.17978",
+  "official_repository": "https://github.com/bobxwu/FASTopic",
+  "dataset": {
+    "id": "nyt",
+    "artifact": "https://raw.githubusercontent.com/BobXWu/TopMost/master/data/NYT.zip",
+    "num_docs_expected": 9172,
+    "verdict": "MATCH - fetched via topmost's own download_dataset('NYT'), the same mirror the FASTopic ecosystem uses"
+  },
+  "preprocessing": {
+    "description": "topmost.Preprocess(vocab_size=10000, stopwords='English') - tokenize/lowercase, strip punctuation/numbers, drop tokens <3 chars, remove gensim's English stopword list",
+    "verdict": "MATCH"
+  },
+  "vocabulary": {
+    "source": "vocab.txt from the official NYT.zip artifact, size 10000",
+    "verdict": "MATCH"
+  },
+  "K": {
+    "value": 50,
+    "paper_reports": "K=50 (primary results)",
+    "verdict": "MATCH"
+  },
+  "split_strategy": {
+    "value": "predefined_train_test",
+    "verdict": "MATCH - pre-split train/test files, as shipped"
+  },
+  "seeds": {
+    "value": [
+      42
+    ],
+    "verdict": "UNKNOWN - official repo sets no seed; paper reports significance markers with undisclosed run count/seed/test method"
+  },
+  "metrics": {
+    "cv": "DIFFERENCE - paper uses an unreleased 'large Wikipedia article collection' as reference corpus; this project uses the NYT train corpus itself (same fallback topmost's own demos use)",
+    "topic_diversity": "MATCH - same proportion-of-unique-words formula as topmost/eva/topic_diversity.py",
+    "purity": "MATCH - same as topmost/eva/clustering.py::purity_score",
+    "nmi": "MATCH - same as sklearn.metrics.normalized_mutual_info_score, same as official repo"
+  },
+  "baseline_implementation": "MATCH - official `fastopic` PyPI package, default hyperparameters (verified against paper Appendix D)",
+  "vaebm_implementation": "N/A - VAE-BM is not a baseline being reproduced; see docs/methodological_notes.md",
+  "epochs": {
+    "value": 20,
+    "paper_value": 200,
+    "verdict": "DIFFERENCE - reduced for smoke test, see BaselineProtocol.__init__"
+  },
+  "environment": {
+    "python_version": "3.11.9",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "processor": "arm",
+    "packages": {
+      "numpy": "1.26.4",
+      "scipy": "1.17.1",
+      "sklearn": "1.9.0",
+      "gensim": "4.4.0",
+      "torch": "2.13.0",
+      "tensorflow": "2.21.0",
+      "sentence_transformers": "5.7.0",
+      "fastopic": "unknown",
+      "topmost": "unknown",
+      "transformers": "5.15.0"
+    },
+    "gpu": {
+      "available": false
+    }
+  }
+}

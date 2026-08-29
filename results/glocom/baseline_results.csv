@@ -1,0 +1,2 @@
+protocol,system,dataset_id,seed,k,num_documents,metric_cv,metric_glocom_td,metric_purity,metric_nmi
+glocom,baseline,search_snippets,42,50,12294,0.5264061772494879,0.976,0.8208882381649585,0.529829704266102

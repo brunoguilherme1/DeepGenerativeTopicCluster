@@ -44,3 +44,11 @@ notes: >
   mu (the encoder's latent mean) is NOT treated as p(z|d) anywhere in this
   repo - see docs/methodological_notes.md for why, and for what that does
   and doesn't affect for each metric this project computes.
+
+  `lr: 0.01` above is the AS-SUPPLIED default, kept here as documentation
+  of what the original notebook code actually used - NOT what either
+  protocol's build_vaebm() actually runs. Both protocols override
+  lr=1e-3: confirmed by direct diagnostic that 1e-2 diverges to inf/NaN
+  within ~2 epochs at these vocab scales (4618-10000 words), producing
+  degenerate near-random clusters, while 1e-3 trains stably. See
+  docs/methodological_notes.md #8 for the full diagnostic table.

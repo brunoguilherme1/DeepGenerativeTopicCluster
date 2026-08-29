@@ -1,0 +1,5 @@
+dataset_id,metric,published,published_source,reproduced_baseline,vaebm
+nyt,cv,0.437,"Table 1, FASTopic row, NYT K=50 (Wu et al., NeurIPS 2024) - PUBLISHED VALUE USES AN UNRELEASED WIKIPEDIA REFERENCE CORPUS; see module docstring",0.4578998134270102,0.46688039292081845
+nyt,nmi,0.369,"Table 2, FASTopic row, NYT K=50 (Wu et al., NeurIPS 2024)",0.26195305956997794,0.3496350202990195
+nyt,purity,0.662,"Table 2, FASTopic row, NYT K=50 (Wu et al., NeurIPS 2024)",0.545751633986928,0.6546840958605664
+nyt,topic_diversity,0.999,"Table 1, FASTopic row, NYT K=50 (Wu et al., NeurIPS 2024)",0.969,0.319

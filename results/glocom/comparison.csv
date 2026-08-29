@@ -1,0 +1,5 @@
+dataset_id,metric,published,published_source,reproduced_baseline,vaebm
+search_snippets,cv,0.453,"Table 2, GloCOM row, SearchSnippets K=50 (Nguyen et al., NAACL 2025) - PUBLISHED VALUE USES PALMETTO+WIKIPEDIA, NOT gensim CoherenceModel; see module docstring",0.5264061772494879,0.48363810981029237
+search_snippets,glocom_td,0.956,"Table 2, GloCOM row, SearchSnippets K=50 (Nguyen et al., NAACL 2025)",0.976,0.5053333333333333
+search_snippets,nmi,0.502,"Table 2, GloCOM row, SearchSnippets K=50 (Nguyen et al., NAACL 2025)",0.529829704266102,0.398078987448811
+search_snippets,purity,0.806,"Table 2, GloCOM row, SearchSnippets K=50 (Nguyen et al., NAACL 2025)",0.8208882381649585,0.7606962746054986

@@ -9,6 +9,13 @@ dependencies = [
     "pyyaml>=6.0",
     "numpy>=1.26,<2.0",
     "scipy>=1.11",
+    # Makes Python's ssl module trust the OS certificate store (not just
+    # certifi's bundle) - needed on networks behind a TLS-inspecting
+    # corporate proxy, where huggingface_hub/httpx downloads (sentence-
+    # transformers model weights) otherwise fail certificate verification
+    # even though the OS itself trusts the proxy's root CA. See
+    # src/vaebm_benchmark/__init__.py.
+    "truststore>=0.9",
 ]
 
 [project.optional-dependencies]

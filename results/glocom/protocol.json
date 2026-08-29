@@ -1,0 +1,66 @@
+{
+  "paper": "Nguyen, Q. D., Nguyen, T., Nguyen, D. A., Ngo Van, L., Dinh, S., & Nguyen, T. H. (2025). \"GloCOM: A Short Text Neural Topic Model via Global Clustering Context.\" NAACL 2025. https://aclanthology.org/2025.naacl-long.51/",
+  "official_repository": "https://github.com/qducnguyen/GloCOM",
+  "dataset": {
+    "id": "search_snippets",
+    "artifact": "https://raw.githubusercontent.com/qducnguyen/GloCOM/4094055b9e2d0169b0aa75d5aed7220e9509f0de/data/SearchSnippets",
+    "num_docs_expected": 12294,
+    "verdict": "MATCH - fetched verbatim from the official repo's own data/SearchSnippets/"
+  },
+  "preprocessing": {
+    "description": "None applied by this project - documents/vocab/bow are the official repo's own precomputed artifact.",
+    "verdict": "MATCH"
+  },
+  "vocabulary": {
+    "source": "vocab.txt (official artifact)",
+    "verdict": "MATCH"
+  },
+  "K": {
+    "value": 50,
+    "paper_reports": "K in {50, 100}",
+    "verdict": "MATCH (K=50)"
+  },
+  "split_strategy": {
+    "value": "full_corpus",
+    "verdict": "MATCH - official repo is transductive"
+  },
+  "seeds": {
+    "value": [
+      42
+    ],
+    "verdict": "UNKNOWN - official repo sets no seed; paper reports mean/std over 3 runs, not seed-reproducible"
+  },
+  "metrics": {
+    "cv": "DIFFERENCE - paper uses Palmetto+Wikipedia C_V, this project uses gensim CoherenceModel c_v (see module docstring)",
+    "glocom_td": "MATCH - same formula as evaluations/topic_diversity.py::compute_TD",
+    "purity": "MATCH - same as evaluations/clustering.py::purity_score",
+    "nmi": "MATCH - same as sklearn.metrics.normalized_mutual_info_score, same as official repo"
+  },
+  "baseline_implementation": "MATCH - GloCOM model vendored verbatim; trained on official precomputed artifacts, hyperparameters match run.py's own CLI defaults",
+  "vaebm_implementation": "N/A - VAE-BM is not a baseline being reproduced; see docs/methodological_notes.md",
+  "epochs": {
+    "value": 20,
+    "paper_value": 200,
+    "verdict": "DIFFERENCE - reduced for smoke test, see BaselineProtocol.__init__"
+  },
+  "environment": {
+    "python_version": "3.11.9",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "processor": "arm",
+    "packages": {
+      "numpy": "1.26.4",
+      "scipy": "1.17.1",
+      "sklearn": "1.9.0",
+      "gensim": "4.4.0",
+      "torch": "2.13.0",
+      "tensorflow": "2.21.0",
+      "sentence_transformers": "5.7.0",
+      "fastopic": "unknown",
+      "topmost": "unknown",
+      "transformers": "5.15.0"
+    },
+    "gpu": {
+      "available": false
+    }
+  }
+}

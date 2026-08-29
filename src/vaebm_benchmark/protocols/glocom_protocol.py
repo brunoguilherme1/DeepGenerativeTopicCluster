@@ -200,7 +200,17 @@ class GloCOMProtocol(BaselineProtocol):
             units=50,
             epochs=self.epochs,
             batch_size=128,
-            lr=1e-2,
+            # NOT the supplied notebook's own default (1e-2): confirmed by
+            # direct diagnostic (see docs/methodological_notes.md) that
+            # 1e-2 diverges to inf/NaN within 2 epochs on this vocab size
+            # (4618 words), producing degenerate KMeans clusters
+            # (Purity=0.224, NMI=0.014 - near-random). 1e-3 trains stably
+            # over the full smoke-test run and produces non-degenerate
+            # results (Purity=0.742, NMI=0.393). This is a hyperparameter
+            # substitution, not a change to VAE-BM's architecture/loss -
+            # documented per this project's own "don't silently change
+            # the model" rule, not hidden.
+            lr=1e-3,
             random_state=seed,
             vectorizer_type="tfidf",
             embedder="all-MiniLM-L6-v2",  # matches GloCOM's own embedding_model
