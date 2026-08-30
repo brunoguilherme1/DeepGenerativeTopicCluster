@@ -92,6 +92,45 @@ _VAEBM_VARIANT_OVERRIDES: dict[str, dict] = {}
 KNOWN_MODELS = ["vaebm", "bertopic"]
 
 
+def _valid_vaebm_params() -> set[str]:
+    """VAEBMAdapter's own constructor parameter names (via `inspect`, not
+    a hand-maintained duplicate list), minus the sweep-controlled ones -
+    the single source of truth both register_vaebm_variants() and
+    set_vaebm_defaults() validate against."""
+    import inspect
+
+    from vaebm_benchmark.models.vaebm_adapter import VAEBMAdapter
+
+    return set(inspect.signature(VAEBMAdapter.__init__).parameters) - {"self"} - _VAEBM_SWEEP_CONTROLLED_PARAMS
+
+
+def _check_vaebm_overrides(overrides: dict, valid_params: set[str], label: str) -> None:
+    controlled = _VAEBM_SWEEP_CONTROLLED_PARAMS & set(overrides)
+    if controlled:
+        raise ValueError(
+            f"{label} overrides {sorted(controlled)} - these are controlled by this runner's own "
+            "--k/--voc-size/--seed for every model uniformly, not settable here."
+        )
+    unknown = set(overrides) - valid_params
+    if unknown:
+        raise ValueError(f"Unknown VAEBMAdapter parameter(s) {sorted(unknown)} for {label}. Valid parameters: {sorted(valid_params)}")
+
+
+def set_vaebm_defaults(**overrides) -> None:
+    """Overrides _VAEBM_DEFAULTS in place - e.g. from top-level
+    --vaebm-embedder/--vaebm-vectorizer-type - changing what EVERY
+    vaebm-family model uses (bare "vaebm" and any registered variant that
+    doesn't itself override the same key) without needing a full
+    --vaebm-configs entry for a simple global change. Per-variant
+    overrides from register_vaebm_variants still win over these, since
+    _build_model applies _VAEBM_DEFAULTS first and layers variant
+    overrides on top - call this BEFORE register_vaebm_variants if both
+    are used together, so that ordering reads naturally (it doesn't
+    actually matter: the two update different dicts)."""
+    _check_vaebm_overrides(overrides, _valid_vaebm_params(), "set_vaebm_defaults()")
+    _VAEBM_DEFAULTS.update(overrides)
+
+
 def register_vaebm_variants(variants: dict[str, dict]) -> None:
     """Registers additional named VAE-BM configurations - e.g. parsed
     from --vaebm-configs - each an arbitrary dict of VAEBMAdapter
@@ -105,25 +144,10 @@ def register_vaebm_variants(variants: dict[str, dict]) -> None:
     `inspect`, not a hand-maintained duplicate list) so a typo'd
     parameter name fails immediately with a clear message instead of
     being silently ignored deep inside a training run."""
-    import inspect
-
-    from vaebm_benchmark.models.vaebm_adapter import VAEBMAdapter
-
-    valid_params = set(inspect.signature(VAEBMAdapter.__init__).parameters) - {"self"} - _VAEBM_SWEEP_CONTROLLED_PARAMS
+    valid_params = _valid_vaebm_params()
 
     for name, overrides in variants.items():
-        controlled = _VAEBM_SWEEP_CONTROLLED_PARAMS & set(overrides)
-        if controlled:
-            raise ValueError(
-                f"Variant '{name}' overrides {sorted(controlled)} - these are controlled by this runner's own "
-                "--k/--voc-size/--seed for every model uniformly, not settable per-variant."
-            )
-        unknown = set(overrides) - valid_params
-        if unknown:
-            raise ValueError(
-                f"Unknown VAEBMAdapter parameter(s) {sorted(unknown)} for variant '{name}'. "
-                f"Valid parameters: {sorted(valid_params)}"
-            )
+        _check_vaebm_overrides(overrides, valid_params, f"variant '{name}'")
         _VAEBM_VARIANT_OVERRIDES[name] = overrides
         if name not in KNOWN_MODELS:
             KNOWN_MODELS.append(name)

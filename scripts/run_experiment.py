@@ -326,6 +326,19 @@ def main() -> None:
     parser.add_argument("--voc-size", type=int, default=5000, help="Vectorizer vocabulary cap (VAE-BM/FASTopic/GloCOM)")
     parser.add_argument("--format", default="percent", choices=["percent", "decimal"], help="Cluster table print format (CSV/JSON always store decimals)")
     parser.add_argument(
+        "--vaebm-embedder", default=None,
+        help="Topic experiment only: sentence-embedding model for VAE-BM's embedding branch (default: "
+             "VAEBMAdapter's own, all-MiniLM-L6-v2). Applies to EVERY vaebm-family model (bare 'vaebm' and any "
+             "--vaebm-configs variant that doesn't itself override 'embedder') - for a per-variant override instead, "
+             "set 'embedder' inside that variant's --vaebm-configs entry.",
+    )
+    parser.add_argument(
+        "--vaebm-vectorizer-type", default=None, choices=["tfidf", "count"],
+        help="Topic experiment only: bag-of-words vectorizer for VAE-BM's BoW branch (default: VAEBMAdapter's own, "
+             "tfidf). Applies to EVERY vaebm-family model unless a --vaebm-configs variant overrides "
+             "'vectorizer_type' itself.",
+    )
+    parser.add_argument(
         "--vaebm-configs", default=None,
         help="Topic experiment only: define any number of named VAE-BM configurations, each an arbitrary set of "
              "VAEBMAdapter overrides (alpha, units, dim, dim_emb, epochs, batch_size, lr, vectorizer_type, embedder, "
@@ -333,7 +346,8 @@ def main() -> None:
              "which stay controlled by --k/--voc-size/--seed for every model). Accepts either a literal JSON object "
              "or a path to a .json/.yaml/.yml file, e.g. "
              '\'{"vaebm_a05": {"alpha": 0.5}, "vaebm_deep": {"alpha": 0.9, "units": 100}}\' '
-             "- include the names you define here in --models to run them. See "
+             "- include the names you define here in --models to run them. A key here always wins over "
+             "--vaebm-embedder/--vaebm-vectorizer-type for that same variant. See "
              "experiment/runner.py's register_vaebm_variants().",
     )
 
@@ -374,12 +388,24 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    if args.vaebm_configs:
+    if args.vaebm_embedder or args.vaebm_vectorizer_type or args.vaebm_configs:
         if args.experiment != "topic":
-            raise SystemExit("--vaebm-configs is topic-experiment only (cluster/llm_cluster_refinement have their own VAE-BM builder)")
-        from vaebm_benchmark.experiment.runner import register_vaebm_variants
+            raise SystemExit(
+                "--vaebm-embedder/--vaebm-vectorizer-type/--vaebm-configs are topic-experiment only "
+                "(cluster/llm_cluster_refinement have their own VAE-BM builder)"
+            )
+        from vaebm_benchmark.experiment.runner import register_vaebm_variants, set_vaebm_defaults
 
-        register_vaebm_variants(_load_vaebm_configs(args.vaebm_configs))
+        defaults = {}
+        if args.vaebm_embedder:
+            defaults["embedder"] = args.vaebm_embedder
+        if args.vaebm_vectorizer_type:
+            defaults["vectorizer_type"] = args.vaebm_vectorizer_type
+        if defaults:
+            set_vaebm_defaults(**defaults)
+
+        if args.vaebm_configs:
+            register_vaebm_variants(_load_vaebm_configs(args.vaebm_configs))
 
     if args.experiment == "topic":
         _run_topic(args)
