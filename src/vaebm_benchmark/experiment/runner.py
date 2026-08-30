@@ -140,21 +140,53 @@ def set_vaebm_defaults(**overrides) -> None:
     _VAEBM_DEFAULTS.update(overrides)
 
 
-def set_sbert_kmeans_defaults(**overrides) -> None:
-    """Overrides _SBERT_KMEANS_DEFAULTS in place - e.g. from --sbert-embedder -
-    validated against SBERTKMeansAdapter's own constructor signature (via
-    `inspect`, mirroring _valid_vaebm_params/set_vaebm_defaults above) so a
-    typo'd parameter name fails immediately instead of being silently
-    ignored."""
+# Populated by register_sbert_kmeans_variants() - name -> SBERTKMeansAdapter
+# kwarg overrides layered on top of _SBERT_KMEANS_DEFAULTS. Empty until a
+# caller (scripts/run_experiment.py's --sbert-configs) registers something.
+_SBERT_KMEANS_VARIANT_OVERRIDES: dict[str, dict] = {}
+
+
+def _valid_sbert_kmeans_params() -> set[str]:
+    """SBERTKMeansAdapter's own constructor parameter names (via `inspect`,
+    mirroring _valid_vaebm_params above), minus the sweep-controlled ones -
+    the single source of truth both register_sbert_kmeans_variants() and
+    set_sbert_kmeans_defaults() validate against."""
     import inspect
 
     from vaebm_benchmark.models.sbert_kmeans_adapter import SBERTKMeansAdapter
 
-    valid_params = set(inspect.signature(SBERTKMeansAdapter.__init__).parameters) - {"self", "n_clusters", "random_state"}
+    return set(inspect.signature(SBERTKMeansAdapter.__init__).parameters) - {"self", "n_clusters", "random_state"}
+
+
+def set_sbert_kmeans_defaults(**overrides) -> None:
+    """Overrides _SBERT_KMEANS_DEFAULTS in place - e.g. from --sbert-embedder -
+    validated against SBERTKMeansAdapter's own constructor signature so a
+    typo'd parameter name fails immediately instead of being silently
+    ignored."""
+    valid_params = _valid_sbert_kmeans_params()
     unknown = set(overrides) - valid_params
     if unknown:
         raise ValueError(f"Unknown SBERTKMeansAdapter parameter(s) {sorted(unknown)}. Valid parameters: {sorted(valid_params)}")
     _SBERT_KMEANS_DEFAULTS.update(overrides)
+
+
+def register_sbert_kmeans_variants(variants: dict[str, dict]) -> None:
+    """Registers additional named sbert_kmeans configurations - e.g. parsed
+    from --sbert-configs - each an arbitrary dict of SBERTKMeansAdapter
+    constructor overrides layered on top of _SBERT_KMEANS_DEFAULTS (the
+    same base "sbert_kmeans" itself uses), mirroring
+    register_vaebm_variants above. Lets a single run compare any number of
+    embedder choices (e.g. all-mpnet-base-v2 vs. t5-large) side by side
+    under distinct model names, entirely from a config file/CLI argument."""
+    valid_params = _valid_sbert_kmeans_params()
+
+    for name, overrides in variants.items():
+        unknown = set(overrides) - valid_params
+        if unknown:
+            raise ValueError(f"Unknown SBERTKMeansAdapter parameter(s) {sorted(unknown)} for variant '{name}'. Valid parameters: {sorted(valid_params)}")
+        _SBERT_KMEANS_VARIANT_OVERRIDES[name] = overrides
+        if name not in KNOWN_MODELS:
+            KNOWN_MODELS.append(name)
 
 
 def register_vaebm_variants(variants: dict[str, dict]) -> None:
@@ -190,10 +222,12 @@ def _build_model(model_name: str, k: int, seed: int, voc_size: int):
         from vaebm_benchmark.models.bertopic_adapter import BERTopicAdapter
 
         return BERTopicAdapter(n_clusters=k, embedding_model="all-MiniLM-L6-v2", random_state=seed)
-    if model_name == "sbert_kmeans":
+    if model_name == "sbert_kmeans" or model_name in _SBERT_KMEANS_VARIANT_OVERRIDES:
         from vaebm_benchmark.models.sbert_kmeans_adapter import SBERTKMeansAdapter
 
-        return SBERTKMeansAdapter(n_clusters=k, random_state=seed, **_SBERT_KMEANS_DEFAULTS)
+        params = dict(_SBERT_KMEANS_DEFAULTS)
+        params.update(_SBERT_KMEANS_VARIANT_OVERRIDES.get(model_name, {}))
+        return SBERTKMeansAdapter(n_clusters=k, random_state=seed, **params)
     raise KeyError(f"Unknown model '{model_name}'. Available: {', '.join(KNOWN_MODELS)}")
 
 

@@ -78,9 +78,11 @@ def _merge_json(json_path, rows: list[dict]) -> None:
     json_path.write_text(json.dumps(existing, indent=2), encoding="utf-8")
 
 
-def _load_vaebm_configs(raw: str) -> dict:
+def _load_named_configs(raw: str, flag_name: str) -> dict:
     """Accepts either a literal JSON object, or a path to a .json/.yaml/
-    .yml file containing one - see --vaebm-configs' own help text."""
+    .yml file containing one - shared by --vaebm-configs and
+    --sbert-configs (identical format, different variant-override
+    validators downstream)."""
     import json
     import os
 
@@ -98,7 +100,7 @@ def _load_vaebm_configs(raw: str) -> dict:
 
     if not isinstance(data, dict):
         raise SystemExit(
-            f"--vaebm-configs must be a JSON/YAML object mapping variant name -> override dict, got {type(data).__name__}"
+            f"{flag_name} must be a JSON/YAML object mapping variant name -> override dict, got {type(data).__name__}"
         )
     return data
 
@@ -364,7 +366,20 @@ def main() -> None:
         help="Topic experiment only: model 'sbert_kmeans' (a plain SentenceTransformer embedding + KMeans "
              "baseline, no trained model of its own) - any SentenceTransformer/HuggingFace model name (default: "
              "SBERTKMeansAdapter's own, all-MiniLM-L6-v2). Topic words are derived via class-based TF-IDF "
-             "(see models/sbert_kmeans_adapter.py), same as BERTopic's own topic-word procedure.",
+             "(see models/sbert_kmeans_adapter.py), same as BERTopic's own topic-word procedure. Applies to EVERY "
+             "sbert_kmeans-family model (bare 'sbert_kmeans' and any --sbert-configs variant that doesn't itself "
+             "override 'embedder') - for a per-variant override instead, set 'embedder' inside that variant's "
+             "--sbert-configs entry.",
+    )
+    parser.add_argument(
+        "--sbert-configs", default=None,
+        help="Topic experiment only: define any number of named sbert_kmeans configurations, each an arbitrary "
+             "set of SBERTKMeansAdapter overrides (embedder, n_init - anything its own __init__ accepts, except "
+             "n_clusters/random_state, which stay controlled by --k/--seed for every model). Same format as "
+             "--vaebm-configs: a literal JSON object or a path to a .json/.yaml/.yml file, e.g. "
+             '\'{"sbert_mpnet": {"embedder": "all-mpnet-base-v2"}, "sbert_t5large": {"embedder": "t5-large"}}\' '
+             "- include the names you define here in --models to run them. A key here always wins over "
+             "--sbert-embedder for that same variant. See experiment/runner.py's register_sbert_kmeans_variants().",
     )
 
     # --- llm_cluster_refinement only ---
@@ -423,14 +438,18 @@ def main() -> None:
             set_vaebm_defaults(**defaults)
 
         if args.vaebm_configs:
-            register_vaebm_variants(_load_vaebm_configs(args.vaebm_configs))
+            register_vaebm_variants(_load_named_configs(args.vaebm_configs, "--vaebm-configs"))
 
-    if args.sbert_embedder:
+    if args.sbert_embedder or args.sbert_configs:
         if args.experiment != "topic":
-            raise SystemExit("--sbert-embedder is topic-experiment only")
-        from vaebm_benchmark.experiment.runner import set_sbert_kmeans_defaults
+            raise SystemExit("--sbert-embedder/--sbert-configs are topic-experiment only")
+        from vaebm_benchmark.experiment.runner import register_sbert_kmeans_variants, set_sbert_kmeans_defaults
 
-        set_sbert_kmeans_defaults(embedder=args.sbert_embedder)
+        if args.sbert_embedder:
+            set_sbert_kmeans_defaults(embedder=args.sbert_embedder)
+
+        if args.sbert_configs:
+            register_sbert_kmeans_variants(_load_named_configs(args.sbert_configs, "--sbert-configs"))
 
     if args.experiment == "topic":
         _run_topic(args)
