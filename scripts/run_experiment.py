@@ -78,6 +78,31 @@ def _merge_json(json_path, rows: list[dict]) -> None:
     json_path.write_text(json.dumps(existing, indent=2), encoding="utf-8")
 
 
+def _load_vaebm_configs(raw: str) -> dict:
+    """Accepts either a literal JSON object, or a path to a .json/.yaml/
+    .yml file containing one - see --vaebm-configs' own help text."""
+    import json
+    import os
+
+    if os.path.isfile(raw):
+        with open(raw, encoding="utf-8") as f:
+            text = f.read()
+        if raw.endswith((".yaml", ".yml")):
+            import yaml
+
+            data = yaml.safe_load(text)
+        else:
+            data = json.loads(text)
+    else:
+        data = json.loads(raw)
+
+    if not isinstance(data, dict):
+        raise SystemExit(
+            f"--vaebm-configs must be a JSON/YAML object mapping variant name -> override dict, got {type(data).__name__}"
+        )
+    return data
+
+
 def _run_topic(args) -> None:
     from vaebm_benchmark.datasets.simple_registry import list_datasets
     from vaebm_benchmark.experiment.report import (
@@ -300,6 +325,17 @@ def main() -> None:
                               "result is still persisted to cluster_results.csv/json. Overrides --seed if given.")
     parser.add_argument("--voc-size", type=int, default=5000, help="Vectorizer vocabulary cap (VAE-BM/FASTopic/GloCOM)")
     parser.add_argument("--format", default="percent", choices=["percent", "decimal"], help="Cluster table print format (CSV/JSON always store decimals)")
+    parser.add_argument(
+        "--vaebm-configs", default=None,
+        help="Topic experiment only: define any number of named VAE-BM configurations, each an arbitrary set of "
+             "VAEBMAdapter overrides (alpha, units, dim, dim_emb, epochs, batch_size, lr, vectorizer_type, embedder, "
+             "top_words_mode - anything VAEBMAdapter's own __init__ accepts, except n_clusters/voc_size/random_state, "
+             "which stay controlled by --k/--voc-size/--seed for every model). Accepts either a literal JSON object "
+             "or a path to a .json/.yaml/.yml file, e.g. "
+             '\'{"vaebm_a05": {"alpha": 0.5}, "vaebm_deep": {"alpha": 0.9, "units": 100}}\' '
+             "- include the names you define here in --models to run them. See "
+             "experiment/runner.py's register_vaebm_variants().",
+    )
 
     # --- llm_cluster_refinement only ---
     llm_group = parser.add_argument_group("llm_cluster_refinement")
@@ -337,6 +373,13 @@ def main() -> None:
                                  "rather than starting over - see llm/resume.py.")
 
     args = parser.parse_args()
+
+    if args.vaebm_configs:
+        if args.experiment != "topic":
+            raise SystemExit("--vaebm-configs is topic-experiment only (cluster/llm_cluster_refinement have their own VAE-BM builder)")
+        from vaebm_benchmark.experiment.runner import register_vaebm_variants
+
+        register_vaebm_variants(_load_vaebm_configs(args.vaebm_configs))
 
     if args.experiment == "topic":
         _run_topic(args)

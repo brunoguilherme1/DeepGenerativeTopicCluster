@@ -10,10 +10,17 @@ the SAME shared corpus and the SAME requested K, using identical metric
 implementations for both (see metrics/topic_quality.py,
 metrics/clustering_quality.py - reused, not reimplemented).
 
-Model names: "vaebm" plus its alpha-variants "vaebm2"/"vaebm3" (same
-pipeline, different Encoder branch-blend weight - see
-VAEBM_ALPHA_VARIANTS below) and "bertopic". Adding another alpha variant
-is a one-line addition to VAEBM_ALPHA_VARIANTS, not a new branch.
+Model names: "bertopic", "vaebm" (VAEBMAdapter's own supplied defaults),
+and any number of additional named VAE-BM configurations registered at
+run time via `register_vaebm_variants()` (see `--vaebm-configs` in
+scripts/run_experiment.py) - each an arbitrary set of VAEBMAdapter
+constructor overrides (alpha, units, dim, dim_emb, epochs, batch_size,
+lr, vectorizer_type, embedder, top_words_mode - anything VAEBMAdapter's
+own `__init__` accepts except n_clusters/voc_size/random_state, which
+stay controlled by this runner's own --k/--voc-size/--seed for every
+model uniformly). This is what lets a single run compare 5, 10, or more
+VAE-BM configurations side by side without a code change or a new
+hardcoded branch per variant.
 
 VAE-BM topic words: this runner always uses the ENERGY view
 (`top_words_mode="energy"`, VAE-BM's own learned decoder signal) for the
@@ -51,43 +58,84 @@ class ExperimentResult:
         return asdict(self)
 
 
-# Same VAEBMAdapter/VaeBmKMeansFit pipeline for all three - only the
-# encoder's branch-blend weight (`alpha`, see models/vaebm.py's Encoder)
-# differs per variant. "vaebm" keeps the supplied notebook's own default
-# (0.99); vaebm2/vaebm3 exist to compare against it at lower alpha
-# (more weight on the sentence-embedding branch, less on the BoW branch).
-VAEBM_ALPHA_VARIANTS = {
-    "vaebm": 0.99,
-    "vaebm2": 0.50,
-    "vaebm3": 0.70,
-}
+# VAEBMAdapter's own supplied defaults (what bare "vaebm" uses) - the
+# base every named variant's overrides (see register_vaebm_variants) are
+# layered on top of. NOT the notebook's own default lr (1e-2) - this
+# project already established (docs/methodological_notes.md #8) that
+# 1e-2 diverges to inf/NaN at these vocab scales; 1e-3 trains stably,
+# and is the base every variant gets unless it overrides `lr` itself.
+_VAEBM_DEFAULTS = dict(
+    units=50,
+    epochs=30,
+    batch_size=128,
+    lr=1e-3,
+    vectorizer_type="tfidf",
+    embedder="all-MiniLM-L6-v2",
+    dim=(1500, 1000, 500),
+    dim_emb=(368,),
+    alpha=0.99,
+    top_words_mode="energy",
+)
 
-KNOWN_MODELS = list(VAEBM_ALPHA_VARIANTS) + ["bertopic"]
+# Experiment-level, never per-variant: every model in a sweep gets the
+# SAME requested k/vocabulary-cap/seed (see run_single/run_sweep below),
+# so a --vaebm-configs override touching any of these would silently
+# fight the sweep's own --k/--voc-size/--seed - rejected explicitly in
+# register_vaebm_variants rather than silently overridden or ignored.
+_VAEBM_SWEEP_CONTROLLED_PARAMS = {"n_clusters", "voc_size", "random_state"}
+
+# Populated by register_vaebm_variants() - name -> VAEBMAdapter kwarg
+# overrides layered on top of _VAEBM_DEFAULTS. Empty until a caller
+# (scripts/run_experiment.py's --vaebm-configs) registers something.
+_VAEBM_VARIANT_OVERRIDES: dict[str, dict] = {}
+
+KNOWN_MODELS = ["vaebm", "bertopic"]
+
+
+def register_vaebm_variants(variants: dict[str, dict]) -> None:
+    """Registers additional named VAE-BM configurations - e.g. parsed
+    from --vaebm-configs - each an arbitrary dict of VAEBMAdapter
+    constructor overrides layered on top of _VAEBM_DEFAULTS (the same
+    base "vaebm" itself uses). This is what lets a single run compare an
+    unbounded number of VAE-BM configurations (5, 10, 50) under distinct
+    model names, entirely from a config file/CLI argument - no code
+    change or new hardcoded branch per variant.
+
+    Validated against VAEBMAdapter's OWN constructor signature (via
+    `inspect`, not a hand-maintained duplicate list) so a typo'd
+    parameter name fails immediately with a clear message instead of
+    being silently ignored deep inside a training run."""
+    import inspect
+
+    from vaebm_benchmark.models.vaebm_adapter import VAEBMAdapter
+
+    valid_params = set(inspect.signature(VAEBMAdapter.__init__).parameters) - {"self"} - _VAEBM_SWEEP_CONTROLLED_PARAMS
+
+    for name, overrides in variants.items():
+        controlled = _VAEBM_SWEEP_CONTROLLED_PARAMS & set(overrides)
+        if controlled:
+            raise ValueError(
+                f"Variant '{name}' overrides {sorted(controlled)} - these are controlled by this runner's own "
+                "--k/--voc-size/--seed for every model uniformly, not settable per-variant."
+            )
+        unknown = set(overrides) - valid_params
+        if unknown:
+            raise ValueError(
+                f"Unknown VAEBMAdapter parameter(s) {sorted(unknown)} for variant '{name}'. "
+                f"Valid parameters: {sorted(valid_params)}"
+            )
+        _VAEBM_VARIANT_OVERRIDES[name] = overrides
+        if name not in KNOWN_MODELS:
+            KNOWN_MODELS.append(name)
 
 
 def _build_model(model_name: str, k: int, seed: int, voc_size: int):
-    if model_name in VAEBM_ALPHA_VARIANTS:
+    if model_name == "vaebm" or model_name in _VAEBM_VARIANT_OVERRIDES:
         from vaebm_benchmark.models.vaebm_adapter import VAEBMAdapter
 
-        return VAEBMAdapter(
-            n_clusters=k,
-            voc_size=voc_size,
-            units=50,
-            epochs=30,  # VaeBmKMeansFit's own supplied default
-            batch_size=128,
-            # NOT the supplied notebook's own default (1e-2) - this
-            # project already established (docs/methodological_notes.md
-            # #8) that 1e-2 diverges to inf/NaN at these vocab scales.
-            # 1e-3 trains stably; documented here, not silent.
-            lr=1e-3,
-            random_state=seed,
-            vectorizer_type="tfidf",
-            embedder="all-MiniLM-L6-v2",
-            dim=(1500, 1000, 500),
-            dim_emb=(368,),
-            alpha=VAEBM_ALPHA_VARIANTS[model_name],
-            top_words_mode="energy",
-        )
+        params = dict(_VAEBM_DEFAULTS)
+        params.update(_VAEBM_VARIANT_OVERRIDES.get(model_name, {}))
+        return VAEBMAdapter(n_clusters=k, voc_size=voc_size, random_state=seed, **params)
     if model_name == "bertopic":
         from vaebm_benchmark.models.bertopic_adapter import BERTopicAdapter
 
