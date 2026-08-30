@@ -10,6 +10,11 @@ the SAME shared corpus and the SAME requested K, using identical metric
 implementations for both (see metrics/topic_quality.py,
 metrics/clustering_quality.py - reused, not reimplemented).
 
+Model names: "vaebm" plus its alpha-variants "vaebm2"/"vaebm3" (same
+pipeline, different Encoder branch-blend weight - see
+VAEBM_ALPHA_VARIANTS below) and "bertopic". Adding another alpha variant
+is a one-line addition to VAEBM_ALPHA_VARIANTS, not a new branch.
+
 VAE-BM topic words: this runner always uses the ENERGY view
 (`top_words_mode="energy"`, VAE-BM's own learned decoder signal) for the
 CV/TD columns - chosen as the primary, fixed definition per this
@@ -46,8 +51,22 @@ class ExperimentResult:
         return asdict(self)
 
 
+# Same VAEBMAdapter/VaeBmKMeansFit pipeline for all three - only the
+# encoder's branch-blend weight (`alpha`, see models/vaebm.py's Encoder)
+# differs per variant. "vaebm" keeps the supplied notebook's own default
+# (0.99); vaebm2/vaebm3 exist to compare against it at lower alpha
+# (more weight on the sentence-embedding branch, less on the BoW branch).
+VAEBM_ALPHA_VARIANTS = {
+    "vaebm": 0.99,
+    "vaebm2": 0.50,
+    "vaebm3": 0.70,
+}
+
+KNOWN_MODELS = list(VAEBM_ALPHA_VARIANTS) + ["bertopic"]
+
+
 def _build_model(model_name: str, k: int, seed: int, voc_size: int):
-    if model_name == "vaebm":
+    if model_name in VAEBM_ALPHA_VARIANTS:
         from vaebm_benchmark.models.vaebm_adapter import VAEBMAdapter
 
         return VAEBMAdapter(
@@ -66,14 +85,14 @@ def _build_model(model_name: str, k: int, seed: int, voc_size: int):
             embedder="all-MiniLM-L6-v2",
             dim=(1500, 1000, 500),
             dim_emb=(368,),
-            alpha=0.99,
+            alpha=VAEBM_ALPHA_VARIANTS[model_name],
             top_words_mode="energy",
         )
     if model_name == "bertopic":
         from vaebm_benchmark.models.bertopic_adapter import BERTopicAdapter
 
         return BERTopicAdapter(n_clusters=k, embedding_model="all-MiniLM-L6-v2", random_state=seed)
-    raise KeyError(f"Unknown model '{model_name}'. Available: vaebm, bertopic")
+    raise KeyError(f"Unknown model '{model_name}'. Available: {', '.join(KNOWN_MODELS)}")
 
 
 def run_single(model_name: str, dataset_id: str, k: int, seed: int = 42, voc_size: int = 5000) -> ExperimentResult:

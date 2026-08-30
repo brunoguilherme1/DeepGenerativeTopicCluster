@@ -85,14 +85,13 @@ def _run_topic(args) -> None:
         render_table_for_k,
         results_to_rows,
     )
-    from vaebm_benchmark.experiment.runner import run_sweep
+    from vaebm_benchmark.experiment.runner import KNOWN_MODELS, run_sweep
     from vaebm_benchmark.utils.paths import RESULTS_DIR
 
-    all_models = ["vaebm", "bertopic"]
-    models = all_models if args.models == ["all"] else args.models
-    unknown_models = [m for m in models if m not in all_models]
+    models = KNOWN_MODELS if args.models == ["all"] else args.models
+    unknown_models = [m for m in models if m not in KNOWN_MODELS]
     if unknown_models:
-        raise SystemExit(f"Unknown model(s) for --experiment topic: {unknown_models}. Available: {all_models}")
+        raise SystemExit(f"Unknown model(s) for --experiment topic: {unknown_models}. Available: {KNOWN_MODELS}")
 
     datasets = list_datasets() if args.datasets == ["all"] else args.datasets
     unknown = [d for d in datasets if d not in list_datasets()]
