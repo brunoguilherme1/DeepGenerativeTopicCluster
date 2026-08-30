@@ -10,17 +10,19 @@ the SAME shared corpus and the SAME requested K, using identical metric
 implementations for both (see metrics/topic_quality.py,
 metrics/clustering_quality.py - reused, not reimplemented).
 
-Model names: "bertopic", "vaebm" (VAEBMAdapter's own supplied defaults),
-and any number of additional named VAE-BM configurations registered at
-run time via `register_vaebm_variants()` (see `--vaebm-configs` in
-scripts/run_experiment.py) - each an arbitrary set of VAEBMAdapter
-constructor overrides (alpha, units, dim, dim_emb, epochs, batch_size,
-lr, vectorizer_type, embedder, top_words_mode, verbose - anything VAEBMAdapter's
-own `__init__` accepts except n_clusters/voc_size/random_state, which
-stay controlled by this runner's own --k/--voc-size/--seed for every
-model uniformly). This is what lets a single run compare 5, 10, or more
-VAE-BM configurations side by side without a code change or a new
-hardcoded branch per variant.
+Model names: "bertopic", "sbert_kmeans" (SBERTKMeansAdapter's own supplied
+defaults - any SentenceTransformer/HuggingFace model via --sbert-embedder,
+see set_sbert_kmeans_defaults), "vaebm" (VAEBMAdapter's own supplied
+defaults), and any number of additional named VAE-BM configurations
+registered at run time via `register_vaebm_variants()` (see
+`--vaebm-configs` in scripts/run_experiment.py) - each an arbitrary set of
+VAEBMAdapter constructor overrides (alpha, units, dim, dim_emb, epochs,
+batch_size, lr, vectorizer_type, embedder, top_words_mode, verbose -
+anything VAEBMAdapter's own `__init__` accepts except
+n_clusters/voc_size/random_state, which stay controlled by this runner's
+own --k/--voc-size/--seed for every model uniformly). This is what lets a
+single run compare 5, 10, or more VAE-BM configurations side by side
+without a code change or a new hardcoded branch per variant.
 
 VAE-BM topic words: this runner always uses the ENERGY view
 (`top_words_mode="energy"`, VAE-BM's own learned decoder signal) for the
@@ -90,7 +92,13 @@ _VAEBM_SWEEP_CONTROLLED_PARAMS = {"n_clusters", "voc_size", "random_state"}
 # (scripts/run_experiment.py's --vaebm-configs) registers something.
 _VAEBM_VARIANT_OVERRIDES: dict[str, dict] = {}
 
-KNOWN_MODELS = ["vaebm", "bertopic"]
+# SBERTKMeansAdapter's own supplied defaults (what bare "sbert_kmeans"
+# uses) - overridden in place by set_sbert_kmeans_defaults(), e.g. from
+# --sbert-embedder, so ANY SentenceTransformer/HuggingFace model can be
+# swapped in without a code change.
+_SBERT_KMEANS_DEFAULTS = dict(embedder="all-MiniLM-L6-v2")
+
+KNOWN_MODELS = ["vaebm", "bertopic", "sbert_kmeans"]
 
 
 def _valid_vaebm_params() -> set[str]:
@@ -132,6 +140,23 @@ def set_vaebm_defaults(**overrides) -> None:
     _VAEBM_DEFAULTS.update(overrides)
 
 
+def set_sbert_kmeans_defaults(**overrides) -> None:
+    """Overrides _SBERT_KMEANS_DEFAULTS in place - e.g. from --sbert-embedder -
+    validated against SBERTKMeansAdapter's own constructor signature (via
+    `inspect`, mirroring _valid_vaebm_params/set_vaebm_defaults above) so a
+    typo'd parameter name fails immediately instead of being silently
+    ignored."""
+    import inspect
+
+    from vaebm_benchmark.models.sbert_kmeans_adapter import SBERTKMeansAdapter
+
+    valid_params = set(inspect.signature(SBERTKMeansAdapter.__init__).parameters) - {"self", "n_clusters", "random_state"}
+    unknown = set(overrides) - valid_params
+    if unknown:
+        raise ValueError(f"Unknown SBERTKMeansAdapter parameter(s) {sorted(unknown)}. Valid parameters: {sorted(valid_params)}")
+    _SBERT_KMEANS_DEFAULTS.update(overrides)
+
+
 def register_vaebm_variants(variants: dict[str, dict]) -> None:
     """Registers additional named VAE-BM configurations - e.g. parsed
     from --vaebm-configs - each an arbitrary dict of VAEBMAdapter
@@ -165,6 +190,10 @@ def _build_model(model_name: str, k: int, seed: int, voc_size: int):
         from vaebm_benchmark.models.bertopic_adapter import BERTopicAdapter
 
         return BERTopicAdapter(n_clusters=k, embedding_model="all-MiniLM-L6-v2", random_state=seed)
+    if model_name == "sbert_kmeans":
+        from vaebm_benchmark.models.sbert_kmeans_adapter import SBERTKMeansAdapter
+
+        return SBERTKMeansAdapter(n_clusters=k, random_state=seed, **_SBERT_KMEANS_DEFAULTS)
     raise KeyError(f"Unknown model '{model_name}'. Available: {', '.join(KNOWN_MODELS)}")
 
 

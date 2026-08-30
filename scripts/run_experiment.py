@@ -359,6 +359,13 @@ def main() -> None:
              "--vaebm-embedder/--vaebm-vectorizer-type for that same variant. See "
              "experiment/runner.py's register_vaebm_variants().",
     )
+    parser.add_argument(
+        "--sbert-embedder", default=None,
+        help="Topic experiment only: model 'sbert_kmeans' (a plain SentenceTransformer embedding + KMeans "
+             "baseline, no trained model of its own) - any SentenceTransformer/HuggingFace model name (default: "
+             "SBERTKMeansAdapter's own, all-MiniLM-L6-v2). Topic words are derived via class-based TF-IDF "
+             "(see models/sbert_kmeans_adapter.py), same as BERTopic's own topic-word procedure.",
+    )
 
     # --- llm_cluster_refinement only ---
     llm_group = parser.add_argument_group("llm_cluster_refinement")
@@ -417,6 +424,13 @@ def main() -> None:
 
         if args.vaebm_configs:
             register_vaebm_variants(_load_vaebm_configs(args.vaebm_configs))
+
+    if args.sbert_embedder:
+        if args.experiment != "topic":
+            raise SystemExit("--sbert-embedder is topic-experiment only")
+        from vaebm_benchmark.experiment.runner import set_sbert_kmeans_defaults
+
+        set_sbert_kmeans_defaults(embedder=args.sbert_embedder)
 
     if args.experiment == "topic":
         _run_topic(args)
