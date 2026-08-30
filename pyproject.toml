@@ -7,7 +7,13 @@ requires-python = ">=3.10"
 dependencies = [
     "requests>=2.31",
     "pyyaml>=6.0",
-    "numpy>=1.26,<2.0",
+    # No upper bound, deliberately: a <2.0 cap here was found to conflict
+    # with tensorflow's own (much newer) internal numpy requirement on a
+    # fresh Colab image, sending pip's resolver into a multi-minute
+    # backtracking search through years of old keras/ml_dtypes/hdbscan
+    # releases trying to find one old enough to accept numpy<2.0 - no code
+    # in this package actually depends on numpy 1.x-only behavior.
+    "numpy>=1.26",
     "scipy>=1.11",
     # Makes Python's ssl module trust the OS certificate store (not just
     # certifi's bundle) - needed on networks behind a TLS-inspecting
