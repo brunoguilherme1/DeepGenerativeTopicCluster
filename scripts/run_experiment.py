@@ -327,11 +327,11 @@ def main() -> None:
     parser.add_argument("--format", default="percent", choices=["percent", "decimal"], help="Cluster table print format (CSV/JSON always store decimals)")
     parser.add_argument(
         "--vaebm-embedder", default=None,
-        help="Topic experiment only: VAE-BM's embedding branch input - any SentenceTransformer model name (default: "
-             "VAEBMAdapter's own, all-MiniLM-L6-v2), or 'bag'/'bow'/'tfidf' to use a classical vectorizer there "
-             "instead of a neural sentence embedding. Applies to EVERY vaebm-family model (bare 'vaebm' and any "
-             "--vaebm-configs variant that doesn't itself override 'embedder') - for a per-variant override instead, "
-             "set 'embedder' inside that variant's --vaebm-configs entry.",
+        help="Topic experiment only: VAE-BM's embedding branch (e_txt) input - any SentenceTransformer/HuggingFace "
+             "model name (default: VAEBMAdapter's own, all-MiniLM-L6-v2). A SEPARATE knob from --vaebm-vectorizer-type "
+             "(which controls the BoW branch x_bow) - never 'tfidf'/'bag' itself. Applies to EVERY vaebm-family model "
+             "(bare 'vaebm' and any --vaebm-configs variant that doesn't itself override 'embedder') - for a "
+             "per-variant override instead, set 'embedder' inside that variant's --vaebm-configs entry.",
     )
     parser.add_argument(
         "--vaebm-vectorizer-type", default=None, choices=["tfidf", "count"],

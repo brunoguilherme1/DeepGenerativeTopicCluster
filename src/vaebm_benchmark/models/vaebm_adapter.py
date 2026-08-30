@@ -26,8 +26,8 @@ class VAEBMAdapter(ProtocolModelAdapter):
         batch_size: int = 128,
         lr: float = 1e-2,
         random_state: int = 42,
-        vectorizer_type: str = "tfidf",  # BoW branch: "tfidf" or anything else -> CountVectorizer, see vaebm.py fit_predict
-        embedder: str = "all-MiniLM-L6-v2",  # embedding branch: any SentenceTransformer model name, or "bag"/"bow"/"tfidf" for a classical vectorizer instead - see vaebm.py's _EMBEDDER_VECTORIZER_ALIASES
+        vectorizer_type: str = "tfidf",  # BoW branch (x_bow): "tfidf" or anything else -> CountVectorizer/"bag" - see vaebm.py fit_predict
+        embedder: str = "all-MiniLM-L6-v2",  # embedding branch (e_txt): any SentenceTransformer/HuggingFace model name - a SEPARATE knob from vectorizer_type, never "tfidf"/"bag" itself
         dim: tuple = (1500, 1000, 500),
         dim_emb: tuple = (368,),
         alpha: float = 0.99,
