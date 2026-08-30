@@ -4,13 +4,23 @@ branch that blends in pretrained sentence embeddings.
 
 This is the model AS SUPPLIED for this benchmark (from the user's own
 1_0_Baselines_&_Results.ipynb, cell "VAE-BM-Distill" / vaebm_fit.py) -
-copied here verbatim, unmodified, save for this module docstring and
-translating the original inline Portuguese comments to English. Per the
-task's own instructions: "Do not silently change the mathematical
-formulation of VAE-BM. ... If you find a methodological/model issue,
-document it separately rather than silently changing the model." Any such
-issue found while integrating this model into baseline protocols is
-recorded in docs/methodological_notes.md, NOT fixed here.
+the VAEBM/Encoder/Decoder architecture and training objective (ELBO)
+themselves are unmodified. Per the task's own instructions: "Do not
+silently change the mathematical formulation of VAE-BM. ... If you find
+a methodological/model issue, document it separately rather than
+silently changing the model." Any such issue found while integrating
+this model into baseline protocols is recorded in
+docs/methodological_notes.md, NOT fixed here.
+
+One deliberate, requested extension beyond the supplied notebook (not a
+silent change to the math above): `VaeBmKMeansFit.fit_predict()`'s
+`embedder` parameter originally only accepted a SentenceTransformer
+model name or a precomputed array - it now also accepts "bag"/"bow" or
+"tfidf" to use a classical vectorizer as the embedding branch's input
+instead of a neural sentence embedding (see `_VectorizerEmbedder`/
+`_EMBEDDER_VECTORIZER_ALIASES` below). The Encoder's `mlp_emb` MLP
+consumes whatever `e_txt` array it's given regardless of its source, so
+this does not touch VAEBM's own architecture or ELBO objective.
 
 In particular (see docs/methodological_notes.md for the full writeup):
 mu (the encoder's latent mean) is a latent Gaussian representation, not a
@@ -39,6 +49,44 @@ try:
     from sentence_transformers import SentenceTransformer
 except Exception:  # pragma: no cover - optional dependency
     SentenceTransformer = None  # type: ignore
+
+
+class _VectorizerEmbedder:
+    """Wraps a FITTED sklearn vectorizer (CountVectorizer/TfidfVectorizer)
+    behind the same `.encode(texts, batch_size=None, convert_to_numpy=True)`
+    interface SentenceTransformer exposes, so every existing
+    `self.embedder.encode(...)` call site in VaeBmKMeansFit (predict(),
+    top_words_by_freq_exact(), the init_R_from_vocab branch) works
+    unchanged regardless of which embedding source is active. This is
+    what lets `embedder="bag"` / `embedder="tfidf"` use a classical
+    bag-of-words/TF-IDF vector AS the embedding branch's input, as an
+    alternative to a neural sentence-embedding model - not a change to
+    VAEBM's own math (the Encoder's `mlp_emb` just consumes whatever
+    `e_txt` array it's given, whatever its source)."""
+
+    def __init__(self, vectorizer: Union[TfidfVectorizer, CountVectorizer]):
+        self.vectorizer = vectorizer
+
+    def encode(self, texts: Sequence[str], batch_size: Optional[int] = None, convert_to_numpy: bool = True) -> np.ndarray:
+        X = self.vectorizer.transform(list(texts))
+        if isinstance(self.vectorizer, TfidfVectorizer):
+            X = X.tocoo(copy=False)
+            X.data = np.log1p(X.data)
+            X = X.tocsr()
+        return X.toarray().astype(np.float32)
+
+
+# String values of `embedder` that select a classical vectorizer for the
+# embedding branch instead of a SentenceTransformer model name - matched
+# case-insensitively; any other string is passed straight to
+# `SentenceTransformer(...)` as before.
+_EMBEDDER_VECTORIZER_ALIASES = {
+    "bag": CountVectorizer,
+    "bow": CountVectorizer,
+    "count": CountVectorizer,
+    "tfidf": TfidfVectorizer,
+    "tf-idf": TfidfVectorizer,
+}
 
 
 # =============================================================================
@@ -257,6 +305,12 @@ class VaeBmKMeansFit:
         texts: Sequence[str],
         vectorizer_type: str = "tfidf",
         embedder: Union[str, np.ndarray] = "thenlper/gte-small",
+        # `embedder` accepts, in addition to a SentenceTransformer model
+        # name (any string not matching _EMBEDDER_VECTORIZER_ALIASES) or a
+        # precomputed [N, d] array: "bag"/"bow"/"count" (a fitted
+        # CountVectorizer) or "tfidf"/"tf-idf" (a fitted TfidfVectorizer)
+        # as the embedding branch's input, capped at self.voc_size like
+        # the primary BoW vectorizer - see _VectorizerEmbedder above.
         dim: Sequence[int] = (1500, 1000, 500),
         dim_emb: Sequence[int] = (368,),
         init_R_from_vocab: bool = False,
@@ -303,7 +357,17 @@ class VaeBmKMeansFit:
             X = self.vectorizer.fit_transform(texts)
         X_bow = X.toarray().astype(np.float32)
 
-        if isinstance(embedder, str):
+        if isinstance(embedder, str) and embedder.lower() in _EMBEDDER_VECTORIZER_ALIASES:
+            embed_vectorizer_cls = _EMBEDDER_VECTORIZER_ALIASES[embedder.lower()]
+            embed_vectorizer = embed_vectorizer_cls(max_features=self.voc_size)
+            X_embed = embed_vectorizer.fit_transform(texts)
+            if embed_vectorizer_cls is TfidfVectorizer:
+                X_embed = X_embed.tocoo(copy=False)
+                X_embed.data = np.log1p(X_embed.data)
+                X_embed = X_embed.tocsr()
+            E = X_embed.toarray().astype(np.float32)
+            self.embedder = _VectorizerEmbedder(embed_vectorizer)
+        elif isinstance(embedder, str):
             if SentenceTransformer is None:
                 raise RuntimeError("sentence-transformers is not available.")
             self.embedder = SentenceTransformer(embedder)
