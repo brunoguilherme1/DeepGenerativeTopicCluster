@@ -5,8 +5,19 @@ listing its full repo tree; GoogleNews/StackOverflow/Biomedical require
 external STTM+TopMost preprocessing this project has not reproduced - see
 docs/methodological_notes.md and configs/datasets/*.yaml for those three).
 
+This project does NOT clone or subprocess-execute the official repo (a
+deliberate choice - see docs/methodological_notes.md #10): the GloCOM
+model (`_glocom_source.py`) is vendored verbatim, trained via this
+project's own data pipeline
+(`models/glocom_adapter.py::fit_precomputed()`), built directly from the
+official repo's own precomputed artifacts (bow.npz/global_bow.npz/
+global_maps.txt/vocab.txt/word_embeddings.npz - no re-derivation). Every
+hyperparameter below is verified against the official repo's own
+`run.py`/`GloCOM.py` source, not assumed.
+
 Protocol facts, each verified directly against the cloned official repo
-and the NAACL 2025 paper PDF (not inferred):
+(read directly during this project's own research pass, not executed)
+and the NAACL 2025 paper PDF:
   - Dataset artifact: the exact bow.npz / global_bow.npz / global_maps.txt
     / vocab.txt / word_embeddings.npz files shipped in
     data/SearchSnippets/, fetched verbatim (see
@@ -29,27 +40,41 @@ and the NAACL 2025 paper PDF (not inferred):
     en_units=200, embed_size=200, sinkhorn_alpha=20.0,
     sinkhorn_max_iter=100, beta_temp=0.2 (fixed, not CLI-exposed),
     epochs=200, lr=0.002, batch_size=200, num_top_words=15.
+  - Training loop equivalence: this project trains the vendored GloCOM
+    module via `topmost.BasicTrainer`, not the official
+    `trainer/Trainer.py` class. VERIFIED by fetching
+    `trainer/Trainer.py` directly from the pinned commit and diffing its
+    `train()`/`test()`/`make_optimizer()` against `topmost.BasicTrainer`'s
+    (installed, inspected via `inspect.getsource`): both construct
+    `torch.optim.Adam(model.parameters(), lr=learning_rate)` identically,
+    both loops are `for epoch: for batch_data in train_dataloader:
+    rst_dict = model(batch_data); loss = rst_dict['loss'];
+    optimizer.zero_grad(); loss.backward(); optimizer.step()` verbatim,
+    and both `test()` methods batch `model.get_theta(...)` identically.
+    The only difference is logging cosmetics (`print()` vs. a logger) -
+    nothing that affects trained weights, theta, or beta. Recorded as
+    MATCH below on this verified basis, not assumed - see
+    docs/methodological_notes.md #10 for the full comparison.
   - Metrics: the paper reports TC (Topic Coherence, C_V via the Palmetto
-    Java library against a bundled Wikipedia reference corpus), TD (this
+    Java library against a bundled Wikipedia reference corpus -
+    `cv_palmetto_wikipedia`, computed for real when
+    `tools/palmetto/{palmetto.jar,wiki_data/wikipedia_bd}` are present,
+    else recorded as UNAVAILABLE and never silently replaced), TD (this
     project's `glocom_td` - see metrics/topic_quality.py, NOT the same
-    formula as standard `topic_diversity`), Purity, and NMI (both via
-    argmax(theta) vs. ground-truth labels).
+    formula as standard `topic_diversity` - this distinction is preserved
+    exactly and unit-tested, see tests/test_metrics.py), Purity, and NMI
+    (both via argmax(theta) vs. ground-truth labels).
   - Seeds: the official codebase sets NO random seed anywhere (`grep -rni
     seed` across its own .py files returns nothing) - the paper instead
     reports mean+-std over 3 runs. This protocol's own `seeds` list is
     this project's OWN choice (for reproducibility of THIS project's
     runs), not something recovered from the paper.
 
-KNOWN DEVIATION (documented, not silently absorbed - see
-docs/methodological_notes.md #5 and comparison.csv's `published_source`
-column): TC is NOT computed via Palmetto+Wikipedia here (that requires a
-Java runtime and a ~multi-GB bundled Wikipedia reference corpus this
-project does not set up for a smoke test) - `cv` below uses gensim's
-CoherenceModel against the SearchSnippets corpus itself as the reference,
-the SAME fallback method the official repo's own
-`evaluations/topic_coherence.py` provides as a non-default alternative to
-Palmetto. This makes the `cv` published-vs-reproduced comparison NOT
-apples-to-apples; treat it as indicative only until Palmetto is wired up.
+Separately-named, non-paper coherence: `cv_local_corpus` (gensim
+CoherenceModel against the SearchSnippets corpus itself) is ALSO computed
+and reported, but under a name that can never be confused with the
+paper's own `cv_palmetto_wikipedia` metric - see
+docs/methodological_notes.md #5/#11.
 """
 
 from __future__ import annotations
@@ -57,7 +82,9 @@ from __future__ import annotations
 from vaebm_benchmark.protocols.base import (
     BaselineProtocol,
     DatasetSpec,
+    MatchStatus,
     MetricSpec,
+    ProtocolCheck,
     PublishedResult,
     SplitSpec,
 )
@@ -108,6 +135,7 @@ class GloCOMProtocol(BaselineProtocol):
         "https://aclanthology.org/2025.naacl-long.51/"
     )
     official_repository = "https://github.com/qducnguyen/GloCOM"
+    upstream_commit = "4094055b9e2d0169b0aa75d5aed7220e9509f0de"
 
     datasets = [
         DatasetSpec(
@@ -126,7 +154,8 @@ class GloCOMProtocol(BaselineProtocol):
     )
     topic_count = {"search_snippets": 50}
     metric_specs = [
-        MetricSpec(name="cv", kind="topic", top_n=15),
+        MetricSpec(name="cv_palmetto_wikipedia", kind="topic", top_n=15),
+        MetricSpec(name="cv_local_corpus", kind="topic", top_n=15),
         MetricSpec(name="glocom_td", kind="topic", top_n=15),
         MetricSpec(name="purity", kind="clustering"),
         MetricSpec(name="nmi", kind="clustering"),
@@ -134,38 +163,57 @@ class GloCOMProtocol(BaselineProtocol):
     seeds = [42]
 
     published_results = [
-        PublishedResult(dataset_id="search_snippets", metric="cv", value=0.453,
-                         source="Table 2, GloCOM row, SearchSnippets K=50 (Nguyen et al., NAACL 2025) - "
-                                "PUBLISHED VALUE USES PALMETTO+WIKIPEDIA, NOT gensim CoherenceModel; see module docstring"),
+        PublishedResult(dataset_id="search_snippets", metric="cv_palmetto_wikipedia", value=0.453,
+                         source="Table 2, GloCOM row, SearchSnippets K=50 (Nguyen et al., NAACL 2025)"),
         PublishedResult(dataset_id="search_snippets", metric="glocom_td", value=0.956,
                          source="Table 2, GloCOM row, SearchSnippets K=50 (Nguyen et al., NAACL 2025)"),
         PublishedResult(dataset_id="search_snippets", metric="purity", value=0.806,
                          source="Table 2, GloCOM row, SearchSnippets K=50 (Nguyen et al., NAACL 2025)"),
         PublishedResult(dataset_id="search_snippets", metric="nmi", value=0.502,
                          source="Table 2, GloCOM row, SearchSnippets K=50 (Nguyen et al., NAACL 2025)"),
+        # cv_local_corpus has no published counterpart - it is not the paper's metric (see module docstring).
     ]
 
     def __init__(self, smoke_test: bool = True) -> None:
         self.smoke_test = smoke_test
+        self.mode = "smoke" if smoke_test else "full"
         # Paper default is 200 epochs (~<10 min on an RTX 3090; slower on
         # CPU). Reduced for a smoke test per this project's own
         # instructions ("test only small experiments") - documented here,
         # not silently substituted; verify() surfaces this as a DIFFERENCE.
         self.epochs = 20 if smoke_test else 200
 
-    def prepare_dataset(self, dataset_id: str) -> list[str]:
+    def _require_search_snippets(self, dataset_id: str) -> None:
         if dataset_id != "search_snippets":
             raise KeyError(f"GloCOMProtocol only supports 'search_snippets' currently, got '{dataset_id}'")
+
+    def prepare_dataset(self, dataset_id: str) -> list[str]:
+        self._require_search_snippets(dataset_id)
         from vaebm_benchmark.datasets.definitions.glocom_official import GloCOMOfficialSearchSnippets
 
         return GloCOMOfficialSearchSnippets().load().documents
 
     def prepare_labels(self, dataset_id: str):
-        if dataset_id != "search_snippets":
-            raise KeyError(f"GloCOMProtocol only supports 'search_snippets' currently, got '{dataset_id}'")
+        self._require_search_snippets(dataset_id)
         from vaebm_benchmark.datasets.definitions.glocom_official import GloCOMOfficialSearchSnippets
 
         return GloCOMOfficialSearchSnippets().load().labels
+
+    def artifact_checksum(self, dataset_id: str) -> str:
+        self._require_search_snippets(dataset_id)
+        from vaebm_benchmark.datasets.definitions.glocom_official import EXPECTED_SHA256
+
+        return "|".join(f"{name}:{digest}" for name, digest in sorted(EXPECTED_SHA256.items()))
+
+    def preprocessing_version(self, dataset_id: str) -> str:
+        self._require_search_snippets(dataset_id)
+        return "official_precomputed_artifact_no_preprocessing_v1"
+
+    def vocabulary_for(self, dataset_id: str) -> list[str]:
+        self._require_search_snippets(dataset_id)
+        from vaebm_benchmark.datasets.definitions.glocom_official import GloCOMOfficialSearchSnippets
+
+        return GloCOMOfficialSearchSnippets().load().vocab
 
     def build_baseline(self, dataset_id: str, seed: int):
         from vaebm_benchmark.models.glocom_adapter import GloCOMAdapter
@@ -189,9 +237,27 @@ class GloCOMProtocol(BaselineProtocol):
         )
         return _GloCOMOfficialArtifactAdapter(inner)
 
-    def build_vaebm(self, dataset_id: str, seed: int):
+    def vaebm_variants(self) -> list[str]:
+        return ["protocol_faithful", "stability_adjusted"]
+
+    def build_vaebm(self, dataset_id: str, seed: int, variant: str = "stability_adjusted"):
         from vaebm_benchmark.datasets.definitions.glocom_official import GloCOMOfficialSearchSnippets
         from vaebm_benchmark.models.vaebm_adapter import VAEBMAdapter
+
+        if variant not in self.vaebm_variants():
+            raise ValueError(f"Unknown VAE-BM variant '{variant}'; available: {self.vaebm_variants()}")
+
+        # protocol_faithful: the AS-SUPPLIED notebook default (lr=1e-2).
+        # Confirmed by direct diagnostic (docs/methodological_notes.md #8)
+        # to diverge to inf/NaN within 2 epochs on this vocab size (4618
+        # words), producing degenerate KMeans clusters (Purity=0.224,
+        # NMI=0.014 - near-random). This is EXPECTED and recorded as such,
+        # never hidden. stability_adjusted: lr=1e-3, trains stably over
+        # the full run and produces non-degenerate results (Purity=0.742,
+        # NMI=0.393) - a documented hyperparameter substitution, not a
+        # change to VAE-BM's architecture/loss, never presented as if it
+        # were the original formulation.
+        lr = 1e-2 if variant == "protocol_faithful" else 1e-3
 
         bundle = GloCOMOfficialSearchSnippets().load()
         return VAEBMAdapter(
@@ -200,17 +266,7 @@ class GloCOMProtocol(BaselineProtocol):
             units=50,
             epochs=self.epochs,
             batch_size=128,
-            # NOT the supplied notebook's own default (1e-2): confirmed by
-            # direct diagnostic (see docs/methodological_notes.md) that
-            # 1e-2 diverges to inf/NaN within 2 epochs on this vocab size
-            # (4618 words), producing degenerate KMeans clusters
-            # (Purity=0.224, NMI=0.014 - near-random). 1e-3 trains stably
-            # over the full smoke-test run and produces non-degenerate
-            # results (Purity=0.742, NMI=0.393). This is a hyperparameter
-            # substitution, not a change to VAE-BM's architecture/loss -
-            # documented per this project's own "don't silently change
-            # the model" rule, not hidden.
-            lr=1e-3,
+            lr=lr,
             random_state=seed,
             vectorizer_type="tfidf",
             embedder="all-MiniLM-L6-v2",  # matches GloCOM's own embedding_model
@@ -218,38 +274,71 @@ class GloCOMProtocol(BaselineProtocol):
             dim_emb=(368,),
             alpha=0.99,
             top_words_mode="energy",
-            vocabulary=bundle.vocab,  # exact same vocab.txt as the GloCOM baseline, not just matching size
+            vocabulary=bundle.vocab,  # exact same vocab.txt as the GloCOM baseline, exact-count tokenizer (see vaebm.py)
         )
 
-    def verify(self) -> dict:
-        return {
-            "paper": self.paper,
-            "official_repository": self.official_repository,
-            "dataset": {
-                "id": "search_snippets",
-                "artifact": self.datasets[0].source_url,
-                "num_docs_expected": self.datasets[0].num_docs_expected,
-                "verdict": "MATCH - fetched verbatim from the official repo's own data/SearchSnippets/",
-            },
-            "preprocessing": {
-                "description": "None applied by this project - documents/vocab/bow are the official repo's own precomputed artifact.",
-                "verdict": "MATCH",
-            },
-            "vocabulary": {"source": "vocab.txt (official artifact)", "verdict": "MATCH"},
-            "K": {"value": self.topic_count["search_snippets"], "paper_reports": "K in {50, 100}", "verdict": "MATCH (K=50)"},
-            "split_strategy": {"value": self.split_strategy.strategy, "verdict": "MATCH - official repo is transductive"},
-            "seeds": {"value": self.seeds, "verdict": "UNKNOWN - official repo sets no seed; paper reports mean/std over 3 runs, not seed-reproducible"},
-            "metrics": {
-                "cv": "DIFFERENCE - paper uses Palmetto+Wikipedia C_V, this project uses gensim CoherenceModel c_v (see module docstring)",
-                "glocom_td": "MATCH - same formula as evaluations/topic_diversity.py::compute_TD",
-                "purity": "MATCH - same as evaluations/clustering.py::purity_score",
-                "nmi": "MATCH - same as sklearn.metrics.normalized_mutual_info_score, same as official repo",
-            },
-            "baseline_implementation": "MATCH - GloCOM model vendored verbatim; trained on official precomputed artifacts, hyperparameters match run.py's own CLI defaults",
-            "vaebm_implementation": "N/A - VAE-BM is not a baseline being reproduced; see docs/methodological_notes.md",
-            "epochs": {
-                "value": self.epochs,
-                "paper_value": 200,
-                "verdict": "MATCH" if not self.smoke_test else "DIFFERENCE - reduced for smoke test, see BaselineProtocol.__init__",
-            },
-        }
+    def checks(self) -> list[ProtocolCheck]:
+        from vaebm_benchmark.datasets.definitions.glocom_official import (
+            GLOCOM_COMMIT,
+            GloCOMOfficialSearchSnippets,
+        )
+        from vaebm_benchmark.metrics.palmetto import palmetto_available
+
+        checksum_ok, checksum_problems = GloCOMOfficialSearchSnippets().verify()
+        checksum_status = MatchStatus.MATCH if checksum_ok else MatchStatus.DIFFERENCE
+        checksum_note = (
+            f"every file's SHA256 matches EXPECTED_SHA256, pinned to commit {GLOCOM_COMMIT}"
+            if checksum_ok
+            else "; ".join(checksum_problems) or "not yet downloaded - run prepare_dataset() first"
+        )
+        palmetto_status = MatchStatus.MATCH if palmetto_available() else MatchStatus.UNKNOWN
+        palmetto_note = (
+            "tools/palmetto/palmetto.jar + wiki_data/wikipedia_bd found - real Palmetto C_V will be computed"
+            if palmetto_available()
+            else "tools/palmetto/{palmetto.jar,wiki_data/wikipedia_bd} not present - cv_palmetto_wikipedia will be "
+                 "recorded as unavailable, never silently replaced by cv_local_corpus"
+        )
+
+        return [
+            ProtocolCheck("dataset", self.datasets[0].source_url, MatchStatus.MATCH,
+                          "fetched verbatim from the official repo's own data/SearchSnippets/ at the pinned commit"),
+            ProtocolCheck("checksum", "per-file SHA256 vs. EXPECTED_SHA256 (glocom_official.py)", checksum_status,
+                          checksum_note),
+            ProtocolCheck("upstream_commit", self.upstream_commit, MatchStatus.MATCH,
+                          "pinned commit, verified directly by reading run.py/GloCOM.py/dataloader.py at this commit"),
+            ProtocolCheck("preprocessing", "none applied by this project", MatchStatus.MATCH,
+                          "documents/vocab/bow are the official repo's own precomputed artifact, unmodified"),
+            ProtocolCheck("vocabulary", f"{len(self.vocabulary_for('search_snippets'))}-word vocab.txt (official artifact)",
+                          MatchStatus.MATCH,
+                          "VAE-BM's vectorizer is pinned to this exact vocab list AND the same whitespace-split "
+                          "tokenization (models/vaebm.py) - counts are provably identical, not assumed equivalent"),
+            ProtocolCheck("K", f"{self.topic_count['search_snippets']}", MatchStatus.MATCH,
+                          "paper reports K in {50, 100} for SearchSnippets; K=50 used here"),
+            ProtocolCheck("split_strategy", self.split_strategy.strategy, MatchStatus.MATCH,
+                          "official repo is transductive - dataloader.py reloads train bow.npz as test too"),
+            ProtocolCheck("seeds", f"{self.seeds}", MatchStatus.UNKNOWN,
+                          "official repo sets no seed anywhere (grep -rni seed on the cloned repo is empty); "
+                          "paper reports mean/std over 3 runs, not a seed-reproducible single number"),
+            ProtocolCheck("metric:cv_palmetto_wikipedia", "metrics/palmetto.py::palmetto_cv()", palmetto_status, palmetto_note),
+            ProtocolCheck("metric:cv_local_corpus", "gensim CoherenceModel c_v vs. training corpus", MatchStatus.DIFFERENCE,
+                          "NOT the paper's metric - a separately-named, documented approximation; never compared "
+                          "against the paper's published cv_palmetto_wikipedia number"),
+            ProtocolCheck("metric:glocom_td", "topic_diversity_glocom()", MatchStatus.MATCH,
+                          "same TF==1 formula as the official evaluations/topic_diversity.py::compute_TD"),
+            ProtocolCheck("metric:purity", "clustering_quality.purity()", MatchStatus.MATCH,
+                          "same as evaluations/clustering.py::purity_score"),
+            ProtocolCheck("metric:nmi", "clustering_quality.nmi()", MatchStatus.MATCH,
+                          "same as sklearn.metrics.normalized_mutual_info_score, same as official repo"),
+            ProtocolCheck("baseline_implementation", "GloCOM/ECR vendored verbatim + official precomputed artifacts",
+                          MatchStatus.MATCH,
+                          "hyperparameters match run.py's own CLI defaults (prior_var=0.1, weight_loss_ECR=60.0, "
+                          "not the class defaults); training loop is topmost.BasicTrainer, compared directly "
+                          "against the official trainer/Trainer.py - see module docstring"),
+            ProtocolCheck("vaebm_implementation", "models/vaebm.py, unmodified architecture/initializers/callbacks",
+                          MatchStatus.MATCH,
+                          "protocol_faithful variant uses the AS-SUPPLIED lr=1e-2; stability_adjusted uses lr=1e-3 - "
+                          "both persisted and labeled, never conflated (see docs/methodological_notes.md #8/#9)"),
+            ProtocolCheck("mode", self.mode, MatchStatus.MATCH if not self.smoke_test else MatchStatus.DIFFERENCE,
+                          "smoke mode uses 20 epochs, not the paper's 200 - never described as paper reproduction"
+                          if self.smoke_test else "matches paper default (200 epochs)"),
+        ]

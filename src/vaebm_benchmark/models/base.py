@@ -38,3 +38,16 @@ class ProtocolModelAdapter:
     def get_document_clusters(self, documents: list[str]) -> list[int]:
         """Hard cluster/topic assignment per document."""
         raise NotImplementedError
+
+    def get_document_embeddings(self, documents: list[str]) -> Optional[np.ndarray]:
+        """This model's own native geometric representation, if it has
+        one meaningful for downstream geometry-based post-processing
+        (e.g. experiment/llm_refinement_runner.py's edge-point detection,
+        `--edge-representation native`) - NOT necessarily a fixed-size
+        "embedding" in the deep-learning sense for every model (VAE-BM's
+        native representation is its latent mu, not a separate embedding
+        model's output). Returns None if this adapter has none; callers
+        must handle that explicitly (e.g. by falling back to
+        `--edge-representation shared`) rather than assuming every model
+        has a usable native representation."""
+        return None

@@ -99,13 +99,35 @@ def irbo(topics: list[list[str]], top_n: int = 10, p: float = 0.9) -> float:
     return 1.0 - (sum(scores) / len(scores))
 
 
+def _cv_palmetto_wikipedia(topics, _reference_corpus, top_n=10) -> float:
+    from vaebm_benchmark.metrics.palmetto import palmetto_cv
+
+    return palmetto_cv(topics, top_n=top_n)
+
+
+# Every metric name a protocol can request in its own MetricSpec list.
+# `cv_local_corpus` and `cv_palmetto_wikipedia` are DELIBERATELY separate
+# entries, never aliases of each other - see palmetto.py's module
+# docstring and docs/methodological_notes.md. A protocol that requests
+# `cv_palmetto_wikipedia` gets either a real Palmetto number or (if the
+# jar/Wikipedia index are absent) an explicit "unavailable" - it is never
+# silently filled in with `cv_local_corpus`'s value under the paper's
+# metric name.
 METRIC_FUNCTIONS = {
     "npmi": lambda topics, ref, top_n=10: coherence(topics, ref, top_n, "c_npmi")[0],
-    "cv": lambda topics, ref, top_n=10: coherence(topics, ref, top_n, "c_v")[0],
+    "cv_local_corpus": lambda topics, ref, top_n=10: coherence(topics, ref, top_n, "c_v")[0],
+    "cv_palmetto_wikipedia": _cv_palmetto_wikipedia,
     "topic_diversity": lambda topics, ref, top_n=10: topic_diversity(topics, top_n),
     "glocom_td": lambda topics, ref, top_n=10: topic_diversity_glocom(topics, top_n),
     "irbo": lambda topics, ref, top_n=10: irbo(topics, top_n),
 }
+
+# Metrics allowed to come back as "unavailable" (None) rather than raise
+# and abort the whole evaluation - currently only the real Palmetto path,
+# since its external prerequisites (Java, a multi-GB Wikipedia index) are
+# routinely absent and that must never block TD/Purity/NMI/topics from
+# being reported (see protocols/base.py's evaluate()).
+OPTIONAL_METRICS = {"cv_palmetto_wikipedia"}
 
 
 def compute_topic_metrics(
@@ -113,5 +135,21 @@ def compute_topic_metrics(
     reference_corpus: list[list[str]],
     metric_names: list[str],
     top_n: int = 10,
-) -> dict[str, float]:
-    return {name: METRIC_FUNCTIONS[name](topics, reference_corpus, top_n) for name in metric_names}
+) -> tuple[dict[str, float], dict[str, str]]:
+    """Returns (values, errors). `values[name]` is None (not omitted) for
+    any optional metric that could not be computed; `errors[name]` then
+    holds the reason. A non-optional metric that fails raises instead of
+    silently degrading - only OPTIONAL_METRICS get the soft-fail path."""
+    from vaebm_benchmark.metrics.palmetto import PalmettoUnavailable
+
+    values: dict[str, float] = {}
+    errors: dict[str, str] = {}
+    for name in metric_names:
+        try:
+            values[name] = METRIC_FUNCTIONS[name](topics, reference_corpus, top_n)
+        except PalmettoUnavailable as exc:
+            if name not in OPTIONAL_METRICS:
+                raise
+            values[name] = None
+            errors[name] = str(exc)
+    return values, errors

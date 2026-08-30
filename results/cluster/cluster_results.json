@@ -1,0 +1,30 @@
+[
+  {
+    "experiment": "cluster",
+    "model": "vaebm",
+    "dataset": "search_snippets",
+    "seed": 42,
+    "requested_k": 8,
+    "actual_k": 8,
+    "num_classes": 8,
+    "acc": 0.6404376012965964,
+    "nmi": 0.44033843957390006,
+    "runtime_seconds": 89.364,
+    "status": "ok",
+    "error": ""
+  },
+  {
+    "experiment": "cluster",
+    "model": "bertopic",
+    "dataset": "search_snippets",
+    "seed": 42,
+    "requested_k": 8,
+    "actual_k": 8,
+    "num_classes": 8,
+    "acc": 0.7991085899513777,
+    "nmi": 0.6648333598146912,
+    "runtime_seconds": 29.455,
+    "status": "ok",
+    "error": ""
+  }
+]

@@ -1,0 +1,7 @@
+          SearchSnippets (K=8)
+Model        ACC      NMI
+----------------------------
+VAE-BM       64.0     44.0
+BERTopic    *79.9*   *66.5*
+
+Results from a single run (seed=42).

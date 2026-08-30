@@ -18,9 +18,48 @@ respectively - never a K independently tuned for VAE-BM.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any, Optional
 
 from vaebm_benchmark.models.base import ProtocolModelAdapter
+
+
+class MatchStatus(str, Enum):
+    """Adopted from an independent second implementation of this same
+    project (see docs/repository_comparison_report.md) - a formal enum
+    plus an aggregate boolean is a genuinely stronger fair-comparison
+    guardrail than free-text verdict strings alone. Unlike that other
+    implementation's checks (which mostly compared a config value to
+    itself - see the report's Finding C.3), every ProtocolCheck emitted
+    by this project's own `checks()` methods below is backed by cited
+    evidence from this project's own upstream research (paper text,
+    official repo source, or a runtime-computed checksum) - never a
+    tautological self-comparison."""
+
+    MATCH = "MATCH"
+    DIFFERENCE = "DIFFERENCE"
+    UNKNOWN = "UNKNOWN"
+
+
+@dataclass(frozen=True)
+class ProtocolCheck:
+    """One verifiable fair-comparison field. `note` should cite WHY the
+    status is what it is (a paper section, a repo file, a checksum
+    comparison) - never left to speak for itself."""
+
+    field: str
+    detail: str
+    status: MatchStatus
+    note: str = ""
+
+
+def fair_comparison(checks: list[ProtocolCheck]) -> bool:
+    """True iff EVERY check is MATCH. A single DIFFERENCE or UNKNOWN in
+    any field (dataset artifact, checksum, preprocessing, vocabulary, K,
+    split, metrics, baseline source, environment) means the comparison is
+    not yet defensible as fair - this function is never overridden to
+    special-case a field away."""
+    return all(check.status is MatchStatus.MATCH for check in checks)
 
 
 @dataclass(frozen=True)
@@ -95,6 +134,8 @@ class BaselineProtocol:
     name: str = ""
     paper: str = ""
     official_repository: str = ""
+    upstream_commit: str = ""  # pinned commit/version this protocol was verified against - never a moving branch
+    mode: str = "smoke"  # "smoke" | "full" - every persisted run stamps this; smoke results are never paper reproduction
 
     datasets: list[DatasetSpec] = []
     split_strategy: SplitSpec = SplitSpec(strategy="full_corpus", description="")
@@ -141,7 +182,46 @@ class BaselineProtocol:
     def build_baseline(self, dataset_id: str, seed: int) -> ProtocolModelAdapter:
         raise NotImplementedError
 
-    def build_vaebm(self, dataset_id: str, seed: int) -> ProtocolModelAdapter:
+    def build_vaebm(self, dataset_id: str, seed: int, variant: str = "stability_adjusted") -> ProtocolModelAdapter:
+        """`variant` distinguishes the AS-SUPPLIED hyperparameters
+        ("protocol_faithful") from any documented substitution this
+        project made for training stability ("stability_adjusted" - see
+        docs/methodological_notes.md #8). Both are real, runnable
+        configurations - never silently pick one and call it "the"
+        VAE-BM result; every persisted run states which variant produced
+        it (see evaluation/runner.py)."""
+        raise NotImplementedError
+
+    def vaebm_variants(self) -> list[str]:
+        """Which variants build_vaebm() actually supports for this
+        protocol - default both. A protocol can override this to add
+        more (e.g. a third "tuned" variant) but must never silently drop
+        "protocol_faithful", even where it is known to diverge - the
+        divergence itself is the result worth recording."""
+        return ["protocol_faithful", "stability_adjusted"]
+
+    def artifact_checksum(self, dataset_id: str) -> str:
+        """A single stable hash identifying the exact dataset artifact
+        this protocol trains on for `dataset_id` - used both for
+        provenance (checks()) and as a run-key component (utils/
+        run_identity.py) so a baseline and VAE-BM run can only ever be
+        paired if they trained on the byte-identical artifact."""
+        raise NotImplementedError
+
+    def preprocessing_version(self, dataset_id: str) -> str:
+        """A short, stable tag identifying the exact preprocessing recipe
+        applied for `dataset_id` (e.g. "topmost_preprocess_v1_vocab10000"
+        or "official_precomputed_artifact_no_preprocessing"). Two runs
+        with a different tag are NOT comparable even if everything else
+        matches, and run_identity.py's run key reflects that."""
+        raise NotImplementedError
+
+    def vocabulary_for(self, dataset_id: str) -> list[str]:
+        """The exact vocabulary (ordered) this protocol's baseline AND
+        VAE-BM both train against for `dataset_id` - both models must use
+        this SAME list, not independently-derived lists that merely have
+        the same size. Used to compute the vocabulary_checksum run-key
+        component and the `vocabulary` ProtocolCheck."""
         raise NotImplementedError
 
     def evaluate(
@@ -151,7 +231,7 @@ class BaselineProtocol:
         eval_documents: Optional[list[str]] = None,
         true_labels: Optional[list[int]] = None,
         reference_corpus: Optional[list[list[str]]] = None,
-    ) -> dict:
+    ) -> tuple[dict, dict]:
         """Computes every metric in self.metric_specs against `model`,
         already fit on `train_documents`. Topic-quality metrics (NPMI/CV/
         Diversity/...) always describe the topics the model learned from
@@ -161,7 +241,14 @@ class BaselineProtocol:
         FASTopic's protocol passes the held-out test split instead - see
         prepare_eval_documents()). Identical code path for the baseline
         and for VAE-BM - the only difference between the two runs is which
-        model was fit, never how it's scored."""
+        model was fit, never how it's scored.
+
+        Returns `(metrics, metric_errors)`. `metrics[name]` is `None` (not
+        omitted) for any OPTIONAL metric that could not be computed (e.g.
+        `cv_palmetto_wikipedia` with no Java/Palmetto installed);
+        `metric_errors[name]` then explains why - see metrics/
+        topic_quality.py's `OPTIONAL_METRICS`. A non-optional metric that
+        fails raises instead of silently degrading the result."""
         from vaebm_benchmark.metrics.clustering_quality import compute_clustering_metrics
         from vaebm_benchmark.metrics.topic_quality import compute_topic_metrics
 
@@ -173,21 +260,50 @@ class BaselineProtocol:
         top_n = self.metric_specs[0].top_n if self.metric_specs else 10
 
         results: dict = {}
+        metric_errors: dict = {}
         if topic_metric_names:
             if reference_corpus is None:
                 reference_corpus = [doc.split() for doc in train_documents]
             topics = model.get_topics(top_n=top_n)
-            results.update(compute_topic_metrics(topics, reference_corpus, topic_metric_names, top_n))
+            topic_values, topic_errors = compute_topic_metrics(topics, reference_corpus, topic_metric_names, top_n)
+            results.update(topic_values)
+            metric_errors.update(topic_errors)
         if clustering_metric_names and true_labels is not None:
             predicted = model.get_document_clusters(eval_documents)
             results.update(compute_clustering_metrics(predicted, true_labels, clustering_metric_names))
-        return results
+        return results, metric_errors
+
+    def checks(self) -> list[ProtocolCheck]:
+        """The one place a protocol declares its own MATCH/DIFFERENCE/
+        UNKNOWN verdicts, as a flat, machine-readable list - subclasses
+        implement this; `verify()` below renders it for humans and
+        computes the aggregate `fair_comparison` boolean automatically, so
+        the two can never drift out of sync with each other."""
+        raise NotImplementedError
 
     def verify(self) -> dict:
-        """Structured self-description for scripts/verify_protocol.py -
-        returns exactly the fields that script prints (paper, repo,
-        dataset, checksum, preprocessing, vocab, K, seeds, metrics,
-        baseline/vaebm implementation) plus a best-effort MATCH/DIFFERENCE/
-        UNKNOWN verdict per field, based on what this protocol actually
-        pinned down vs. left as "unknown/ambiguous in the source paper."""
-        raise NotImplementedError
+        """Structured self-description for scripts/verify_protocol.py:
+        paper, repo, dataset, checksum, preprocessing, vocab, K, seeds,
+        metrics, baseline/vaebm implementation - each derived from
+        checks(), plus the aggregate `fair_comparison` boolean (True only
+        if every single check is MatchStatus.MATCH - see fair_comparison()
+        above). A caller that only reads `fair_comparison` still gets the
+        correct, conservative answer without having to parse prose."""
+        checks = self.checks()
+        return {
+            "paper": self.paper,
+            "official_repository": self.official_repository,
+            "checks": {
+                check.field: {
+                    "detail": check.detail,
+                    "status": check.status.value,
+                    "note": check.note,
+                }
+                for check in checks
+            },
+            "fair_comparison": fair_comparison(checks),
+            "summary": {
+                status.value: sum(1 for c in checks if c.status is status)
+                for status in MatchStatus
+            },
+        }

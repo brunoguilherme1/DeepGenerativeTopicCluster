@@ -33,8 +33,21 @@ glocom = ["torch>=2.0", "topmost>=1.0", "sentence-transformers>=3.0", "scikit-le
 vaebm = ["tensorflow>=2.15", "scikit-learn>=1.3", "sentence-transformers>=3.0"]
 metrics = ["gensim>=4.3", "scikit-learn>=1.3"]
 viz = ["matplotlib>=3.7", "pandas>=2.0", "tabulate>=0.9"]
+# scripts/run_experiment.py: the simplified VAE-BM vs. BERTopic runner.
+# `datasets` is only needed for the HF-backed `imdb` loader.
+experiment = ["bertopic>=0.16", "sentence-transformers>=3.0", "tensorflow>=2.15", "scikit-learn>=1.3",
+              "gensim>=4.3", "pandas>=2.0", "tabulate>=0.9", "datasets>=2.19"]
+# scripts/run_experiment.py --experiment llm_cluster_refinement ONLY.
+# Deliberately its OWN extra, not folded into `experiment` or `all` -
+# bitsandbytes requires a CUDA-capable Linux/Colab environment and
+# should never be forced onto a non-LLM `topic`/`cluster` experiment run
+# (e.g. this project's own macOS development environment, which has no
+# CUDA device and would gain nothing from installing it). Install with:
+#   pip install -e ".[llm]"
+llm = ["transformers>=4.44", "accelerate>=0.33", "bitsandbytes>=0.43", "sentence-transformers>=3.0",
+       "torch>=2.0", "scikit-learn>=1.3", "gensim>=4.3"]
 dev = ["pytest>=7.4"]
-all = ["vaebm-benchmark[fastopic,glocom,vaebm,metrics,viz,dev]"]
+all = ["vaebm-benchmark[fastopic,glocom,vaebm,metrics,viz,experiment,dev]"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -220,3 +220,18 @@ class GloCOMAdapter(ProtocolModelAdapter):
     def get_document_clusters(self, documents: list[str]) -> list[int]:
         doc_topics = self.get_document_topics(documents)
         return [int(i) for i in np.argmax(doc_topics, axis=1)]
+
+    def get_document_embeddings(self, documents: list[str]) -> Optional[np.ndarray]:
+        """The SBERT encoder used to build the "global clustering
+        context" - a preprocessing utility of GloCOM's own pipeline, not
+        a representation specific to its topic-discovery mechanism, but
+        a direct native output (same caveat as fastopic_adapter.py's).
+        `fit_precomputed()` (the official-artifact GloCOM protocol path)
+        never sets `self._encoder`, since it needs no SBERT step at all
+        (the global context is already precomputed) - constructed lazily
+        here so this method still works in that case."""
+        if self._encoder is None:
+            from sentence_transformers import SentenceTransformer
+
+            self._encoder = SentenceTransformer(self.embedding_model_name)
+        return self._encoder.encode(list(documents), show_progress_bar=False)

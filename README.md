@@ -131,3 +131,30 @@ small official dataset, **one** baseline seed, **one** VAE-BM seed - a
 smoke test, per this project's own instructions, not a full experiment
 sweep. Expand datasets/seeds only after confirming the smoke test
 reproduces sane, non-degenerate results for both systems.
+
+## Additional experiment runner: `scripts/run_experiment.py`
+
+A separate, simpler runner - independent of the paper-fidelity
+`protocols/*.py` track above - for direct model-vs-model comparisons on
+shared corpora (not a specific paper's own pinned artifact/split). Three
+modes:
+
+- `--experiment topic` (default): VAE-BM vs. BERTopic topic-quality
+  comparison (C_V, Purity, NMI, TD) at requested K values.
+- `--experiment cluster`: pure clustering-quality comparison (ACC via
+  Hungarian-matched accuracy, NMI) across any registered model
+  (`vaebm`, `bertopic`, `fastopic`, `glocom`) that exposes hard document
+  clusters - K is always the dataset's own number of ground-truth
+  classes, never independently tuned.
+- `--experiment llm_cluster_refinement`: an LLM-based post-clustering
+  refinement stage (LLMEdgeRefine-style) applied on top of the same hard
+  clusters `cluster` mode produces - before/after ACC/NMI/ARI/AMI/Purity
+  plus Silhouette/Davies-Bouldin/Calinski-Harabasz. Requires a GPU
+  runtime for real use (4-bit Mistral-7B via `pip install -e ".[llm]"`);
+  see `notebooks/LLM_Cluster_Refinement_Colab.ipynb` and
+  `src/vaebm_benchmark/llm/*.py`'s module docstrings for the full design
+  (edge-point detection, candidate-cluster selection, cluster-context
+  construction, deterministic prompting/parsing, conservative
+  reassignment, persistent decision cache, `--resume` support).
+
+Run `python scripts/run_experiment.py --help` for the full flag list.

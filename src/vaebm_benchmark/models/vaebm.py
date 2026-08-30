@@ -33,6 +33,8 @@ from tensorflow.keras.optimizers import Adam
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.cluster import KMeans
 
+from vaebm_benchmark.models._vaebm_topic_scoring import energy_scores
+
 try:
     from sentence_transformers import SentenceTransformer
 except Exception:  # pragma: no cover - optional dependency
@@ -269,14 +271,35 @@ class VaeBmKMeansFit:
         purely a preprocessing-matching hook for protocol fidelity (see
         protocols/*.py), not a change to the model's math: sklearn's
         vectorizers accept a fixed `vocabulary=` natively, and everything
-        downstream (X_bow shape/values) is unaffected either way."""
-        vectorizer_kwargs = {"vocabulary": list(vocabulary)} if vocabulary is not None else {"max_features": self.voc_size}
+        downstream (X_bow shape/values) is unaffected either way.
+
+        When `vocabulary` is given, `tokenizer=str.split` and
+        `lowercase=False` are ALSO forced (not sklearn's own defaults) -
+        the released artifacts this is used against (GloCOM's texts.txt,
+        FASTopic/topmost's train_texts.txt) are already tokenized/
+        lowercased/filtered exactly once, via simple whitespace-split, to
+        build their own official count matrices. sklearn's default
+        tokenizer is a DIFFERENT regex (`\\b\\w\\w+\\b` - drops
+        single-character tokens, splits on punctuation/underscores
+        differently) that could silently undercount some vocabulary
+        entries relative to the official artifact even with the same
+        `vocabulary=` list - this makes the resulting BoW counts
+        PROVABLY identical to the official ones (same tokenization
+        rule, same fixed vocabulary), not merely "should be equivalent."
+        See protocols/*.py `vocabulary_for()`/checks() for how this is
+        surfaced as a MATCH rather than assumed."""
+        if vocabulary is not None:
+            vectorizer_kwargs = {"vocabulary": list(vocabulary), "tokenizer": str.split, "lowercase": False, "token_pattern": None}
+        else:
+            vectorizer_kwargs = {"max_features": self.voc_size}
         if vectorizer_type == "tfidf":
             self.vectorizer = TfidfVectorizer(norm=None, **vectorizer_kwargs)
             X = self.vectorizer.fit_transform(texts)
             X = X.tocoo(copy=False); X.data = np.log1p(X.data); X = X.tocsr()
         else:
-            self.vectorizer = CountVectorizer(stop_words="english" if vocabulary is None else None, **vectorizer_kwargs)
+            if vocabulary is None:
+                vectorizer_kwargs["stop_words"] = "english"
+            self.vectorizer = CountVectorizer(**vectorizer_kwargs)
             X = self.vectorizer.fit_transform(texts)
         X_bow = X.toarray().astype(np.float32)
 
@@ -424,14 +447,15 @@ class VaeBmKMeansFit:
             top_words_freq.append(vocab[top_idx_freq].tolist())
 
             logits_k = h_k @ R.T + b
-
             mask_k = (X_k.toarray() > 0).astype(np.float32)
-            logits_k *= mask_k
+            # See _vaebm_topic_scoring.energy_scores's docstring for why
+            # never-observed words are forced to -inf rather than left at
+            # the 0 that plain mask multiplication would give them - a
+            # topic-word DISPLAY/ranking fix, not a change to the trained
+            # model's parameters, ELBO, or KMeans clusters.
+            scores = energy_scores(logits_k, mask_k, counts_k)
 
-            scores = logits_k.sum(axis=0)
-            scores = np.asarray(scores).ravel()
-
-            if np.all(scores == 0):
+            if not np.any(np.isfinite(scores)):
                 empty_clusters += 1
                 continue
 

@@ -1,0 +1,3 @@
+experiment,model,dataset,seed,requested_k,actual_k,num_classes,acc,nmi,runtime_seconds,status,error
+cluster,vaebm,search_snippets,42,8,8,8,0.6404376012965964,0.44033843957390006,89.364,ok,
+cluster,bertopic,search_snippets,42,8,8,8,0.7991085899513777,0.6648333598146912,29.455,ok,

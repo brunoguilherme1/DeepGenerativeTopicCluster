@@ -41,8 +41,49 @@ class SearchSnippetsDataset(LabelTabTextDataset):
     _source_path = "search_text.txt"
 
 
+class AGNewsShortDataset(LabelTabTextDataset):
+    """8,000-doc short-text-clustering subsample (4 classes:
+    World/Sports/Business/Sci-Tech) - distinct from the full 127,600-doc
+    AG News classification benchmark (`agnews_full`, HuggingFace
+    fancyzhx/ag_news), same underlying corpus, different standard cut."""
+
+    dataset_id = "agnews_short"
+    _source_path = "agnewsdataraw-8000"
+
+
+class GoogleNewsTitleSnippetDataset(LabelTabTextDataset):
+    """Title+Snippet view (152 classes) - the default "GoogleNews" view."""
+
+    dataset_id = "google_news_ts"
+    _source_path = "TS"
+
+
+class GoogleNewsTitleDataset(LabelTabTextDataset):
+    """Title-only view of the same 152-class GoogleNews corpus."""
+
+    dataset_id = "google_news_t"
+    _source_path = "T"
+
+
+class GoogleNewsSnippetDataset(LabelTabTextDataset):
+    """Snippet-only view of the same 152-class GoogleNews corpus."""
+
+    dataset_id = "google_news_s"
+    _source_path = "S"
+
+
+class TweetDataset(LabelTabTextDataset):
+    dataset_id = "tweet"
+    _source_path = "tweet-original-order.txt"
+
+
 DATASETS = {
     "stack_overflow": StackOverflowDataset,
     "biomedical": BiomedicalDataset,
     "search_snippets": SearchSnippetsDataset,
+    "agnews_short": AGNewsShortDataset,
+    "google_news_ts": GoogleNewsTitleSnippetDataset,
+    "google_news_t": GoogleNewsTitleDataset,
+    "google_news_s": GoogleNewsSnippetDataset,
+    "tweet": TweetDataset,
 }

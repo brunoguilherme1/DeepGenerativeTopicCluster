@@ -29,7 +29,7 @@ import numpy as np
 
 from vaebm_benchmark.datasets.download_utils import save_url
 from vaebm_benchmark.utils.paths import RAW_DIR
-from vaebm_benchmark.utils.provenance import verify_manifest, write_manifest
+from vaebm_benchmark.utils.provenance import sha256_of, verify_manifest, write_manifest
 
 GLOCOM_COMMIT = "4094055b9e2d0169b0aa75d5aed7220e9509f0de"
 GLOCOM_BASE_URL = f"https://raw.githubusercontent.com/qducnguyen/GloCOM/{GLOCOM_COMMIT}/data/SearchSnippets"
@@ -43,6 +43,23 @@ _FILES = {
     "word_embeddings.npz": "word_embeddings.npz",
     "global/global_bow.npz": "global_bow.npz",
     "global/global_maps.txt": "global_maps.txt",
+}
+
+# Expected SHA256 per local filename, pinned to GLOCOM_COMMIT above -
+# enforced at download time (fail loud on mismatch), not just recorded
+# after the fact. This is a genuinely stronger provenance guarantee than
+# a manifest written from whatever bytes happened to arrive: it catches
+# "the upstream file changed since this commit was pinned" as well as
+# "the local copy was corrupted/tampered with," not only the latter. See
+# docs/repository_comparison_report.md for why this was adopted.
+EXPECTED_SHA256 = {
+    "bow.npz": "5ecccc489f1f2f400e486addacb43959609c2b3382a7e929903c6605048780cf",
+    "global_bow.npz": "860a2792c5fa67d7efa7ff17cb3fc22ff04e521317cb530d13e3a8da9154d57c",
+    "global_maps.txt": "a356c763e9b66ba60bf465177ce2cea7c6351ef966843b68ab13d754f1205fd0",
+    "labels.txt": "04dc5dc232371196de0902128d9c084d8ef035aa7df1692a0d9eb1a00e93e290",
+    "texts.txt": "c60fb42d1fb43fe82732b4f88d66d80005aeb33f3621cc56ba4d3d5ac547a748",
+    "vocab.txt": "a4f724b16394602a8d66c59dadd1286291a70f24ce70ad0b3160a084aa717274",
+    "word_embeddings.npz": "3d9a44dbf05c6096f12d6c46d093f09d4f25ed4da3af74d3292947c9847ea13a",
 }
 
 
@@ -74,7 +91,17 @@ class GloCOMOfficialSearchSnippets:
         if manifest_path.exists() and not force:
             return
         for repo_relpath, local_name in _FILES.items():
-            save_url(f"{GLOCOM_BASE_URL}/{repo_relpath}", self.raw_dir() / local_name)
+            dest = self.raw_dir() / local_name
+            save_url(f"{GLOCOM_BASE_URL}/{repo_relpath}", dest)
+            expected = EXPECTED_SHA256.get(local_name)
+            if expected is not None:
+                actual = sha256_of(dest)
+                if actual != expected:
+                    raise ValueError(
+                        f"{local_name}: downloaded SHA256 {actual} does not match the hash "
+                        f"pinned to commit {GLOCOM_COMMIT} ({expected}) - the upstream file may "
+                        f"have changed, or the download was corrupted. Refusing to proceed silently."
+                    )
         write_manifest(self.raw_dir(), extra={"source_commit": GLOCOM_COMMIT, "source_base_url": GLOCOM_BASE_URL})
 
     def verify(self) -> tuple[bool, list[str]]:

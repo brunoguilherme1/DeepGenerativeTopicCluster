@@ -106,3 +106,11 @@ class VAEBMAdapter(ProtocolModelAdapter):
 
     def get_mu(self, documents: list[str]) -> np.ndarray:
         return self.get_document_topics(documents)
+
+    def get_document_embeddings(self, documents: list[str]) -> Optional[np.ndarray]:
+        """VAE-BM's native representation is its latent mu - the same
+        value get_document_topics()/get_mu() return, exposed here too
+        under the common cross-model interface (models/base.py) that
+        experiment/llm_refinement_runner.py's `--edge-representation
+        native` relies on."""
+        return self.get_document_topics(documents)
