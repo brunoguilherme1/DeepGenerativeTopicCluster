@@ -256,6 +256,13 @@ class VaeBmKMeansFit:
         epochs: int = 30,
         batch_size: int = 128,
         lr: float = 1e-2,
+        # 0: silent (no training output at all - only the caller's own
+        # final result table prints). 1: one concise summary line per
+        # fit_predict() call (dataset size, vectorizer/embedder, epochs
+        # actually run, final loss). 2: everything Keras itself reports -
+        # a per-epoch progress bar plus the EarlyStopping/ModelCheckpoint
+        # callbacks' own verbose logging.
+        verbose: int = 1,
     ):
         self.voc_size = voc_size
         self.units = units
@@ -264,6 +271,7 @@ class VaeBmKMeansFit:
         self.epochs = epochs
         self.batch_size = batch_size
         self.lr = lr
+        self.verbose = verbose
 
         self.vectorizer: Optional[Union[TfidfVectorizer, CountVectorizer]] = None
         self.model: Optional[VAEBM] = None
@@ -376,15 +384,23 @@ class VaeBmKMeansFit:
         # change to the model's math - see docs/methodological_notes.md.
         run_ckpt_dir = checkpoint_dir or tempfile.mkdtemp(prefix="vaebm_ckpt_")
         ckpt_path = f"{run_ckpt_dir}/vaebm_best.weights.h5"
+        keras_verbose = 1 if self.verbose >= 2 else 0
         callbacks = [
-            tf.keras.callbacks.EarlyStopping(monitor="loss", patience=1, restore_best_weights=True, mode="min", verbose=1),
+            tf.keras.callbacks.EarlyStopping(monitor="loss", patience=1, restore_best_weights=True, mode="min", verbose=keras_verbose),
             tf.keras.callbacks.ModelCheckpoint(filepath=ckpt_path, monitor="loss", save_best_only=True,
-                                               save_weights_only=True, mode="min", verbose=1),
+                                               save_weights_only=True, mode="min", verbose=keras_verbose),
             tf.keras.callbacks.TerminateOnNaN(),
         ]
-        self.model.fit([X_bow, E], X_bow,
+        history = self.model.fit([X_bow, E], X_bow,
                        epochs=self.epochs, batch_size=self.batch_size,
-                       shuffle=True, callbacks=callbacks, verbose=1)
+                       shuffle=True, callbacks=callbacks, verbose=keras_verbose)
+
+        if self.verbose >= 1:
+            loss_history = history.history.get("loss", [])
+            embedder_label = embedder if isinstance(embedder, str) else "precomputed"
+            final_loss = f"{loss_history[-1]:.4f}" if loss_history else "n/a"
+            print(f"[VAE-BM] docs={len(texts)} voc={X_bow.shape[1]} vectorizer_type={vectorizer_type} "
+                  f"embedder={embedder_label} epochs_run={len(loss_history)}/{self.epochs} final_loss={final_loss}")
 
         # EarlyStopping(restore_best_weights=True) already restored the
         # in-memory model to its best epoch; reloading from disk here is

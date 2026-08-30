@@ -33,6 +33,7 @@ class VAEBMAdapter(ProtocolModelAdapter):
         alpha: float = 0.99,
         top_words_mode: str = "energy",  # "energy" or "freq" - which view get_topics() returns
         vocabulary: Optional[list] = None,  # fixes the exact vocab (protocol fidelity) - see vaebm.py fit_predict
+        verbose: int = 1,  # 0: silent, 1: one concise summary line, 2: full Keras per-epoch output - see vaebm.py VaeBmKMeansFit
     ) -> None:
         self.n_clusters = n_clusters
         self.vectorizer_type = vectorizer_type
@@ -51,6 +52,7 @@ class VAEBMAdapter(ProtocolModelAdapter):
             epochs=epochs,
             batch_size=batch_size,
             lr=lr,
+            verbose=verbose,
         )
         self._train_documents: Optional[list[str]] = None
         self._mu_train: Optional[np.ndarray] = None

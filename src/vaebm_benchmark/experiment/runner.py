@@ -15,7 +15,7 @@ and any number of additional named VAE-BM configurations registered at
 run time via `register_vaebm_variants()` (see `--vaebm-configs` in
 scripts/run_experiment.py) - each an arbitrary set of VAEBMAdapter
 constructor overrides (alpha, units, dim, dim_emb, epochs, batch_size,
-lr, vectorizer_type, embedder, top_words_mode - anything VAEBMAdapter's
+lr, vectorizer_type, embedder, top_words_mode, verbose - anything VAEBMAdapter's
 own `__init__` accepts except n_clusters/voc_size/random_state, which
 stay controlled by this runner's own --k/--voc-size/--seed for every
 model uniformly). This is what lets a single run compare 5, 10, or more
@@ -75,6 +75,7 @@ _VAEBM_DEFAULTS = dict(
     dim_emb=(368,),
     alpha=0.99,
     top_words_mode="energy",
+    verbose=1,
 )
 
 # Experiment-level, never per-variant: every model in a sweep gets the

@@ -340,10 +340,18 @@ def main() -> None:
              "'vectorizer_type' itself.",
     )
     parser.add_argument(
+        "--vaebm-verbose", type=int, default=None, choices=[0, 1, 2],
+        help="Topic experiment only: VAE-BM training output. 0: silent - only this script's own final result "
+             "table prints. 1 (VAEBMAdapter's own default): one concise summary line per fit (dataset size, "
+             "vectorizer_type/embedder, epochs run, final loss). 2: full Keras per-epoch progress plus the "
+             "EarlyStopping/ModelCheckpoint callbacks' own logging. Applies to EVERY vaebm-family model unless a "
+             "--vaebm-configs variant overrides 'verbose' itself.",
+    )
+    parser.add_argument(
         "--vaebm-configs", default=None,
         help="Topic experiment only: define any number of named VAE-BM configurations, each an arbitrary set of "
              "VAEBMAdapter overrides (alpha, units, dim, dim_emb, epochs, batch_size, lr, vectorizer_type, embedder, "
-             "top_words_mode - anything VAEBMAdapter's own __init__ accepts, except n_clusters/voc_size/random_state, "
+             "top_words_mode, verbose - anything VAEBMAdapter's own __init__ accepts, except n_clusters/voc_size/random_state, "
              "which stay controlled by --k/--voc-size/--seed for every model). Accepts either a literal JSON object "
              "or a path to a .json/.yaml/.yml file, e.g. "
              '\'{"vaebm_a05": {"alpha": 0.5}, "vaebm_deep": {"alpha": 0.9, "units": 100}}\' '
@@ -389,10 +397,10 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    if args.vaebm_embedder or args.vaebm_vectorizer_type or args.vaebm_configs:
+    if args.vaebm_embedder or args.vaebm_vectorizer_type or args.vaebm_verbose is not None or args.vaebm_configs:
         if args.experiment != "topic":
             raise SystemExit(
-                "--vaebm-embedder/--vaebm-vectorizer-type/--vaebm-configs are topic-experiment only "
+                "--vaebm-embedder/--vaebm-vectorizer-type/--vaebm-verbose/--vaebm-configs are topic-experiment only "
                 "(cluster/llm_cluster_refinement have their own VAE-BM builder)"
             )
         from vaebm_benchmark.experiment.runner import register_vaebm_variants, set_vaebm_defaults
@@ -402,6 +410,8 @@ def main() -> None:
             defaults["embedder"] = args.vaebm_embedder
         if args.vaebm_vectorizer_type:
             defaults["vectorizer_type"] = args.vaebm_vectorizer_type
+        if args.vaebm_verbose is not None:
+            defaults["verbose"] = args.vaebm_verbose
         if defaults:
             set_vaebm_defaults(**defaults)
 
