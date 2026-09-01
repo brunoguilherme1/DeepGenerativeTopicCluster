@@ -33,6 +33,14 @@ fastopic = ["fastopic>=1.0", "topmost>=1.0", "sentence-transformers>=3.0", "scik
 # in models/_glocom_source.py; topmost's BasicTrainer runs it, torch is
 # its own compute backend, sentence-transformers builds the global
 # clustering context.
+#
+# Deliberately unbounded here (same reasoning as numpy above - a cap risks
+# a multi-minute resolver backtrack on Colab, and Colab's own preinstalled
+# torch/CUDA pairing already works). On a SLURM/GPU cluster where the
+# driver's supported CUDA version is older than whatever torch build pip
+# would otherwise resolve to, install a matching CUDA-specific torch wheel
+# FIRST (before this extra) so pip's resolver sees it already satisfied and
+# leaves it alone - see docs/slurm_gpu_setup.md, not a pyproject.toml change.
 glocom = ["torch>=2.0", "topmost>=1.0", "sentence-transformers>=3.0", "scikit-learn>=1.3"]
 # VAE-BM: TF/Keras model given as-is by the user, BoW via scikit-learn,
 # sentence embeddings via sentence-transformers.
@@ -43,6 +51,18 @@ viz = ["matplotlib>=3.7", "pandas>=2.0", "tabulate>=0.9"]
 # `datasets` is only needed for the HF-backed `imdb` loader.
 experiment = ["bertopic>=0.16", "sentence-transformers>=3.0", "tensorflow>=2.15", "scikit-learn>=1.3",
               "gensim>=4.3", "pandas>=2.0", "tabulate>=0.9", "datasets>=2.19"]
+# scripts/run_experiment.py's `topic` experiment restricted to sbert_kmeans/
+# bertopic models (NOT vaebm/vaebm_* - those still need `experiment` above,
+# for tensorflow) - identical to `experiment` minus tensorflow, which
+# `vaebm.py` imports at module level but sbert_kmeans_adapter.py/
+# bertopic_adapter.py never do. Meaningfully lighter to install (skips a
+# ~500MB wheel with its own nvidia-cu* CUDA runtime deps that can conflict
+# with a hand-picked torch CUDA build on a SLURM/GPU cluster - see
+# docs/slurm_gpu_setup.md) and avoids installing tensorflow at all for a
+# pure SBERT-vs-BERTopic comparison, e.g.:
+#   pip install -e ".[sbert_experiment]"
+sbert_experiment = ["bertopic>=0.16", "sentence-transformers>=3.0", "scikit-learn>=1.3",
+                    "gensim>=4.3", "pandas>=2.0", "tabulate>=0.9", "datasets>=2.19"]
 # scripts/run_experiment.py --experiment llm_cluster_refinement ONLY.
 # Deliberately its OWN extra, not folded into `experiment` or `all` -
 # bitsandbytes requires a CUDA-capable Linux/Colab environment and
@@ -50,6 +70,9 @@ experiment = ["bertopic>=0.16", "sentence-transformers>=3.0", "tensorflow>=2.15"
 # (e.g. this project's own macOS development environment, which has no
 # CUDA device and would gain nothing from installing it). Install with:
 #   pip install -e ".[llm]"
+#
+# Unbounded torch here too, same reasoning as `glocom` above - see
+# docs/slurm_gpu_setup.md for the SLURM-specific install order.
 llm = ["transformers>=4.44", "accelerate>=0.33", "bitsandbytes>=0.43", "sentence-transformers>=3.0",
        "torch>=2.0", "scikit-learn>=1.3", "gensim>=4.3"]
 dev = ["pytest>=7.4"]
