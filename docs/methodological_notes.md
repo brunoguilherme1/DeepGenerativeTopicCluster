@@ -232,7 +232,14 @@ What `ecrtm_hicot` DOES change, all in `experiment/runner.py::run_single()`:
   in the printed table) - it is never silently replaced with the local-
   corpus number under the same `cv` column, matching how
   `glocom_protocol.py` already treats this same distinction (see #5
-  above).
+  above). Run `python scripts/setup_palmetto.py` to install both (the
+  jar - ~5.9MB, checked into `HoangTran223/HiCOT`'s own repo directly -
+  and the Wikipedia_bd coherence index - ~5.1GB compressed, official
+  DICE/AKSW host, verified reachable before that script was written) at
+  exactly the paths `metrics/palmetto.py`'s own `DEFAULT_JAR`/
+  `DEFAULT_WIKI_INDEX` expect; idempotent, prints a step-by-step debug
+  trail throughout since it is meant to run unattended on a Colab/SLURM
+  session.
 - **TD via the fixed-K*15-denominator Dieng definition**
   (`metrics/topic_quality.py::topic_diversity_dieng_fixed_k`), not the
   pre-existing `topic_diversity()`. The two diverge whenever a model
