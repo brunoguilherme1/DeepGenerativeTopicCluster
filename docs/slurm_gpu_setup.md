@@ -229,3 +229,22 @@ handling doesn't automatically get.
 - This doc does not cover SLURM job-script/`sbatch` GPU allocation itself
   (`--gres=gpu:1`, etc.) - it assumes a job/session that already has a GPU
   allocated and visible to `nvidia-smi`.
+
+## Palmetto (`--protocol ecrtm_hicot`'s C_V) needs real disk planning
+
+`scripts/setup_palmetto.py` downloads a ~5.1GB-compressed Wikipedia
+coherence index (official DICE/AKSW host) plus a small jar - without it,
+`--protocol ecrtm_hicot` runs correctly but reports C_V as `N/A`
+everywhere (see `docs/methodological_notes.md` #10). Budget for it
+explicitly on a SLURM node with a disk quota: the script needs roughly
+2x the zip size free at peak (the zip plus its extracted contents,
+before the zip is deleted) - check with `df -h` first. If your `$HOME`
+quota is tight, point the extraction at scratch/local storage instead of
+the repo's own `tools/palmetto/` (e.g. a symlink from `tools/palmetto/`
+to a scratch path with more headroom) rather than letting the download
+fail partway through.
+
+```bash
+python scripts/setup_palmetto.py           # ~5.1GB download + extraction, one-time
+python scripts/check_gpu.py                # unrelated, but worth re-running after any big install step
+```
