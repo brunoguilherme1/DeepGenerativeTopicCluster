@@ -16,3 +16,9 @@ data/processed/
 # committed, in results/<protocol>/protocol.json).
 *.weights.h5
 vaebm_training.csv
+
+# Real Palmetto + the Wikipedia_bd coherence index (scripts/
+# setup_palmetto.py) - a ~5.9MB jar plus a ~5.1GB-compressed external
+# download, never meant to be committed. metrics/palmetto.py's own
+# DEFAULT_JAR/DEFAULT_WIKI_INDEX point here.
+tools/palmetto/

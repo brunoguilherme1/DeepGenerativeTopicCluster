@@ -459,10 +459,10 @@ def main() -> None:
              "unchanged - top_n=10, C_V via gensim against the local training corpus. 'ecrtm_hicot' aligns metric "
              "computation with ECRTM (Wu et al., ICML 2023) and HiCOT (2025) as closely as possible: top_n=15, C_V "
              "via Palmetto/Wikipedia only (recorded as None/N/A if the jar/Wikipedia index are absent - never "
-             "silently substituted with the local-corpus number), TD via the fixed-K*15-denominator Dieng "
-             "definition. Datasets and preprocessing are NOT changed by this flag - this is metric-level alignment "
-             "only, not a claim of exact reproduction. See experiment/runner.py's own docstring and "
-             "docs/methodological_notes.md #10.",
+             "silently substituted with the local-corpus number; run `python scripts/setup_palmetto.py` once to "
+             "install both), TD via the fixed-K*15-denominator Dieng definition. Datasets and preprocessing are "
+             "NOT changed by this flag - this is metric-level alignment only, not a claim of exact reproduction. "
+             "See experiment/runner.py's own docstring and docs/methodological_notes.md #10.",
     )
     parser.add_argument(
         "--svm-kernel", default="linear",
