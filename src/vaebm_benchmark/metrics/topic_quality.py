@@ -52,6 +52,28 @@ def topic_diversity(topics: list[list[str]], top_n: int = 10) -> float:
     return len(unique_words) / total_slots
 
 
+def topic_diversity_dieng_fixed_k(topics: list[list[str]], k: int, top_n: int = 15) -> float:
+    """Dieng, Ruiz & Blei (2020) TD, exactly as ECRTM (Wu et al., ICML
+    2023) and HiCOT (2025) report it: unique words across all topics,
+    divided by the FIXED denominator K*top_n - not `topic_diversity()`
+    above's denominator (sum of each topic's ACTUALLY returned word
+    count). The two only diverge when a model returns fewer than K
+    topics, or a topic's word list is empty/shorter than top_n (e.g. a
+    degenerate/collapsed cluster with no distinguishing words) -
+    `topic_diversity()` silently shrinks its own denominator to
+    compensate, which understates how badly topic collapsing hurts
+    diversity relative to the papers' own definition. `topics` need not
+    have exactly `k` entries (e.g. VAE-BM's own topic-word extraction
+    omits empty clusters rather than returning `[]` for them) - the
+    missing entries correctly contribute zero unique words without
+    inflating the score, which is the point of fixing the denominator at
+    K*top_n instead of deriving it from `topics` itself."""
+    truncated = [words[:top_n] for words in topics]
+    unique_words = {w for words in truncated for w in words}
+    denominator = k * top_n
+    return len(unique_words) / denominator if denominator else 0.0
+
+
 def topic_diversity_glocom(topics: list[list[str]], top_n: int = 10) -> float:
     """GloCOM's own TD implementation (`evaluations/topic_diversity.py::
     compute_TD` in the official repo, github.com/qducnguyen/GloCOM) -

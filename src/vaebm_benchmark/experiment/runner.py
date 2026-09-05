@@ -30,6 +30,35 @@ CV/TD columns - chosen as the primary, fixed definition per this
 project's own instructions ("choose one primary method and keep it fixed
 across all experiments"). The frequency view is also computed and saved
 in each result's raw JSON, but never used in the printed table.
+
+`--protocol ecrtm_hicot` (see scripts/run_experiment.py): an OPTIONAL
+metric-computation mode aligning topic_evaluation with ECRTM (Wu et al.,
+ICML 2023) and HiCOT (2025) as closely as possible WITHOUT touching
+datasets or preprocessing (neither paper's exact dataset artifact/
+preprocessing pipeline is reproduced here - see
+docs/methodological_notes.md #10): top_n=15 (both papers'), C_V via
+Palmetto/Wikipedia only (`metrics/palmetto.py::palmetto_cv` - recorded as
+None, never silently substituted with the local-corpus gensim C_V, if
+Palmetto is unavailable), and TD via the fixed-K*top_n-denominator Dieng
+definition (`topic_diversity_dieng_fixed_k`). The default `protocol=
+"generic"` reproduces this runner's original behavior byte-for-byte
+(top_n=10, local-corpus C_V, the original `topic_diversity()`) - passing
+`--protocol ecrtm_hicot` never changes a "generic" run's own numbers.
+
+Every result also now records `assignment_source` (how document clusters
+were assigned) and `topic_source` (where get_topics() words came from) -
+independent of `protocol`, since these describe what a model actually
+does, not a metric-computation choice. `assignment_source` is
+"kmeans_on_latent_mu" for VAE-BM and "kmeans_on_embeddings" for
+sbert_kmeans/bertopic - NEVER "argmax_theta" for any of these three,
+even though VAEBMAdapter's own `get_document_topics()` always returns
+something (mu, reused there as a storage slot for other callers) rather
+than None: `_assignment_source_for_model()` gates on the MODEL NAME, not
+on whether `get_document_topics()` happens to return non-None, so mu is
+never mistaken for a genuine theta. "argmax_theta" is reserved for a
+model this repo has no explicit knowledge of yet (e.g. a future real
+ECRTM baseline) whose `get_document_topics()` returns an actual
+probability-simplex distribution.
 """
 
 from __future__ import annotations
@@ -38,6 +67,8 @@ import time
 import traceback
 from dataclasses import asdict, dataclass, field
 from typing import Optional
+
+import numpy as np
 
 
 @dataclass
@@ -55,6 +86,18 @@ class ExperimentResult:
     error: str = ""
     topics_energy: list = field(default_factory=list)
     topics_freq: list = field(default_factory=list)
+    # Paper-alignment metadata - see this module's own docstring and
+    # docs/methodological_notes.md #10. `evaluation_protocol`/`top_n`/
+    # `cv_source`/`td_definition` describe how CV/TD were computed for
+    # THIS result (vary with the `protocol` argument to run_single());
+    # `assignment_source`/`topic_source` describe what the model itself
+    # does (fixed per model, independent of `protocol`).
+    evaluation_protocol: str = "generic"
+    top_n: int = 10
+    cv_source: str = "cv_local_corpus"
+    td_definition: str = "unique_over_returned_slots"
+    assignment_source: str = ""
+    topic_source: str = ""
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -231,12 +274,60 @@ def _build_model(model_name: str, k: int, seed: int, voc_size: int):
     raise KeyError(f"Unknown model '{model_name}'. Available: {', '.join(KNOWN_MODELS)}")
 
 
-def run_single(model_name: str, dataset_id: str, k: int, seed: int = 42, voc_size: int = 5000) -> ExperimentResult:
+def _assignment_source_for_model(model_name: str) -> str:
+    """The known-model-family gate run_single() uses to decide clustering
+    assignment - see its own comment on why this is a name-based lookup,
+    not a check on what get_document_topics() returns. "unknown" for any
+    model name not one of vaebm/bertopic/sbert_kmeans (or a registered
+    variant of one) - the only case run_single() will actually try
+    get_document_topics()/argmax for. Keyed by model family, not
+    introspectable generically: "the geometric space KMeans clustered in"
+    is a fact about each adapter's own fit() (VAE-BM's latent mu vs. a
+    plain/UMAP-reduced sentence embedding), not something derivable from
+    the adapter interface alone."""
+    if model_name == "vaebm" or model_name in _VAEBM_VARIANT_OVERRIDES:
+        return "kmeans_on_latent_mu"
+    if model_name == "sbert_kmeans" or model_name in _SBERT_KMEANS_VARIANT_OVERRIDES or model_name == "bertopic":
+        return "kmeans_on_embeddings"
+    return "unknown"
+
+
+def _topic_source_for_model(model_name: str) -> str:
+    """"native" if get_topics() is the model's own learned/native output
+    (VAE-BM's decoder energy/freq view, BERTopic's own c-TF-IDF);
+    "cluster-derived" for sbert_kmeans, whose words are computed here
+    from cluster membership via class-based TF-IDF - see
+    models/sbert_kmeans_adapter.py's own module docstring."""
+    if model_name == "sbert_kmeans" or model_name in _SBERT_KMEANS_VARIANT_OVERRIDES:
+        return "cluster-derived"
+    return "native"
+
+
+def run_single(
+    model_name: str, dataset_id: str, k: int, seed: int = 42, voc_size: int = 5000, protocol: str = "generic"
+) -> ExperimentResult:
     from vaebm_benchmark.datasets.simple_registry import load_dataset
     from vaebm_benchmark.metrics.clustering_quality import nmi as compute_nmi
     from vaebm_benchmark.metrics.clustering_quality import purity as compute_purity
-    from vaebm_benchmark.metrics.topic_quality import coherence, topic_diversity
+    from vaebm_benchmark.metrics.palmetto import PalmettoUnavailable, palmetto_cv
+    from vaebm_benchmark.metrics.topic_quality import coherence, topic_diversity, topic_diversity_dieng_fixed_k
     from vaebm_benchmark.utils.seeding import set_all_seeds
+
+    if protocol not in ("generic", "ecrtm_hicot"):
+        raise ValueError(f"Unknown protocol '{protocol}'. Available: generic, ecrtm_hicot")
+
+    # top_n/cv_source/td_definition are the ONLY things `protocol` changes;
+    # everything else (dataset, preprocessing, model, K) is identical
+    # either way - see this module's own docstring and
+    # docs/methodological_notes.md #10.
+    if protocol == "ecrtm_hicot":
+        top_n = 15
+        cv_source = "palmetto_wikipedia"
+        td_definition = "dieng_unique_words_top15"
+    else:
+        top_n = 10
+        cv_source = "cv_local_corpus"
+        td_definition = "unique_over_returned_slots"
 
     start = time.perf_counter()
     try:
@@ -246,20 +337,54 @@ def run_single(model_name: str, dataset_id: str, k: int, seed: int = 42, voc_siz
         model = _build_model(model_name, k, seed, voc_size)
         model.fit(documents)
 
-        topics_energy = model.get_topics(top_n=10)
-        topics_freq = model.get_topics_both_views(top_n=10)["freq"] if hasattr(model, "get_topics_both_views") else []
-        clusters = model.get_document_clusters(documents)
+        topics_energy = model.get_topics(top_n=top_n)
+        topics_freq = model.get_topics_both_views(top_n=top_n)["freq"] if hasattr(model, "get_topics_both_views") else []
 
-        reference_corpus = [doc.split() for doc in documents]
+        # Assignment: argmax(theta) ONLY for a model this repo has no
+        # explicit knowledge about (_assignment_source_for_model returns
+        # "unknown") AND whose get_document_topics() actually returns
+        # something. This is NOT a generic "is get_document_topics() not
+        # None" check - VAEBMAdapter.get_document_topics() ALWAYS returns
+        # mu (never None; it's reused as the storage slot for
+        # get_mu()/get_document_embeddings() elsewhere in this codebase),
+        # even though mu is explicitly NOT a topic distribution (see
+        # docs/methodological_notes.md #1) - treating that as theta would
+        # be exactly the "pretend mu is theta" mistake this must avoid.
+        # Gating on the known-model-family check below guarantees VAE-BM/
+        # BERTopic/sbert_kmeans (and their registered variants) NEVER take
+        # this branch, regardless of what their own get_document_topics()
+        # happens to return; only a genuinely new, not-yet-special-cased
+        # model (e.g. a future real ECRTM baseline) can.
+        known_assignment_source = _assignment_source_for_model(model_name)
+        document_topics = model.get_document_topics(documents) if known_assignment_source == "unknown" else None
+        if document_topics is not None:
+            clusters = [int(c) for c in np.argmax(np.asarray(document_topics), axis=1)]
+            assignment_source = "argmax_theta"
+        else:
+            clusters = model.get_document_clusters(documents)
+            assignment_source = known_assignment_source
+        topic_source = _topic_source_for_model(model_name)
+
         non_empty_topics = [t for t in topics_energy if t]
-        try:
-            cv = coherence(non_empty_topics, reference_corpus, top_n=10, measure="c_v")[0] if non_empty_topics else None
-        except Exception:
-            cv = None
-        try:
-            td = topic_diversity(non_empty_topics, top_n=10) if non_empty_topics else None
-        except Exception:
-            td = None
+        if protocol == "ecrtm_hicot":
+            try:
+                cv = palmetto_cv(non_empty_topics, top_n=top_n) if non_empty_topics else None
+            except PalmettoUnavailable:
+                cv = None  # never silently substituted with cv_local_corpus - see module docstring
+            try:
+                td = topic_diversity_dieng_fixed_k(topics_energy, k=k, top_n=top_n) if topics_energy else None
+            except Exception:
+                td = None
+        else:
+            reference_corpus = [doc.split() for doc in documents]
+            try:
+                cv = coherence(non_empty_topics, reference_corpus, top_n=top_n, measure="c_v")[0] if non_empty_topics else None
+            except Exception:
+                cv = None
+            try:
+                td = topic_diversity(non_empty_topics, top_n=top_n) if non_empty_topics else None
+            except Exception:
+                td = None
 
         purity_value = compute_purity(clusters, labels)
         nmi_value = compute_nmi(clusters, labels)
@@ -269,6 +394,8 @@ def run_single(model_name: str, dataset_id: str, k: int, seed: int = 42, voc_siz
             model=model_name, dataset=dataset_id, k=k, cv=cv, purity=purity_value, nmi=nmi_value, td=td,
             seed=seed, runtime_seconds=runtime, status="ok",
             topics_energy=topics_energy, topics_freq=topics_freq,
+            evaluation_protocol=protocol, top_n=top_n, cv_source=cv_source, td_definition=td_definition,
+            assignment_source=assignment_source, topic_source=topic_source,
         )
     except Exception as exc:  # noqa: BLE001 - one failed combination must not abort the whole sweep
         runtime = time.perf_counter() - start
@@ -276,13 +403,16 @@ def run_single(model_name: str, dataset_id: str, k: int, seed: int = 42, voc_siz
             model=model_name, dataset=dataset_id, k=k, cv=None, purity=None, nmi=None, td=None,
             seed=seed, runtime_seconds=runtime, status="error",
             error=f"{exc}\n{traceback.format_exc(limit=3)}",
+            evaluation_protocol=protocol, top_n=top_n, cv_source=cv_source, td_definition=td_definition,
         )
 
 
-def run_sweep(models: list[str], datasets: list[str], ks: list[int], seed: int = 42) -> list[ExperimentResult]:
+def run_sweep(
+    models: list[str], datasets: list[str], ks: list[int], seed: int = 42, protocol: str = "generic"
+) -> list[ExperimentResult]:
     results = []
     for k in ks:
         for dataset_id in datasets:
             for model_name in models:
-                results.append(run_single(model_name, dataset_id, k, seed=seed))
+                results.append(run_single(model_name, dataset_id, k, seed=seed, protocol=protocol))
     return results

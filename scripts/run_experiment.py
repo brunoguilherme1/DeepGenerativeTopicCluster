@@ -129,8 +129,8 @@ def _run_topic(args) -> None:
         raise SystemExit("--experiment topic requires --k (e.g. --k 50 or --k 50 100)")
     ks = _parse_ks(args.k)
 
-    print(f"Running [topic]: models={models} datasets={datasets} k={ks} seed={args.seed}\n")
-    results = run_sweep(models, datasets, ks, seed=args.seed)
+    print(f"Running [topic]: models={models} datasets={datasets} k={ks} seed={args.seed} protocol={args.protocol}\n")
+    results = run_sweep(models, datasets, ks, seed=args.seed, protocol=args.protocol)
 
     for result in results:
         if result.status != "ok":
@@ -328,6 +328,17 @@ def main() -> None:
     parser.add_argument("--voc-size", type=int, default=5000, help="Vectorizer vocabulary cap (VAE-BM/FASTopic/GloCOM)")
     parser.add_argument("--format", default="percent", choices=["percent", "decimal"], help="Cluster table print format (CSV/JSON always store decimals)")
     parser.add_argument(
+        "--protocol", default="generic", choices=["generic", "ecrtm_hicot"],
+        help="Topic experiment only: 'generic' (default) reproduces this runner's original metric computation "
+             "unchanged - top_n=10, C_V via gensim against the local training corpus. 'ecrtm_hicot' aligns metric "
+             "computation with ECRTM (Wu et al., ICML 2023) and HiCOT (2025) as closely as possible: top_n=15, C_V "
+             "via Palmetto/Wikipedia only (recorded as None/N/A if the jar/Wikipedia index are absent - never "
+             "silently substituted with the local-corpus number), TD via the fixed-K*15-denominator Dieng "
+             "definition. Datasets and preprocessing are NOT changed by this flag - this is metric-level alignment "
+             "only, not a claim of exact reproduction. See experiment/runner.py's own docstring and "
+             "docs/methodological_notes.md #10.",
+    )
+    parser.add_argument(
         "--vaebm-embedder", default=None,
         help="Topic experiment only: VAE-BM's embedding branch (e_txt) input - any SentenceTransformer/HuggingFace "
              "model name (default: VAEBMAdapter's own, all-MiniLM-L6-v2). A SEPARATE knob from --vaebm-vectorizer-type "
@@ -450,6 +461,9 @@ def main() -> None:
 
         if args.sbert_configs:
             register_sbert_kmeans_variants(_load_named_configs(args.sbert_configs, "--sbert-configs"))
+
+    if args.protocol != "generic" and args.experiment != "topic":
+        raise SystemExit("--protocol is topic-experiment only")
 
     if args.experiment == "topic":
         _run_topic(args)
