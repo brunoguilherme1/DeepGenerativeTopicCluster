@@ -37,13 +37,30 @@ ICML 2023) and HiCOT (2025) as closely as possible WITHOUT touching
 datasets or preprocessing (neither paper's exact dataset artifact/
 preprocessing pipeline is reproduced here - see
 docs/methodological_notes.md #10): top_n=15 (both papers'), C_V via
-Palmetto/Wikipedia only (`metrics/palmetto.py::palmetto_cv` - recorded as
-None, never silently substituted with the local-corpus gensim C_V, if
-Palmetto is unavailable), and TD via the fixed-K*top_n-denominator Dieng
-definition (`topic_diversity_dieng_fixed_k`). The default `protocol=
+Palmetto/Wikipedia by default, and TD via the fixed-K*top_n-denominator
+Dieng definition (`topic_diversity_dieng_fixed_k`). The default `protocol=
 "generic"` reproduces this runner's original behavior byte-for-byte
-(top_n=10, local-corpus C_V, the original `topic_diversity()`) - passing
-`--protocol ecrtm_hicot` never changes a "generic" run's own numbers.
+(top_n=10, local-corpus C_V by default, the original `topic_diversity()`)
+- passing `--protocol ecrtm_hicot` never changes a "generic" run's own
+numbers.
+
+`cv_method` (`--cv-method {local,palmetto}`, `run_single`/`run_sweep`'s
+own parameter) decouples WHICH function computes C_V from `protocol`
+(which still controls top_n/TD): `None` (nothing passed, the default)
+means "follow `protocol`'s own default" - i.e. byte-for-byte the same
+behavior as before this parameter existed. Passing `"palmetto"`/`"local"`
+explicitly overrides that regardless of `protocol` - e.g.
+`--protocol generic --cv-method palmetto` for real Wikipedia C_V without
+the top_n=15/TD-fixed-K bundle, or `--protocol ecrtm_hicot --cv-method
+local` to skip Palmetto for a quick run. When the EFFECTIVE method
+(explicit `--cv-method`, or `protocol`'s own default) is `"palmetto"`,
+`scripts/run_experiment.py` auto-installs Palmetto/the Wikipedia index
+first (via `scripts/setup_palmetto.py::ensure_palmetto_ready`) if not
+already present, rather than silently recording every `cv` as `None` -
+see that script's own module docstring. `palmetto_cv()` itself is still
+never silently substituted with the local-corpus number if Palmetto
+somehow remains unavailable after that (e.g. the install failed) - `cv`
+is recorded as `None`/`N/A`, exactly as before.
 
 Every result also now records `assignment_source` (how document clusters
 were assigned) and `topic_source` (where get_topics() words came from) -
@@ -304,7 +321,8 @@ def _topic_source_for_model(model_name: str) -> str:
 
 
 def run_single(
-    model_name: str, dataset_id: str, k: int, seed: int = 42, voc_size: int = 5000, protocol: str = "generic"
+    model_name: str, dataset_id: str, k: int, seed: int = 42, voc_size: int = 5000,
+    protocol: str = "generic", cv_method: Optional[str] = None,
 ) -> ExperimentResult:
     from vaebm_benchmark.datasets.simple_registry import load_dataset
     from vaebm_benchmark.metrics.clustering_quality import nmi as compute_nmi
@@ -315,19 +333,30 @@ def run_single(
 
     if protocol not in ("generic", "ecrtm_hicot"):
         raise ValueError(f"Unknown protocol '{protocol}'. Available: generic, ecrtm_hicot")
+    if cv_method is not None and cv_method not in ("local", "palmetto"):
+        raise ValueError(f"Unknown cv_method '{cv_method}'. Available: local, palmetto (or None to follow --protocol's own default)")
 
-    # top_n/cv_source/td_definition are the ONLY things `protocol` changes;
-    # everything else (dataset, preprocessing, model, K) is identical
-    # either way - see this module's own docstring and
-    # docs/methodological_notes.md #10.
+    # top_n/td_definition are still governed SOLELY by `protocol`, exactly
+    # as before this parameter existed - see this module's own docstring
+    # and docs/methodological_notes.md #10.
     if protocol == "ecrtm_hicot":
         top_n = 15
-        cv_source = "palmetto_wikipedia"
         td_definition = "dieng_unique_words_top15"
     else:
         top_n = 10
-        cv_source = "cv_local_corpus"
         td_definition = "unique_over_returned_slots"
+
+    # `cv_method` decouples WHICH function computes C_V from `protocol`.
+    # None (nothing passed - the default) means "follow protocol's own
+    # default": palmetto for ecrtm_hicot, local-corpus gensim for generic
+    # - i.e. byte-for-byte the SAME behavior as before this parameter
+    # existed. Passing "palmetto"/"local" explicitly overrides that
+    # regardless of `protocol` (e.g. --protocol generic --cv-method
+    # palmetto to get real Wikipedia C_V without the top_n=15/TD-fixed-K
+    # bundle, or --protocol ecrtm_hicot --cv-method local to skip
+    # Palmetto for a quick run) - see docs/methodological_notes.md #10.
+    effective_cv_method = cv_method or ("palmetto" if protocol == "ecrtm_hicot" else "local")
+    cv_source = "palmetto_wikipedia" if effective_cv_method == "palmetto" else "cv_local_corpus"
 
     start = time.perf_counter()
     try:
@@ -366,21 +395,25 @@ def run_single(
         topic_source = _topic_source_for_model(model_name)
 
         non_empty_topics = [t for t in topics_energy if t]
-        if protocol == "ecrtm_hicot":
+
+        if effective_cv_method == "palmetto":
             try:
                 cv = palmetto_cv(non_empty_topics, top_n=top_n) if non_empty_topics else None
             except PalmettoUnavailable:
                 cv = None  # never silently substituted with cv_local_corpus - see module docstring
-            try:
-                td = topic_diversity_dieng_fixed_k(topics_energy, k=k, top_n=top_n) if topics_energy else None
-            except Exception:
-                td = None
         else:
             reference_corpus = [doc.split() for doc in documents]
             try:
                 cv = coherence(non_empty_topics, reference_corpus, top_n=top_n, measure="c_v")[0] if non_empty_topics else None
             except Exception:
                 cv = None
+
+        if protocol == "ecrtm_hicot":
+            try:
+                td = topic_diversity_dieng_fixed_k(topics_energy, k=k, top_n=top_n) if topics_energy else None
+            except Exception:
+                td = None
+        else:
             try:
                 td = topic_diversity(non_empty_topics, top_n=top_n) if non_empty_topics else None
             except Exception:
@@ -408,11 +441,12 @@ def run_single(
 
 
 def run_sweep(
-    models: list[str], datasets: list[str], ks: list[int], seed: int = 42, protocol: str = "generic"
+    models: list[str], datasets: list[str], ks: list[int], seed: int = 42,
+    protocol: str = "generic", cv_method: Optional[str] = None,
 ) -> list[ExperimentResult]:
     results = []
     for k in ks:
         for dataset_id in datasets:
             for model_name in models:
-                results.append(run_single(model_name, dataset_id, k, seed=seed, protocol=protocol))
+                results.append(run_single(model_name, dataset_id, k, seed=seed, protocol=protocol, cv_method=cv_method))
     return results
