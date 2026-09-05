@@ -119,6 +119,6 @@ def test_dataset_header_annotated_with_k():
 def test_results_to_rows_includes_required_fields():
     rows = cluster_results_to_rows([_result("vaebm", "search_snippets", 42, acc=0.6, nmi=0.4)])
     row = rows[0]
-    for field in ("experiment", "model", "dataset", "seed", "requested_k", "actual_k",
+    for field in ("experiment_type", "model", "dataset", "seed", "requested_k", "actual_k",
                   "num_classes", "acc", "nmi", "runtime_seconds", "status"):
         assert field in row

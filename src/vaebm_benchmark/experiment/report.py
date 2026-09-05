@@ -15,10 +15,19 @@ DATASET_DISPLAY_NAMES = {
     "agnews_short": "AGNews",
     "20ng": "20NG",
     "imdb": "IMDB",
+    "hicot_20ng": "20NG (HiCOT)",
+    "hicot_imdb": "IMDB (HiCOT)",
+    "hicot_agnews": "AGNews (HiCOT)",
+    "hicot_search_snippets": "SearchSnippets (HiCOT)",
+    "hicot_google_news": "GoogleNews (HiCOT)",
 }
 MODEL_DISPLAY_NAMES = {
     "vaebm": "VAE-BM",
     "bertopic": "BERTopic",
+    "fastopic": "FASTopic",
+    "glocom": "GloCOM",
+    "lda": "LDA",
+    "hicot": "HiCOT",
 }
 METRIC_ORDER = ["cv", "purity", "nmi", "td"]
 METRIC_DISPLAY_NAMES = {"cv": "C_V", "purity": "Purity", "nmi": "NMI", "td": "TD"}

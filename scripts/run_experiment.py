@@ -1,17 +1,37 @@
 #!/usr/bin/env python
-"""Experiment runner with three modes:
+"""Experiment runner with five modes:
 
   --experiment topic (default): VAE-BM vs. BERTopic topic-quality
       comparison (C_V, Purity, NMI, TD) at requested K values. See
       src/vaebm_benchmark/experiment/{runner,report}.py.
 
-  --experiment cluster: pure document-clustering-quality comparison
-      (ACC via Hungarian-matched accuracy, NMI) across any registered
-      model that can produce hard document clusters (vaebm, bertopic,
-      fastopic, glocom). K is NOT requested via --k here - it is always
-      the benchmark dataset's own number of ground-truth classes,
-      inspected only to size K, never used during fit(). See
+  --experiment cluster: unsupervised document-clustering-quality
+      comparison, fit+evaluated on the FULL dataset transductively (NOT
+      the HiCOT train/test split) - ACC/NMI/ARI/AMI/Homogeneity/
+      Completeness/V-measure/Purity (label-based) plus Silhouette/
+      Davies-Bouldin/Calinski-Harabasz (label-free geometry), across any
+      registered model (vaebm, bertopic, fastopic, glocom, lda, hicot).
+      K is NOT requested via --k here - it is always the benchmark
+      dataset's own number of ground-truth classes, inspected only to
+      size K, never used during fit(). See
       src/vaebm_benchmark/experiment/{cluster_runner,cluster_report}.py.
+
+  --experiment classification: downstream text classification -
+      document -> model representation (theta or VAE-BM's own mu) ->
+      SVM -> labels, following ECRTM/HiCOT's own Sec 4.4 protocol.
+      REQUIRES a hicot_* --datasets id with a genuine train/test split
+      (--k works like the topic experiment's own, e.g. 50/100 - the same
+      K ECRTM/HiCOT's own Table 2/3 use). Multi-seed via --seeds ->
+      accuracy/F1 mean/std/95% CI. Model set: vaebm, fastopic, lda,
+      hicot. See src/vaebm_benchmark/experiment/
+      {classification_runner,classification_report}.py.
+
+  --experiment all: runs topic, classification, and cluster in
+      sequence - THREE SEPARATE outputs/tables, never merged into one.
+      Each experiment's own model-set/dataset/--k constraints still
+      apply; a --models/--datasets/--k combination invalid for one of
+      the three is skipped (printed, not fatal) rather than aborting
+      the other two.
 
   --experiment llm_cluster_refinement: an LLM-based post-clustering
       refinement stage (LLMEdgeRefine-style) applied on top of the SAME
@@ -28,8 +48,16 @@ Usage (topic):
 Usage (cluster):
     python scripts/run_experiment.py --experiment cluster --models vaebm bertopic --datasets search_snippets
     python scripts/run_experiment.py --experiment cluster --models all --datasets all-short
-    python scripts/run_experiment.py --experiment cluster --models vaebm bertopic fastopic glocom \\
-        --datasets agnews_short search_snippets stack_overflow biomedical google_news_ts google_news_t google_news_s tweet
+    python scripts/run_experiment.py --experiment cluster --models vaebm fastopic lda hicot \\
+        --datasets hicot_20ng
+
+Usage (classification):
+    python scripts/run_experiment.py --experiment classification \\
+        --models vaebm fastopic lda hicot --datasets hicot_20ng --k 50 100 --seeds 1 2 3 4 5
+
+Usage (all):
+    python scripts/run_experiment.py --experiment all \\
+        --models vaebm fastopic lda hicot --datasets hicot_20ng --k 50
 
 Usage (llm_cluster_refinement):
     python scripts/run_experiment.py \\
@@ -231,6 +259,100 @@ def _run_cluster(args) -> None:
     print(f"Table written to: {tex_path}")
 
 
+def _run_classification(args) -> None:
+    from vaebm_benchmark.experiment.classification_report import (
+        aggregate_classification_results,
+        aggregated_rows,
+        per_run_rows,
+        render_all_classification_tables,
+    )
+    from vaebm_benchmark.experiment.classification_runner import run_sweep
+    from vaebm_benchmark.experiment.scientific_models import MODEL_NAMES
+    from vaebm_benchmark.utils.paths import RESULTS_DIR
+
+    models = MODEL_NAMES if args.models == ["all"] else args.models
+    unknown_models = [m for m in models if m not in MODEL_NAMES]
+    if unknown_models:
+        raise SystemExit(f"Unknown model(s) for --experiment classification: {unknown_models}. Available: {MODEL_NAMES}")
+
+    if not args.datasets or args.datasets in (["all"], ["all-short"]):
+        raise SystemExit(
+            "--experiment classification requires explicit --datasets - hicot_* ids with a genuine train/test "
+            "split (hicot_search_snippets/hicot_google_news have none, see "
+            "datasets/definitions/hicot_datasets.py::load_hicot_split's own docstring)."
+        )
+    datasets = args.datasets
+
+    if not args.k:
+        raise SystemExit("--experiment classification requires --k (e.g. --k 50 or --k 50 100)")
+    ks = _parse_ks(args.k)
+
+    seeds = args.seeds if args.seeds else [args.seed]
+    print(f"Running [classification]: models={models} datasets={datasets} k={ks} seeds={seeds}\n")
+    results = run_sweep(models, datasets, ks, seeds, voc_size=args.voc_size, svm_kernel=args.svm_kernel, svm_C=args.svm_c)
+
+    for result in results:
+        if result.status != "ok":
+            print(f"[ERROR] model={result.model} dataset={result.dataset} k={result.k} seed={result.seed}: "
+                  f"{result.error.splitlines()[0]}")
+
+    classification_dir = RESULTS_DIR / "classification"
+    classification_dir.mkdir(parents=True, exist_ok=True)
+
+    rows = per_run_rows(results)
+    csv_path = classification_dir / "classification_results.csv"
+    json_path = classification_dir / "classification_results.json"
+    _append_csv(csv_path, rows)
+    _merge_json(json_path, rows)
+
+    aggregated = aggregate_classification_results(results)
+    agg_rows = aggregated_rows(aggregated)
+    agg_csv_path = classification_dir / "classification_aggregated.csv"
+    agg_json_path = classification_dir / "classification_aggregated.json"
+    _append_csv(agg_csv_path, agg_rows)
+    _merge_json(agg_json_path, agg_rows)
+
+    print()
+    table_text = render_all_classification_tables(aggregated)
+    print(table_text)
+    txt_path = classification_dir / "table.txt"
+    txt_path.write_text(table_text + "\n", encoding="utf-8")
+
+    print(f"\nPer-run results appended to: {csv_path}")
+    print(f"Per-run results merged into: {json_path}")
+    print(f"Aggregated results appended to: {agg_csv_path}")
+    print(f"Aggregated results merged into: {agg_json_path}")
+    print(f"Table written to: {txt_path}")
+
+
+def _run_all(args) -> None:
+    """Runs topic, classification, and cluster in sequence - THREE
+    separate outputs (never merged into one table, per this project's own
+    instruction). Each experiment has its OWN model-set/dataset/--k
+    validity constraints (see _run_topic/_run_classification/_run_cluster
+    above) - a SystemExit from one (e.g. --k missing, or --datasets not
+    a hicot_* split for classification) is caught and printed as
+    "skipped", so an --models/--datasets combination invalid for one
+    experiment doesn't block the other two from still running."""
+    print("=== [1/3] topic experiment ===")
+    try:
+        _run_topic(args)
+    except SystemExit as exc:
+        print(f"[skipped] topic experiment: {exc}")
+
+    print("\n=== [2/3] classification experiment ===")
+    try:
+        _run_classification(args)
+    except SystemExit as exc:
+        print(f"[skipped] classification experiment: {exc}")
+
+    print("\n=== [3/3] cluster experiment ===")
+    try:
+        _run_cluster(args)
+    except SystemExit as exc:
+        print(f"[skipped] cluster experiment: {exc}")
+
+
 def _run_llm_cluster_refinement(args) -> None:
     from vaebm_benchmark.datasets.simple_registry import list_short_text_datasets
     from vaebm_benchmark.experiment.cluster_runner import list_cluster_models
@@ -315,16 +437,20 @@ def _run_llm_cluster_refinement(args) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--experiment", default="topic", choices=["topic", "cluster", "llm_cluster_refinement"])
+    parser.add_argument(
+        "--experiment", default="topic",
+        choices=["topic", "cluster", "classification", "llm_cluster_refinement", "all"],
+    )
     parser.add_argument("--models", nargs="+", required=True, help="Model names, or 'all'")
     parser.add_argument("--datasets", nargs="+", required=True, help="Dataset ids, or 'all' (topic) / 'all-short' (cluster)")
-    parser.add_argument("--k", nargs="+", default=None, help="Topic experiment only: one or more topic/cluster counts, e.g. --k 50 100 or --k 50,100")
+    parser.add_argument("--k", nargs="+", default=None, help="topic/classification experiments only: one or more topic/cluster counts, e.g. --k 50 100 or --k 50,100")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--seeds", nargs="+", type=int, default=None,
-                         help="Cluster experiment only: run every (model, dataset) once per seed and average "
-                              "ACC/NMI across them for the printed/exported table (e.g. --seeds 1 2 3 4 5 for a "
-                              "reference-style 'averaged over N random runs' table). Every individual seed's "
-                              "result is still persisted to cluster_results.csv/json. Overrides --seed if given.")
+                         help="cluster/classification experiments only: run every (model, dataset[, k]) once per "
+                              "seed and average metrics across them for the printed/exported table (e.g. "
+                              "--seeds 1 2 3 4 5 for a reference-style 'averaged over N random runs' table, with "
+                              "mean/std/95%% CI for classification). Every individual seed's result is still "
+                              "persisted. Overrides --seed if given.")
     parser.add_argument("--voc-size", type=int, default=5000, help="Vectorizer vocabulary cap (VAE-BM/FASTopic/GloCOM)")
     parser.add_argument("--format", default="percent", choices=["percent", "decimal"], help="Cluster table print format (CSV/JSON always store decimals)")
     parser.add_argument(
@@ -337,6 +463,18 @@ def main() -> None:
              "definition. Datasets and preprocessing are NOT changed by this flag - this is metric-level alignment "
              "only, not a claim of exact reproduction. See experiment/runner.py's own docstring and "
              "docs/methodological_notes.md #10.",
+    )
+    parser.add_argument(
+        "--svm-kernel", default="linear",
+        help="Classification experiment only: sklearn SVC kernel for the theta/mu -> SVM -> labels protocol "
+             "(ECRTM/HiCOT Sec 4.4). Neither paper's own text/code specifies an exact kernel/C - 'linear' is this "
+             "project's own documented default, not a reproduction of either paper's own SVM tuning. See "
+             "experiment/classification_runner.py's own module docstring.",
+    )
+    parser.add_argument(
+        "--svm-c", type=float, default=1.0,
+        help="Classification experiment only: sklearn SVC's C (regularization strength) - see --svm-kernel's own "
+             "help text on why this is a documented default, not a paper reproduction.",
     )
     parser.add_argument(
         "--vaebm-embedder", default=None,
@@ -431,10 +569,10 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.vaebm_embedder or args.vaebm_vectorizer_type or args.vaebm_verbose is not None or args.vaebm_configs:
-        if args.experiment != "topic":
+        if args.experiment not in ("topic", "all"):
             raise SystemExit(
                 "--vaebm-embedder/--vaebm-vectorizer-type/--vaebm-verbose/--vaebm-configs are topic-experiment only "
-                "(cluster/llm_cluster_refinement have their own VAE-BM builder)"
+                "(cluster/classification/llm_cluster_refinement have their own VAE-BM builder)"
             )
         from vaebm_benchmark.experiment.runner import register_vaebm_variants, set_vaebm_defaults
 
@@ -452,7 +590,7 @@ def main() -> None:
             register_vaebm_variants(_load_named_configs(args.vaebm_configs, "--vaebm-configs"))
 
     if args.sbert_embedder or args.sbert_configs:
-        if args.experiment != "topic":
+        if args.experiment not in ("topic", "all"):
             raise SystemExit("--sbert-embedder/--sbert-configs are topic-experiment only")
         from vaebm_benchmark.experiment.runner import register_sbert_kmeans_variants, set_sbert_kmeans_defaults
 
@@ -462,13 +600,17 @@ def main() -> None:
         if args.sbert_configs:
             register_sbert_kmeans_variants(_load_named_configs(args.sbert_configs, "--sbert-configs"))
 
-    if args.protocol != "generic" and args.experiment != "topic":
+    if args.protocol != "generic" and args.experiment not in ("topic", "all"):
         raise SystemExit("--protocol is topic-experiment only")
 
     if args.experiment == "topic":
         _run_topic(args)
     elif args.experiment == "cluster":
         _run_cluster(args)
+    elif args.experiment == "classification":
+        _run_classification(args)
+    elif args.experiment == "all":
+        _run_all(args)
     else:
         _run_llm_cluster_refinement(args)
 
