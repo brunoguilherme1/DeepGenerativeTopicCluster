@@ -157,8 +157,30 @@ def _run_topic(args) -> None:
         raise SystemExit("--experiment topic requires --k (e.g. --k 50 or --k 50 100)")
     ks = _parse_ks(args.k)
 
-    print(f"Running [topic]: models={models} datasets={datasets} k={ks} seed={args.seed} protocol={args.protocol}\n")
-    results = run_sweep(models, datasets, ks, seed=args.seed, protocol=args.protocol)
+    # `--cv-method` decouples WHICH function computes C_V from
+    # `--protocol` (which still controls top_n/TD) - None (nothing
+    # passed) means "follow --protocol's own default", exactly the
+    # behavior before this flag existed. When the EFFECTIVE method
+    # resolves to "palmetto", auto-install Palmetto/the Wikipedia index
+    # first if it isn't already present, rather than silently recording
+    # every cv as N/A - see experiment/runner.py's own docstring and
+    # scripts/setup_palmetto.py.
+    effective_cv_method = args.cv_method or ("palmetto" if args.protocol == "ecrtm_hicot" else "local")
+    if effective_cv_method == "palmetto":
+        # setup_palmetto.py lives in this same scripts/ directory, which
+        # Python already put on sys.path[0] because this file itself was
+        # invoked as `python scripts/run_experiment.py` - no path
+        # manipulation needed.
+        from setup_palmetto import ensure_palmetto_ready
+
+        palmetto_ready = ensure_palmetto_ready()
+        if not palmetto_ready:
+            print("Warning: Palmetto setup did not complete - C_V will be recorded as N/A for this run "
+                  "(see the [setup_palmetto] log above for why).")
+
+    print(f"Running [topic]: models={models} datasets={datasets} k={ks} seed={args.seed} "
+          f"protocol={args.protocol} cv_method={effective_cv_method}\n")
+    results = run_sweep(models, datasets, ks, seed=args.seed, protocol=args.protocol, cv_method=args.cv_method)
 
     for result in results:
         if result.status != "ok":
@@ -456,13 +478,23 @@ def main() -> None:
     parser.add_argument(
         "--protocol", default="generic", choices=["generic", "ecrtm_hicot"],
         help="Topic experiment only: 'generic' (default) reproduces this runner's original metric computation "
-             "unchanged - top_n=10, C_V via gensim against the local training corpus. 'ecrtm_hicot' aligns metric "
-             "computation with ECRTM (Wu et al., ICML 2023) and HiCOT (2025) as closely as possible: top_n=15, C_V "
-             "via Palmetto/Wikipedia only (recorded as None/N/A if the jar/Wikipedia index are absent - never "
-             "silently substituted with the local-corpus number; run `python scripts/setup_palmetto.py` once to "
-             "install both), TD via the fixed-K*15-denominator Dieng definition. Datasets and preprocessing are "
-             "NOT changed by this flag - this is metric-level alignment only, not a claim of exact reproduction. "
-             "See experiment/runner.py's own docstring and docs/methodological_notes.md #10.",
+             "unchanged - top_n=10, C_V via gensim against the local training corpus by default. 'ecrtm_hicot' "
+             "aligns metric computation with ECRTM (Wu et al., ICML 2023) and HiCOT (2025) as closely as possible: "
+             "top_n=15, C_V via Palmetto/Wikipedia by default, TD via the fixed-K*15-denominator Dieng definition. "
+             "Datasets and preprocessing are NOT changed by this flag - this is metric-level alignment only, not a "
+             "claim of exact reproduction. See --cv-method to override which C_V source is used independently of "
+             "this flag. See experiment/runner.py's own docstring and docs/methodological_notes.md #10.",
+    )
+    parser.add_argument(
+        "--cv-method", default=None, choices=["local", "palmetto"],
+        help="Topic experiment only: overrides WHICH function computes C_V, independently of --protocol (which "
+             "still controls top_n/TD). Default (nothing passed): follow --protocol's own default - 'palmetto' for "
+             "ecrtm_hicot, 'local' for generic - i.e. unchanged behavior if you don't pass this. Pass 'palmetto' "
+             "explicitly to get real Wikipedia C_V under --protocol generic too (without its top_n=15/TD-fixed-K "
+             "bundle), or 'local' to skip Palmetto under --protocol ecrtm_hicot for a quick run. When the "
+             "resulting C_V method is 'palmetto', Palmetto/the Wikipedia index are installed automatically first "
+             "if not already present (scripts/setup_palmetto.py::ensure_palmetto_ready) - never silently recorded "
+             "as N/A without at least attempting the ~5.1GB one-time download.",
     )
     parser.add_argument(
         "--svm-kernel", default="linear",
@@ -602,6 +634,9 @@ def main() -> None:
 
     if args.protocol != "generic" and args.experiment not in ("topic", "all"):
         raise SystemExit("--protocol is topic-experiment only")
+
+    if args.cv_method is not None and args.experiment not in ("topic", "all"):
+        raise SystemExit("--cv-method is topic-experiment only")
 
     if args.experiment == "topic":
         _run_topic(args)

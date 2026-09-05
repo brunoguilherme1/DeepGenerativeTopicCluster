@@ -207,6 +207,33 @@ def setup_wiki_index(force: bool = False, keep_zip: bool = False) -> bool:
     return True
 
 
+def ensure_palmetto_ready(keep_zip: bool = False) -> bool:
+    """Importable entry point for scripts/run_experiment.py: if Palmetto
+    is already installed and verified, does nothing (fast, no network
+    calls) and returns True immediately; otherwise runs the full setup
+    (jar + Wikipedia index) right here, so a caller that requested
+    Palmetto-based C_V (--cv-method palmetto, or --protocol ecrtm_hicot's
+    own default) never has to be told to run this script manually first -
+    it just happens, with the same debug trail setup_jar()/
+    setup_wiki_index() already print. Returns whether Palmetto is ready
+    to use afterward."""
+    from vaebm_benchmark.metrics.palmetto import palmetto_available
+
+    if palmetto_available():
+        _log(f"Palmetto already installed and verified at {JAR_PATH}/{WIKI_INDEX_DIR} - skipping setup.")
+        return True
+
+    _log(
+        "Palmetto-based C_V was requested but Palmetto is not installed yet - running setup now "
+        "(downloads a small jar plus a ~5.1GB Wikipedia index; this can take several minutes)."
+    )
+    _check_java()
+    ok = setup_jar() and setup_wiki_index(keep_zip=keep_zip)
+    available = ok and palmetto_available()
+    _log(f"ensure_palmetto_ready() -> {available}")
+    return available
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--jar-only", action="store_true", help="Only download palmetto.jar, skip the Wikipedia index.")
