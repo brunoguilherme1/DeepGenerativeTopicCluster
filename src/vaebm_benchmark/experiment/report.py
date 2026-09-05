@@ -221,6 +221,11 @@ def results_to_rows(results: list[ExperimentResult]) -> list[dict]:
             "model": r.model, "dataset": r.dataset, "k": r.k,
             "cv": r.cv, "purity": r.purity, "nmi": r.nmi, "td": r.td,
             "seed": r.seed, "runtime_seconds": round(r.runtime_seconds, 3), "status": r.status, "error": r.error,
+            # Paper-alignment metadata - see experiment/runner.py's own
+            # docstring and docs/methodological_notes.md #10.
+            "evaluation_protocol": r.evaluation_protocol, "top_n": r.top_n,
+            "cv_source": r.cv_source, "td_definition": r.td_definition,
+            "assignment_source": r.assignment_source, "topic_source": r.topic_source,
         }
         for r in results
     ]

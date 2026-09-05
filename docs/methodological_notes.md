@@ -196,3 +196,177 @@ package versions, exact preprocessing edge cases, or a "smoke test"
 document subsample rather than the paper's full corpus - see each
 protocol's `notes`) - it is not evidence of a bug in this repo, and it
 must be visible before any claim that "VAE-BM outperforms X."
+
+## 10. `--protocol ecrtm_hicot`: metric-level alignment with ECRTM/HiCOT, not a reproduction
+
+`scripts/run_experiment.py --experiment topic --protocol ecrtm_hicot`
+(default `--protocol generic`, unchanged from before this option existed)
+changes how `experiment/runner.py`'s topic-quality metrics are computed,
+to match ECRTM (Wu et al., ICML 2023, Table 2/3) and HiCOT (2025) as
+closely as possible **without touching datasets or preprocessing** -
+those were explicitly left alone, so this is metric-level alignment
+only, never claimed as an exact reproduction of either paper's numbers.
+See the prior "fair comparison" analysis of this same runner
+(conversation record, not a file in this repo) for the fuller gap list
+this section deliberately does NOT close: Yahoo Answer is still absent,
+`agnews_short`/`agnews_full` are still not the papers' own 12,500-doc AG
+News subsample, and neither dataset's preprocessing follows Card et al.
+(2018)'s 5-step pipeline (lowercase, strip punctuation, drop number-
+containing tokens, drop tokens <3 chars, remove stopwords).
+
+What `ecrtm_hicot` DOES change, all in `experiment/runner.py::run_single()`:
+
+- **top_n = 15**, not 10 - both papers explicitly select the top-15
+  words of each discovered topic for CV/TD (ECRTM §4.1: "We select the
+  top 15 words of discovered topics for the above topic quality
+  evaluation").
+- **C_V via Palmetto/Wikipedia only** (`metrics/palmetto.py::palmetto_cv`,
+  already used by `protocols/glocom_protocol.py`/`fastopic_protocol.py`)
+  - never the local-training-corpus gensim fallback
+  (`metrics/topic_quality.py::coherence()`) this runner used
+  unconditionally before. ECRTM §4.1, verbatim: "We use the public
+  Wikipedia article collection as the external reference corpus. This
+  removes the bias of using relatively small datasets (e.g., training
+  sets) as the reference corpus." If `tools/palmetto/palmetto.jar` and
+  the Wikipedia index aren't present, `cv` is recorded as `None` (`N/A`
+  in the printed table) - it is never silently replaced with the local-
+  corpus number under the same `cv` column, matching how
+  `glocom_protocol.py` already treats this same distinction (see #5
+  above).
+- **TD via the fixed-K*15-denominator Dieng definition**
+  (`metrics/topic_quality.py::topic_diversity_dieng_fixed_k`), not the
+  pre-existing `topic_diversity()`. The two diverge whenever a model
+  returns fewer than K non-empty topic-word lists (a degenerate/collapsed
+  cluster) - `topic_diversity()` shrinks its own denominator to match
+  whatever was actually returned, silently understating how much topic
+  collapsing should hurt the score; the fixed `K*15` denominator (the
+  papers' own definition) does not have this problem.
+- Result metadata now records `evaluation_protocol`, `top_n`,
+  `cv_source` (`"palmetto_wikipedia"` vs `"cv_local_corpus"`), and
+  `td_definition` (`"dieng_unique_words_top15"` vs
+  `"unique_over_returned_slots"`) - persisted in
+  `results/experiment_results.csv`/`.json`, so a row is always
+  self-describing about which metric variant produced it.
+
+**Document-assignment semantics (Purity/NMI)** - independent of
+`--protocol`, recorded for every run regardless:
+
+ECRTM's own official implementation exposes a genuine document-topic
+distribution via `get_theta()`, and computes Purity/NMI from
+`argmax(theta)` against ground truth. This repo's `run_single()` now
+does the same **whenever a model actually has one** - but the check is
+NOT "does `get_document_topics()` return non-`None`": VAEBMAdapter's own
+`get_document_topics()` always returns `mu` (never `None` - it is reused
+there as the storage slot `get_mu()`/`get_document_embeddings()` also
+read from elsewhere in this codebase), even though `mu` is explicitly
+**not** a topic distribution (#1 above). Naively checking "non-`None`"
+would silently treat `mu` as `theta` and `argmax` over it - precisely
+the "pretend mu is theta" mistake this must avoid. Instead,
+`_assignment_source_for_model()` gates on the **model name**: VAE-BM/
+BERTopic/sbert_kmeans (and their registered variants) are explicitly
+known to never use `argmax_theta`, regardless of what their own
+`get_document_topics()` returns; only a model this repo has no explicit
+knowledge of yet (e.g. a future real ECRTM baseline) can take that
+branch, and only if its `get_document_topics()` actually returns
+something.
+
+- **VAE-BM**: `mu` (the encoder's latent Gaussian mean) is explicitly
+  documented (#1 above) as **not** a topic distribution - it is never
+  passed through a softmax to manufacture a fake `theta`, and never
+  reaches the `argmax_theta` branch regardless of what
+  `get_document_topics()` returns. VAE-BM keeps its existing
+  `KMeans(n_clusters=K).fit(mu)` assignment,
+  `assignment_source="kmeans_on_latent_mu"`. VAE-BM is therefore **not
+  structurally identical to ECRTM** here - a real difference, not a bug,
+  and not something this change silently papers over.
+- **SBERT+KMeans**: has no doc-topic distribution at all by
+  construction (a plain embed-then-cluster pipeline) -
+  `assignment_source="kmeans_on_embeddings"`.
+- **BERTopic**: same - its `hdbscan_model` is swapped for `KMeans` over
+  UMAP-reduced SBERT embeddings (see `bertopic_adapter.py`'s own module
+  docstring) - `assignment_source="kmeans_on_embeddings"`.
+
+Every result also records `topic_source`: `"native"` when a model's
+`get_topics()` is its own learned/native output (VAE-BM's decoder
+energy/freq view, BERTopic's own c-TF-IDF), or `"cluster-derived"` for
+SBERT+KMeans, whose topic words are computed here, after the fact, from
+cluster membership via class-based TF-IDF (`sbert_kmeans_adapter.py`'s
+own module docstring) - never a native output of that model family.
+
+Usage: `python scripts/run_experiment.py --experiment topic --protocol
+ecrtm_hicot --models vaebm bertopic sbert_kmeans --datasets 20ng imdb
+--k 50 100 --seed 42`. Everything else about the CLI (`--models`,
+`--datasets`, `--k`, `--vaebm-configs`, `--sbert-configs`, ...) is
+unchanged; `--protocol` only ever changes how CV/TD are computed and
+what metadata a result carries.
+
+## 11. `hicot_*` dataset ids: HiCOT's own preprocessed artifacts, used verbatim
+
+`hicot_20ng`/`hicot_imdb`/`hicot_agnews`/`hicot_search_snippets`/
+`hicot_google_news` (`datasets/definitions/hicot_datasets.py`) download
+the exact `train_texts.txt`/`train_labels.txt`/`test_texts.txt`/
+`test_labels.txt` (plus `vocab.txt`/`word_embeddings.npz`/
+`{train,test}_bow.npz`, kept on disk but not auto-wired into any model -
+see below) files from `github.com/HoangTran223/HiCOT`'s own
+`datasets/<Folder>/` - no re-tokenizing, re-splitting, or resampling.
+These are a SEPARATE artifact from this project's pre-existing `20ng`/
+`imdb`/`agnews_short`/`agnews_full`/`search_snippets`/`google_news_*`
+datasets (different preprocessing, different vocab) - never silently
+merged with them under the same id.
+
+**Why `hicot_agnews` matters specifically**: it is the first AG News
+artifact in this project that actually matches ECRTM's own Table 9 -
+10,000 train + 2,500 test = 12,500 documents, exactly the paper's own
+subsample size. `agnews_short` (8,000 docs, a different STC-family
+subsample) and `agnews_full` (127,600 docs, the full HF `ag_news`) are
+both different cuts of the same underlying corpus, neither matching the
+paper - see the "fair comparison" gap list this project's own prior
+analysis identified (not itself a file in this repo, but the reasoning
+behind adding `hicot_agnews` rather than trying to resample the existing
+two).
+
+**Train/test combination rule** - verified directly against the actual
+files, not assumed:
+
+- **20NG/IMDB/AGNews**: train and test are genuinely disjoint (line
+  counts verified: 11,314+7,532=18,846 / 25,000+25,000=50,000 /
+  10,000+2,500=12,500 - all three matching ECRTM Table 9 exactly).
+  `_load_raw()` concatenates them (train first, then test, in file
+  order) into one corpus, since this project's topic experiment - like
+  ECRTM's own Table 2/3 - evaluates topic quality transductively over
+  the whole corpus, not via a held-out split (the paper's own train/test
+  split is for its downstream text-classification experiment, Sec 4.4,
+  not for topic-quality evaluation).
+- **SearchSnippets/GoogleNews**: HiCOT's own `train_texts.txt` and
+  `test_texts.txt` are **byte-identical** (verified with a direct diff -
+  same for the label files) - there is no genuine held-out split for
+  these two, only one corpus duplicated across both filenames.
+  `_load_raw()` detects this (exact equality of both texts and labels)
+  and uses train alone, rather than silently doubling every document
+  (which would corrupt corpus size and every topic-quality metric
+  computed over it).
+
+**Labels**: already 0-indexed contiguous integers in the official files
+(verified: AGNews has exactly `{0,1,2,3}`, IMDB exactly `{0,1}`, 20NG
+exactly 20 distinct values) - used as-is, `num_classes = max(labels)+1`.
+
+**Vocab/BoW/word-embeddings are downloaded but not auto-wired into any
+model.** `load_hicot_vocab()`/`load_hicot_bow()`/
+`load_hicot_word_embeddings()` (same module) expose HiCOT's own 200-dim
+GloVe embeddings (matching ECRTM Appendix B's spec) and BoW matrices
+(scipy-sparse `.npz`) for a future caller - e.g. passing
+`load_hicot_vocab(...)` as VAEBMAdapter's own `vocabulary=` parameter
+(`models/vaebm.py::fit_predict` already supports a fixed external
+vocabulary, for exactly this kind of protocol-fidelity need). This was
+deliberately NOT wired into `experiment/runner.py` automatically: forcing
+VAE-BM (or any model) onto HiCOT's own fixed vocabulary for these
+datasets is a model-behavior decision with real consequences for
+`--voc-size`, left for an explicit future change rather than decided
+silently here.
+
+**Still not changed by adding these dataset ids** (see #10 above for the
+metric-side alignment, which is independent of this): the actual
+preprocessing pipeline these texts went through is HiCOT's own, not
+independently re-verified against Card et al. (2018)'s exact 5 steps
+here - it is used because it is the paper's own artifact, not because
+this project re-derived or checked it.

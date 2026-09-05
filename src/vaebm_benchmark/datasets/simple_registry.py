@@ -38,6 +38,16 @@ def _imdb():
     return loaded.documents, loaded.labels, len(loaded.label_names)
 
 
+def _hicot_loader(dataset_id: str):
+    def _load():
+        from vaebm_benchmark.datasets.definitions.hicot_datasets import DATASETS
+
+        loaded = DATASETS[dataset_id]().load()
+        return loaded.documents, loaded.labels, len(loaded.label_names)
+
+    return _load
+
+
 # Short-text-clustering family (STC2 + GoogleNews + Tweet), all from the
 # same brunoguilherme1/TopicClusterDocument mirror via LabelTabTextDataset
 # - see datasets/definitions/short_text_benchmarks.py.
@@ -52,9 +62,24 @@ SHORT_TEXT_DATASET_IDS = [
     "tweet",
 ]
 
+# The official HiCOT (Tran et al., 2025) pre-processed artifacts - used
+# verbatim, see datasets/definitions/hicot_datasets.py's own module
+# docstring for exact provenance/train-test-combination rules per
+# dataset. Kept as separate ids from the pre-existing 20ng/imdb/
+# agnews_short/search_snippets/google_news_* above (different artifacts,
+# different preprocessing/vocab - never silently merged with them).
+HICOT_DATASET_IDS = [
+    "hicot_20ng",
+    "hicot_imdb",
+    "hicot_agnews",
+    "hicot_search_snippets",
+    "hicot_google_news",
+]
+
 LOADERS = {dataset_id: _short_text_loader(dataset_id) for dataset_id in SHORT_TEXT_DATASET_IDS}
 LOADERS["20ng"] = _twenty_newsgroups
 LOADERS["imdb"] = _imdb
+LOADERS.update({dataset_id: _hicot_loader(dataset_id) for dataset_id in HICOT_DATASET_IDS})
 
 # Aliases: alternate spellings that map onto an already-registered id,
 # rather than duplicating a dataset definition under two names.
