@@ -1,29 +1,54 @@
-"""Cluster experiment: pure document-clustering-quality comparison
-(ACC + NMI only - no C_V/TD/Purity, see experiment/runner.py for the
-topic-quality experiment those belong to).
+"""Cluster experiment: unsupervised document-clustering-quality
+comparison, using the FULL dataset transductively (fit AND evaluate on
+the same combined corpus, NOT the HiCOT train/test split - see
+experiment/classification_runner.py for the experiment that uses that
+split; the same "full corpus" convention experiment/runner.py's topic
+experiment and ECRTM's own Table 2/3 already use, see
+docs/methodological_notes.md #11/#12).
 
-    documents -> model.fit() -> model.get_document_clusters() -> compare
-    against ground-truth labels (ACC via Hungarian-matched accuracy, NMI)
+    documents -> model.fit() -> hard cluster assignment -> compare
+    against ground-truth labels (label-based metrics) AND against the
+    model's own feature space (label-free geometry metrics)
 
-Labels are used ONLY after fitting, to (a) determine the benchmark's own
+Labels are used ONLY after fitting: (a) to determine the benchmark's own
 class cardinality K (`requested_k = num_classes`, never a value chosen by
-looking at how well a model does) and (b) score ACC/NMI - never during
-`model.fit()`.
+looking at how well a model does), and (b) to score the label-based
+metrics below - never during `model.fit()`. Silhouette/Davies-Bouldin/
+Calinski-Harabasz never see labels at all (see
+metrics/clustering_quality.py's own module docstring on this
+distinction).
+
+Metrics computed:
+  - Label-based (ground truth vs. predicted cluster): ACC (Hungarian),
+    NMI, ARI, AMI, Homogeneity, Completeness, V-measure, Purity.
+  - Label-free/geometry (predicted cluster vs. the model's OWN feature
+    space only): Silhouette, Davies-Bouldin, Calinski-Harabasz.
+
+`assignment_source`/`representation_source` (see experiment/
+scientific_models.py) record, per model, HOW its hard cluster assignment
+was derived and WHICH feature space the geometry metrics were computed
+over - gated on model NAME, never on whether get_document_topics()
+returns non-None (VAEBMAdapter's own get_document_topics() always
+returns mu, never None - see docs/methodological_notes.md #1/#10):
+"argmax_theta" for fastopic/glocom/lda/hicot (a genuine theta),
+"kmeans_on_latent_mu" for vaebm (its EXISTING, unchanged KMeans-on-mu
+behavior - mu is never softmaxed into a fake theta), "kmeans_on_embeddings"
+for bertopic (its own SBERT-embedding KMeans swap).
 
 MODEL REGISTRY, NOT BRANCHING: `CLUSTER_MODEL_BUILDERS` maps a model name
-to a small builder function; `run_single()` below never inspects a model
-name itself - it only ever calls the two capability methods every
-adapter already implements (`fit(documents)`, `get_document_clusters
-(documents)`, both from models/base.py::ProtocolModelAdapter). Adding a
-future baseline to this experiment is exactly one new entry in that dict
-plus (if needed) a small `_build_<name>` function - nothing else in this
-module changes.
+to a small builder function; `run_single()` below dispatches on
+`assignment_source` (itself looked up by model name, see above), not on
+the model name directly - adding a future baseline is one new entry in
+`CLUSTER_MODEL_BUILDERS` plus a `representation_source_for_model()`/
+`assignment_source_for_model()` case in scientific_models.py.
 
-FASTopic/GloCOM here use their EXISTING adapters' generic, non-protocol-
-pinned `fit(documents)` path (no released official BoW/vocab artifact
-injected - see models/fastopic_adapter.py / models/glocom_adapter.py) -
-appropriate for this experiment, which compares models on a SHARED
-generic corpus, not a specific paper's own pinned dataset artifact.
+FASTopic/GloCOM/LDA/HiCOT here use their EXISTING adapters' generic,
+non-protocol-pinned `fit(documents)` path (no released official BoW/
+vocab/word-embeddings artifact injected for HiCOT's own datasets, unlike
+experiment/classification_runner.py, which does inject them - see
+scientific_models.py::build_hicot) - appropriate for this experiment,
+which compares models on a SHARED generic corpus, not a specific paper's
+own pinned dataset artifact.
 """
 
 from __future__ import annotations
@@ -48,6 +73,22 @@ class ClusterResult:
     runtime_seconds: float
     status: str  # "ok" | "error"
     error: str = ""
+    # Added alongside ari/ami/.../assignment_source below (originally
+    # only acc/nmi existed) - defaulted and placed after `error` so
+    # existing construction call sites (tests, this module's own
+    # pre-existing callers) that only pass the original fields keep
+    # working unchanged; new callers pass these as keyword arguments too.
+    ari: Optional[float] = None
+    ami: Optional[float] = None
+    homogeneity: Optional[float] = None
+    completeness: Optional[float] = None
+    v_measure: Optional[float] = None
+    purity: Optional[float] = None
+    silhouette: Optional[float] = None
+    davies_bouldin: Optional[float] = None
+    calinski_harabasz: Optional[float] = None
+    representation_source: str = ""
+    assignment_source: str = ""
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -112,11 +153,31 @@ def _build_glocom(k: int, seed: int, voc_size: int):
     # SearchSnippets artifact for the GloCOM protocol track).
 
 
+def _build_lda(k: int, seed: int, voc_size: int):
+    from vaebm_benchmark.experiment.scientific_models import build_lda
+
+    return build_lda(k, seed, voc_size)
+
+
+def _build_hicot(k: int, seed: int, voc_size: int):
+    """Generic (not protocol-pinned) path - self-fits its own vocabulary/
+    word-embedding init, same reasoning as _build_fastopic/_build_glocom
+    above. experiment/classification_runner.py uses HiCOT's own official
+    vocab/word-embeddings for hicot_* datasets instead - see
+    scientific_models.py::build_hicot's `dataset_id` parameter, left
+    unset (None) here."""
+    from vaebm_benchmark.experiment.scientific_models import build_hicot
+
+    return build_hicot(k, seed, voc_size)
+
+
 CLUSTER_MODEL_BUILDERS = {
     "vaebm": _build_vaebm,
     "bertopic": _build_bertopic,
     "fastopic": _build_fastopic,
     "glocom": _build_glocom,
+    "lda": _build_lda,
+    "hicot": _build_hicot,
 }
 
 
@@ -124,12 +185,20 @@ def list_cluster_models() -> list[str]:
     return sorted(CLUSTER_MODEL_BUILDERS)
 
 
+LABEL_METRIC_IDS = ["acc", "nmi", "ari", "ami", "homogeneity", "completeness", "v_measure", "purity"]
+GEOMETRY_METRIC_IDS = ["silhouette", "davies_bouldin", "calinski_harabasz"]
+
+
 def run_single(model_name: str, dataset_id: str, seed: int = 42, voc_size: int = 5000) -> ClusterResult:
+    import numpy as np
+
     from vaebm_benchmark.datasets.simple_registry import load_dataset, resolve_dataset_id
-    from vaebm_benchmark.metrics.clustering_quality import accuracy_hungarian, nmi as compute_nmi
+    from vaebm_benchmark.experiment.scientific_models import assignment_source_for_model, representation_source_for_model
+    from vaebm_benchmark.metrics.clustering_quality import compute_clustering_metrics, compute_geometry_metrics
     from vaebm_benchmark.utils.seeding import set_all_seeds
 
     resolved_dataset_id = resolve_dataset_id(dataset_id)
+    empty_metrics = {name: None for name in LABEL_METRIC_IDS + GEOMETRY_METRIC_IDS}
     start = time.perf_counter()
     try:
         if model_name not in CLUSTER_MODEL_BUILDERS:
@@ -142,24 +211,48 @@ def run_single(model_name: str, dataset_id: str, seed: int = 42, voc_size: int =
         model = CLUSTER_MODEL_BUILDERS[model_name](requested_k, seed, voc_size)
         model.fit(documents)  # labels never passed here
 
-        clusters = model.get_document_clusters(documents)
+        representation_source = representation_source_for_model(model_name)
+        assignment_source = assignment_source_for_model(model_name)
+
+        # Hard cluster assignment - "argmax_theta" for a genuine theta
+        # (fastopic/glocom/lda/hicot), the model's OWN existing
+        # get_document_clusters() otherwise (vaebm's KMeans-on-mu,
+        # bertopic's KMeans-on-embeddings - both UNCHANGED). Same
+        # feature_space also feeds the label-free geometry metrics below.
+        if assignment_source == "argmax_theta":
+            feature_space = model.get_document_topics(documents)
+            clusters = [int(i) for i in np.argmax(np.asarray(feature_space), axis=1)]
+        else:
+            clusters = model.get_document_clusters(documents)
+            feature_space = model.get_document_embeddings(documents)  # mu (vaebm) or embeddings (bertopic)
         actual_k = len(set(clusters))
 
-        acc = accuracy_hungarian(clusters, labels)
-        nmi_value = compute_nmi(clusters, labels)
+        label_metrics = compute_clustering_metrics(clusters, labels, LABEL_METRIC_IDS)
+        try:
+            geometry_metrics = compute_geometry_metrics(feature_space, clusters, GEOMETRY_METRIC_IDS)
+        except Exception:
+            # Silhouette/DB/CH require >=2 non-trivial clusters - a
+            # degenerate assignment (e.g. actual_k < 2) fails these
+            # specifically without invalidating the label-based metrics
+            # above, which don't have this requirement.
+            geometry_metrics = {name: None for name in GEOMETRY_METRIC_IDS}
 
         runtime = time.perf_counter() - start
         return ClusterResult(
             experiment="cluster", model=model_name, dataset=dataset_id, seed=seed,
             requested_k=requested_k, actual_k=actual_k, num_classes=num_classes,
-            acc=acc, nmi=nmi_value, runtime_seconds=runtime, status="ok",
+            representation_source=representation_source, assignment_source=assignment_source,
+            runtime_seconds=runtime, status="ok",
+            **label_metrics, **geometry_metrics,
         )
     except Exception as exc:  # noqa: BLE001 - one failed combination must not abort the whole sweep
         runtime = time.perf_counter() - start
         return ClusterResult(
             experiment="cluster", model=model_name, dataset=dataset_id, seed=seed,
-            requested_k=0, actual_k=None, num_classes=0, acc=None, nmi=None,
+            requested_k=0, actual_k=None, num_classes=0,
+            representation_source="", assignment_source="",
             runtime_seconds=runtime, status="error", error=f"{exc}\n{traceback.format_exc(limit=3)}",
+            **empty_metrics,
         )
 
 

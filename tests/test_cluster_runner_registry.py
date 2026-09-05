@@ -9,8 +9,11 @@ no dataset download, no network access.
 from vaebm_benchmark.experiment.cluster_runner import CLUSTER_MODEL_BUILDERS, list_cluster_models
 
 
-def test_all_four_models_are_registered():
-    assert set(list_cluster_models()) == {"vaebm", "bertopic", "fastopic", "glocom"}
+def test_all_six_models_are_registered():
+    """vaebm/bertopic/fastopic/glocom, plus lda/hicot added for the
+    classification/cluster experiments' shared model set (see
+    experiment/scientific_models.py)."""
+    assert set(list_cluster_models()) == {"vaebm", "bertopic", "fastopic", "glocom", "lda", "hicot"}
 
 
 def test_registry_is_a_plain_dict_not_branching_logic():

@@ -370,3 +370,126 @@ preprocessing pipeline these texts went through is HiCOT's own, not
 independently re-verified against Card et al. (2018)'s exact 5 steps
 here - it is used because it is the paper's own artifact, not because
 this project re-derived or checked it.
+
+## 12. `classification`/`cluster`/`all` experiments: model set, representation, and every judgment call
+
+Two new `scripts/run_experiment.py` experiment types, plus `--experiment
+all` to run topic+classification+cluster in sequence (three separate
+outputs, never merged) - model set `{vaebm, fastopic, lda, hicot}`
+throughout (`experiment/scientific_models.py`), with `bertopic`/`glocom`
+also usable in `cluster` (both pre-existing there already).
+
+**`representation_source`/`assignment_source` are looked up by MODEL
+NAME, never by probing what `get_document_topics()` returns.**
+`VAEBMAdapter.get_document_topics()` always returns `mu` (never `None` -
+it is reused there as the storage slot `get_mu()`/
+`get_document_embeddings()` also read from), even though `mu` is
+explicitly not a topic distribution (#1 above). A naive "non-`None` ->
+must be theta" check would silently treat `mu` as `theta` for VAE-BM -
+exactly the mistake this project has now caught and fixed twice (first
+in `experiment/runner.py`'s `ecrtm_hicot` protocol work, #10 above; the
+same fix is applied here via `scientific_models.py`'s
+`representation_source_for_model()`/`assignment_source_for_model()`,
+gated on model name, reused by both new experiments). Values:
+`"theta"`/`"argmax_theta"` for fastopic/glocom/lda/hicot (all four
+expose a genuine document-topic probability simplex via
+`get_document_topics()`/`transform()`); `"mu"`/`"kmeans_on_latent_mu"`
+for vaebm (its EXISTING, unchanged behavior - `mu` is never softmaxed
+into a fake `theta`); `"embeddings"`/`"kmeans_on_embeddings"` for
+bertopic (a plain SBERT-embedding KMeans swap, no theta or mu at all).
+
+**LDA** (`models/lda_adapter.py`): scikit-learn's own
+`LatentDirichletAllocation` (`learning_method="online"`, its own
+default) - no reimplementation, straightforward `transform()` ->
+genuine `theta`.
+
+**HiCOT** (`models/_hicot_source.py` + `models/hicot_adapter.py`): the
+actual model vendored from `github.com/HoangTran223/HiCOT`
+(`HiCOT/{HiCOT,ECR,DT,TP,_model_utils}.py`), mirroring this project's
+existing GloCOM-vendoring precedent (`models/_glocom_source.py`) rather
+than reimplementing from the paper alone - see `_hicot_source.py`'s own
+module docstring for exactly what was dropped as unused
+(`torch_kmeans`, `sklearn.cluster.KMeans`, `scipy.spatial.distance.
+squareform`, `sentence_transformers`, `utils.static_utils` - all
+imported upstream but never referenced in `HiCOT.py`'s own body;
+`hdbscan` made a lazy import, only reached by the non-default
+`method_CL="HDBSCAN"` path). Hyperparameter defaults are taken from
+upstream's own `utils/config.py` argparse defaults (verified against
+`main.py`'s actual `HiCOT(...)` construction call), NOT `HiCOT`'s own
+class-signature defaults, which differ in three places: `weight_loss_ECR`
+(argparse 40.0 vs. class-signature 250.0), `max_clusters` (argparse 9 vs.
+class-signature 50), `threshold_cluster` (argparse 10 vs.
+class-signature 30). `use_pretrainWE` defaults to `False`, matching
+upstream's own argparse default, even when a real
+`load_hicot_word_embeddings()` artifact is available - this adapter does
+not silently opt every run into pretrained embeddings.
+
+**Document embeddings computed live, not downloaded.** Upstream's own
+`datasethandler/basic_dataset_handler.py` loads a SEPARATE, precomputed
+`doc2vec/doc_embeddings_384_.npz` artifact this project's own
+`hicot_datasets.py` does NOT fetch (only the 8 files listed in #11
+above). `HiCOTAdapter.fit()` instead encodes documents live via
+`sentence_transformers` (default `all-MiniLM-L6-v2`, 384-dim, matching
+`HiCOT`'s own `doc2vec_size=384` default) - mathematically the same
+encoding process, just not reusing the cached file. This is what lets
+`HiCOTAdapter` fit on ANY document list (the `cluster` experiment's own
+generic-corpus philosophy - see `cluster_runner.py`'s own module
+docstring), not only the pinned `hicot_*` datasets.
+
+**`cluster` uses HiCOT's own official vocab/word-embeddings only for
+`classification`, not for itself.** `scientific_models.py::build_hicot`
+takes an optional `dataset_id` - when it is a `hicot_*` id,
+`load_hicot_vocab()`/`load_hicot_word_embeddings()` (#11 above) are
+injected; `cluster_runner.py`'s own `_build_hicot` leaves `dataset_id`
+unset (generic self-fit vocab/random embedding init), matching how
+`_build_fastopic`/`_build_glocom` already treat that experiment's own
+philosophy ("compares models on a SHARED generic corpus, not a specific
+paper's own pinned dataset artifact" - the module's own pre-existing
+docstring). `classification_runner.py` always passes `dataset_id`,
+since its own experiment is explicitly about HiCOT's official protocol.
+
+**Why `classification` requires a real train/test split and `cluster`
+does not.** Classification accuracy is only a meaningful generalization
+measurement against a genuinely held-out test set; `cluster`/`topic`
+evaluate transductively over the full corpus (matching ECRTM's own Table
+2/3 methodology and this project's other datasets/protocols, #3/#10
+above). `datasets/definitions/hicot_datasets.py::load_hicot_split()`
+raises for `hicot_search_snippets`/`hicot_google_news` specifically,
+since HiCOT ships the identical corpus under both `train_texts.txt` and
+`test_texts.txt` for those two (verified directly, #11 above) - silently
+handing back that "split" would report a data-leaked accuracy, not a
+real one.
+
+**The SVM protocol itself.** ECRTM Sec 4.4 / HiCOT's own `--tune_SVM`
+reference: "we use the doc-topic distributions learned by topic models
+as document features and train SVMs to predict the class of each
+document." Neither paper's own text/code (HiCOT's `evaluations/` package
+has no SVM module) specifies an exact kernel/C - this experiment uses
+scikit-learn's `SVC(kernel="linear", C=1.0)` (`--svm-kernel`/`--svm-c`
+overridable), a documented default, not a claim of reproducing either
+paper's own SVM tuning.
+
+**Multi-seed semantics differ between the two new experiments' own
+established conventions, deliberately.** `cluster` (pre-existing,
+unchanged) and `classification` (new) both refit the WHOLE model per
+seed (not just re-seed a downstream classifier/KMeans step) - the same
+"seed reseeds the whole pipeline" convention `experiment/runner.py`'s
+topic experiment already uses, capturing a model's own training
+variance rather than only a downstream step's. `classification`'s own
+aggregation (`utils/stats.py::summarize`, mirroring - not importing,
+per this project's independence from DTEA - the same Student's-t
+single-sample CI approach `--protocol`-adjacent work already documented,
+#10 above) additionally reports `n_runs`/mean/std/CI, since accuracy/F1
+`std` and a 95% CI are only meaningful with 2+ seeds - a single seed
+still runs (n_runs=1, ci_lower==ci_upper==the one value, std=0.0), never
+a fabricated interval.
+
+**The label-based vs. label-free metric distinction** (`cluster`'s
+ACC/NMI/ARI/AMI/Homogeneity/Completeness/V-measure/Purity vs.
+Silhouette/Davies-Bouldin/Calinski-Harabasz,
+`metrics/clustering_quality.py`) mirrors the reference architecture at
+`github.com/brunoguilherme1/document-topic-evaluatio-arena`'s own
+`metrics/definitions/{clustering_quality,geometry}.py` split (same
+scikit-learn functions, same citations) - reimplemented independently
+here, not imported, per this project's own stated independence from
+that repo (`models/base.py`'s own docstring).

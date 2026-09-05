@@ -189,3 +189,42 @@ def load_hicot_bow(dataset_id: str, split: str = "train"):
     dataset = DATASETS[dataset_id]()
     dataset.download()
     return sp.load_npz(dataset.raw_dir() / f"{split}_bow.npz")
+
+
+# Datasets where HiCOT's own train_texts.txt/test_texts.txt (and labels)
+# are byte-identical - see this module's own docstring. load_hicot_split()
+# raises for these rather than silently handing back a "held-out" test
+# set that is actually the training set verbatim (a data leak that would
+# make classification accuracy meaningless, not merely optimistic).
+NO_GENUINE_SPLIT_DATASET_IDS = {"hicot_search_snippets", "hicot_google_news"}
+
+
+def load_hicot_split(dataset_id: str) -> tuple[list[str], list[int], list[str], list[int], int]:
+    """The genuine, UN-concatenated official train/test split - for
+    experiment/classification_runner.py, which (per ECRTM's own Sec 4.4
+    text-classification protocol) needs a real held-out test set, unlike
+    the `topic`/`cluster` experiments (load_dataset() above, which
+    combines train+test transductively, matching how this project's
+    other experiments and ECRTM's own Table 2/3 evaluate topic quality).
+
+    Raises ValueError for `dataset_id` in NO_GENUINE_SPLIT_DATASET_IDS
+    (SearchSnippets/GoogleNews) - HiCOT ships the same corpus under both
+    filenames for these two, so there is no real held-out set to use
+    here; silently returning train==test would report a data-leaked
+    accuracy that isn't a real generalization measurement."""
+    if dataset_id in NO_GENUINE_SPLIT_DATASET_IDS:
+        raise ValueError(
+            f"'{dataset_id}' has no genuine held-out test split - HiCOT ships the identical corpus "
+            "under both train_texts.txt and test_texts.txt for this dataset (verified directly - see "
+            "this module's own docstring). Using it for classification would silently data-leak "
+            "(train == test). Choose a dataset with a real split instead: "
+            f"{sorted(set(DATASETS) - NO_GENUINE_SPLIT_DATASET_IDS)}."
+        )
+    dataset = DATASETS[dataset_id]()
+    dataset.download()
+    train_texts = _read_lines(dataset.raw_dir() / "train_texts.txt")
+    test_texts = _read_lines(dataset.raw_dir() / "test_texts.txt")
+    train_labels = _read_int_lines(dataset.raw_dir() / "train_labels.txt")
+    test_labels = _read_int_lines(dataset.raw_dir() / "test_labels.txt")
+    num_classes = max(train_labels + test_labels) + 1
+    return train_texts, train_labels, test_texts, test_labels, num_classes

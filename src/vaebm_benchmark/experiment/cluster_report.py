@@ -29,11 +29,17 @@ import statistics
 from collections import defaultdict
 from typing import Optional
 
-from vaebm_benchmark.experiment.cluster_runner import ClusterResult
+from vaebm_benchmark.experiment.cluster_runner import GEOMETRY_METRIC_IDS, LABEL_METRIC_IDS, ClusterResult
 from vaebm_benchmark.experiment.report import DATASET_DISPLAY_NAMES, MODEL_DISPLAY_NAMES
 
-CLUSTER_METRIC_ORDER = ["acc", "nmi"]
-CLUSTER_METRIC_DISPLAY_NAMES = {"acc": "ACC", "nmi": "NMI"}
+# Table B's own requested column order: ACC | NMI | ARI | AMI |
+# Homogeneity | Completeness | V-measure | Purity | Silhouette | DB | CH.
+CLUSTER_METRIC_ORDER = LABEL_METRIC_IDS + GEOMETRY_METRIC_IDS
+CLUSTER_METRIC_DISPLAY_NAMES = {
+    "acc": "ACC", "nmi": "NMI", "ari": "ARI", "ami": "AMI",
+    "homogeneity": "Homog.", "completeness": "Complet.", "v_measure": "V-meas.", "purity": "Purity",
+    "silhouette": "Silh.", "davies_bouldin": "DB", "calinski_harabasz": "CH",
+}
 
 
 def aggregate_cluster_results(results: list[ClusterResult]) -> tuple[list[ClusterResult], int, Optional[int]]:
@@ -62,19 +68,26 @@ def aggregate_cluster_results(results: list[ClusterResult]) -> tuple[list[Cluste
             example = next((r.error.splitlines()[0] for r in group if r.error), "")
             aggregated.append(ClusterResult(
                 experiment="cluster", model=model, dataset=dataset, seed=-1,
-                requested_k=0, actual_k=None, num_classes=0, acc=None, nmi=None,
+                requested_k=0, actual_k=None, num_classes=0,
+                representation_source=group[0].representation_source, assignment_source=group[0].assignment_source,
                 runtime_seconds=total_runtime, status="error",
                 error=f"all {len(group)} seed(s) failed" + (f": {example}" if example else ""),
+                **{name: None for name in CLUSTER_METRIC_ORDER},
             ))
             continue
+        averaged_metrics = {
+            name: statistics.mean(v for r in ok_results if (v := getattr(r, name)) is not None)
+            if any(getattr(r, name) is not None for r in ok_results) else None
+            for name in CLUSTER_METRIC_ORDER
+        }
         aggregated.append(ClusterResult(
             experiment="cluster", model=model, dataset=dataset,
             seed=-1,  # -1 = "aggregated across seeds", not a real single seed
             requested_k=ok_results[0].requested_k, actual_k=ok_results[0].actual_k,
             num_classes=ok_results[0].num_classes,
-            acc=statistics.mean(r.acc for r in ok_results),
-            nmi=statistics.mean(r.nmi for r in ok_results),
+            representation_source=ok_results[0].representation_source, assignment_source=ok_results[0].assignment_source,
             runtime_seconds=total_runtime, status="ok",
+            **averaged_metrics,
         ))
 
     num_seeds = len(all_seeds)
@@ -252,10 +265,12 @@ def render_cluster_latex_table(results: list[ClusterResult], fmt: str = "percent
 def cluster_results_to_rows(results: list[ClusterResult]) -> list[dict]:
     return [
         {
-            "experiment": r.experiment, "model": r.model, "dataset": r.dataset, "seed": r.seed,
+            "experiment_type": "cluster",
+            "model": r.model, "dataset": r.dataset, "seed": r.seed,
             "requested_k": r.requested_k, "actual_k": r.actual_k, "num_classes": r.num_classes,
-            "acc": r.acc, "nmi": r.nmi, "runtime_seconds": round(r.runtime_seconds, 3), "status": r.status,
-            "error": r.error,
+            "representation_source": r.representation_source, "assignment_source": r.assignment_source,
+            **{name: getattr(r, name) for name in CLUSTER_METRIC_ORDER},
+            "runtime_seconds": round(r.runtime_seconds, 3), "status": r.status, "error": r.error,
         }
         for r in results
     ]
