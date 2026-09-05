@@ -36,31 +36,28 @@ metric-computation mode aligning topic_evaluation with ECRTM (Wu et al.,
 ICML 2023) and HiCOT (2025) as closely as possible WITHOUT touching
 datasets or preprocessing (neither paper's exact dataset artifact/
 preprocessing pipeline is reproduced here - see
-docs/methodological_notes.md #10): top_n=15 (both papers'), C_V via
-Palmetto/Wikipedia by default, and TD via the fixed-K*top_n-denominator
-Dieng definition (`topic_diversity_dieng_fixed_k`). The default `protocol=
-"generic"` reproduces this runner's original behavior byte-for-byte
-(top_n=10, local-corpus C_V by default, the original `topic_diversity()`)
-- passing `--protocol ecrtm_hicot` never changes a "generic" run's own
-numbers.
+docs/methodological_notes.md #10): top_n=15 (both papers'), TD via the
+fixed-K*top_n-denominator Dieng definition
+(`topic_diversity_dieng_fixed_k`). The default `protocol="generic"`
+reproduces this runner's original behavior byte-for-byte (top_n=10, the
+original `topic_diversity()`) - passing `--protocol ecrtm_hicot` never
+changes a "generic" run's own numbers.
 
 `cv_method` (`--cv-method {local,palmetto}`, `run_single`/`run_sweep`'s
 own parameter) decouples WHICH function computes C_V from `protocol`
-(which still controls top_n/TD): `None` (nothing passed, the default)
-means "follow `protocol`'s own default" - i.e. byte-for-byte the same
-behavior as before this parameter existed. Passing `"palmetto"`/`"local"`
-explicitly overrides that regardless of `protocol` - e.g.
-`--protocol generic --cv-method palmetto` for real Wikipedia C_V without
-the top_n=15/TD-fixed-K bundle, or `--protocol ecrtm_hicot --cv-method
-local` to skip Palmetto for a quick run. When the EFFECTIVE method
-(explicit `--cv-method`, or `protocol`'s own default) is `"palmetto"`,
-`scripts/run_experiment.py` auto-installs Palmetto/the Wikipedia index
-first (via `scripts/setup_palmetto.py::ensure_palmetto_ready`) if not
-already present, rather than silently recording every `cv` as `None` -
-see that script's own module docstring. `palmetto_cv()` itself is still
-never silently substituted with the local-corpus number if Palmetto
-somehow remains unavailable after that (e.g. the install failed) - `cv`
-is recorded as `None`/`N/A`, exactly as before.
+(which still controls top_n/TD). `None` (nothing passed - the default,
+for EITHER protocol including `ecrtm_hicot`) ALWAYS means local-corpus
+gensim C_V: Palmetto is a ~5.1GB one-time download
+(`scripts/setup_palmetto.py`) and is NEVER triggered unless the caller
+EXPLICITLY passes `cv_method="palmetto"` - `--protocol ecrtm_hicot`
+alone does not imply it. Only when `cv_method` is explicitly
+`"palmetto"` does `scripts/run_experiment.py` auto-install Palmetto/the
+Wikipedia index first (via `scripts/setup_palmetto.py::
+ensure_palmetto_ready`) if not already present, rather than silently
+recording every `cv` as `None` - see that script's own module docstring.
+`palmetto_cv()` itself is still never silently substituted with the
+local-corpus number if Palmetto remains unavailable after that (e.g.
+the install failed) - `cv` is recorded as `None`/`N/A`.
 
 Every result also now records `assignment_source` (how document clusters
 were assigned) and `topic_source` (where get_topics() words came from) -
@@ -346,16 +343,16 @@ def run_single(
         top_n = 10
         td_definition = "unique_over_returned_slots"
 
-    # `cv_method` decouples WHICH function computes C_V from `protocol`.
-    # None (nothing passed - the default) means "follow protocol's own
-    # default": palmetto for ecrtm_hicot, local-corpus gensim for generic
-    # - i.e. byte-for-byte the SAME behavior as before this parameter
-    # existed. Passing "palmetto"/"local" explicitly overrides that
-    # regardless of `protocol` (e.g. --protocol generic --cv-method
-    # palmetto to get real Wikipedia C_V without the top_n=15/TD-fixed-K
-    # bundle, or --protocol ecrtm_hicot --cv-method local to skip
-    # Palmetto for a quick run) - see docs/methodological_notes.md #10.
-    effective_cv_method = cv_method or ("palmetto" if protocol == "ecrtm_hicot" else "local")
+    # `cv_method` decouples WHICH function computes C_V from `protocol`
+    # (which still controls top_n/TD). Palmetto is a ~5.1GB one-time
+    # download (scripts/setup_palmetto.py) - it is NEVER triggered
+    # unless the caller EXPLICITLY passes `cv_method="palmetto"`. `None`
+    # (nothing passed - the default, for EITHER protocol, including
+    # "ecrtm_hicot") always means local-corpus gensim C_V - no auto-
+    # install, no large download, regardless of `--protocol`. Pass
+    # `cv_method="local"` explicitly too if you want to be unambiguous
+    # about it under `ecrtm_hicot`. See docs/methodological_notes.md #10.
+    effective_cv_method = cv_method if cv_method == "palmetto" else "local"
     cv_source = "palmetto_wikipedia" if effective_cv_method == "palmetto" else "cv_local_corpus"
 
     start = time.perf_counter()

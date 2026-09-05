@@ -220,26 +220,32 @@ What `ecrtm_hicot` DOES change, all in `experiment/runner.py::run_single()`:
   words of each discovered topic for CV/TD (ECRTM §4.1: "We select the
   top 15 words of discovered topics for the above topic quality
   evaluation").
-- **C_V via Palmetto/Wikipedia only** (`metrics/palmetto.py::palmetto_cv`,
-  already used by `protocols/glocom_protocol.py`/`fastopic_protocol.py`)
-  - never the local-training-corpus gensim fallback
-  (`metrics/topic_quality.py::coherence()`) this runner used
-  unconditionally before. ECRTM §4.1, verbatim: "We use the public
-  Wikipedia article collection as the external reference corpus. This
-  removes the bias of using relatively small datasets (e.g., training
-  sets) as the reference corpus." If `tools/palmetto/palmetto.jar` and
-  the Wikipedia index aren't present, `cv` is recorded as `None` (`N/A`
-  in the printed table) - it is never silently replaced with the local-
-  corpus number under the same `cv` column, matching how
-  `glocom_protocol.py` already treats this same distinction (see #5
-  above). Run `python scripts/setup_palmetto.py` to install both (the
-  jar - ~5.9MB, checked into `HoangTran223/HiCOT`'s own repo directly -
-  and the Wikipedia_bd coherence index - ~5.1GB compressed, official
-  DICE/AKSW host, verified reachable before that script was written) at
-  exactly the paths `metrics/palmetto.py`'s own `DEFAULT_JAR`/
+- **C_V, by default, still via the local-training-corpus gensim
+  fallback** (`metrics/topic_quality.py::coherence()`) - `ecrtm_hicot`
+  does NOT, by itself, switch to Palmetto/Wikipedia. ECRTM §4.1,
+  verbatim: "We use the public Wikipedia article collection as the
+  external reference corpus. This removes the bias of using relatively
+  small datasets (e.g., training sets) as the reference corpus." - so
+  the paper-faithful C_V source IS Palmetto, but it is a ~5.1GB one-time
+  download (`scripts/setup_palmetto.py`) this project deliberately never
+  triggers just because `--protocol ecrtm_hicot` was passed (a real cost
+  a caller may not want on every run, e.g. a quick smoke test). Pass
+  `--cv-method palmetto` EXPLICITLY (works under either `--protocol`) to
+  opt in - only then is `metrics/palmetto.py::palmetto_cv` used, and
+  only then does `scripts/run_experiment.py` auto-install Palmetto/the
+  Wikipedia index first if not already present
+  (`scripts/setup_palmetto.py::ensure_palmetto_ready` - the jar, ~5.9MB,
+  checked into `HoangTran223/HiCOT`'s own repo directly; the
+  Wikipedia_bd coherence index, ~5.1GB compressed, official DICE/AKSW
+  host, verified reachable before that script was written - both landing
+  at exactly the paths `metrics/palmetto.py`'s own `DEFAULT_JAR`/
   `DEFAULT_WIKI_INDEX` expect; idempotent, prints a step-by-step debug
   trail throughout since it is meant to run unattended on a Colab/SLURM
-  session.
+  session). If Palmetto remains unavailable even after that attempt
+  (e.g. the install failed), `cv` is recorded as `None` (`N/A` in the
+  printed table) - it is never silently replaced with the local-corpus
+  number under the same `cv` column, matching how `glocom_protocol.py`
+  already treats this same distinction (see #5 above).
 - **TD via the fixed-K*15-denominator Dieng definition**
   (`metrics/topic_quality.py::topic_diversity_dieng_fixed_k`), not the
   pre-existing `topic_diversity()`. The two diverge whenever a model
