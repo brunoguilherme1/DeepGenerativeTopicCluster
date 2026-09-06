@@ -171,6 +171,12 @@ def _build_hicot(k: int, seed: int, voc_size: int):
     return build_hicot(k, seed, voc_size)
 
 
+def _build_sbert_kmeans(k: int, seed: int, voc_size: int):
+    from vaebm_benchmark.experiment.scientific_models import build_sbert_kmeans
+
+    return build_sbert_kmeans(k, seed, voc_size)
+
+
 CLUSTER_MODEL_BUILDERS = {
     "vaebm": _build_vaebm,
     "bertopic": _build_bertopic,
@@ -178,6 +184,7 @@ CLUSTER_MODEL_BUILDERS = {
     "glocom": _build_glocom,
     "lda": _build_lda,
     "hicot": _build_hicot,
+    "sbert_kmeans": _build_sbert_kmeans,
 }
 
 

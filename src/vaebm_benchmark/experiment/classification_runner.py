@@ -1,6 +1,6 @@
 """Downstream text-classification experiment (--experiment classification):
 
-    document -> model representation (theta or mu) -> SVM -> labels
+    document -> model representation (theta, mu, or SBERT embeddings) -> SVM -> labels
 
 Following ECRTM (Wu et al., ICML 2023) Sec 4.4 / HiCOT's own `--tune_SVM`
 protocol reference: "we use the doc-topic distributions learned by topic
@@ -67,6 +67,12 @@ def _representation(model, documents: list[str], representation_source: str):
         # get_document_topics() would also return for this model, fetched
         # via the unambiguously-named getter instead - see
         # docs/methodological_notes.md #1 on why mu is not theta.
+        return model.get_document_embeddings(documents)
+    if representation_source == "embeddings":
+        # sbert_kmeans has no theta/mu at all - its own SBERT embedding
+        # space (the same space it clustered in) is the document
+        # representation here, a completely standard "embed -> SVM"
+        # classification baseline in its own right, not a fallback.
         return model.get_document_embeddings(documents)
     raise ValueError(f"Unknown representation_source '{representation_source}'")
 
