@@ -1,10 +1,20 @@
 """Shared model registry for the `classification` and `cluster`
 experiments (scripts/run_experiment.py --experiment classification /
---experiment cluster) - model set {vaebm, fastopic, lda, hicot}, each
-exposing a genuine representation (`theta` for fastopic/lda/hicot, `mu`
-for VAE-BM - see docs/methodological_notes.md #1 on why `mu` is not
-`theta`) that both experiments consume identically, so a model added
+--experiment cluster) - model set {vaebm, fastopic, lda, hicot,
+sbert_kmeans}, each exposing a genuine representation (`theta` for
+fastopic/lda/hicot, `mu` for VAE-BM - see docs/methodological_notes.md
+#1 on why `mu` is not `theta` - `embeddings` for sbert_kmeans, which has
+neither) that both experiments consume identically, so a model added
 here is available to both without duplicating builder logic.
+
+`sbert_kmeans` (plain SBERT embeddings + scikit-learn KMeans, no
+learned/trained topic model of its own - the same baseline
+`document-topic-evaluatio-arena`'s own registry treats as a first-class
+model, see its README) is included here specifically as a cheap,
+always-available baseline to contrast against the four genuine topic
+models above - useful when one of them isn't installed in a given
+environment (e.g. `fastopic`/`tensorflow` missing) or as a fast sanity
+check before a full sweep.
 
 Epoch counts below are REDUCED from each model's own paper defaults for
 a generic cross-dataset smoke run - same convention
@@ -25,7 +35,7 @@ protocol) - same reasoning, extended to this model set.
 
 from __future__ import annotations
 
-MODEL_NAMES = ["vaebm", "fastopic", "lda", "hicot"]
+MODEL_NAMES = ["vaebm", "fastopic", "lda", "hicot", "sbert_kmeans"]
 
 
 def build_vaebm(k: int, seed: int, voc_size: int, dataset_id: str = None):
@@ -97,11 +107,18 @@ def build_hicot(k: int, seed: int, voc_size: int, dataset_id: str = None):
     return HiCOTAdapter(**kwargs)
 
 
+def build_sbert_kmeans(k: int, seed: int, voc_size: int, dataset_id: str = None):
+    from vaebm_benchmark.models.sbert_kmeans_adapter import SBERTKMeansAdapter
+
+    return SBERTKMeansAdapter(n_clusters=k, embedder="all-MiniLM-L6-v2", random_state=seed)
+
+
 MODEL_BUILDERS = {
     "vaebm": build_vaebm,
     "fastopic": build_fastopic,
     "lda": build_lda,
     "hicot": build_hicot,
+    "sbert_kmeans": build_sbert_kmeans,
 }
 
 
@@ -119,13 +136,13 @@ def build_model(model_name: str, k: int, seed: int, voc_size: int, dataset_id: s
 # representation. Covers "bertopic"/"glocom" too (experiment/
 # cluster_runner.py's own pre-existing models, not in MODEL_NAMES above)
 # so that module can reuse these same three lookups for every model it
-# supports, not just this file's own four.
+# supports, not just this file's own five.
 def representation_source_for_model(model_name: str) -> str:
     if model_name == "vaebm":
         return "mu"
     if model_name in ("fastopic", "lda", "hicot", "glocom"):
         return "theta"
-    if model_name == "bertopic":
+    if model_name in ("bertopic", "sbert_kmeans"):
         return "embeddings"
     return "unknown"
 
@@ -139,15 +156,20 @@ def assignment_source_for_model(model_name: str) -> str:
         return "kmeans_on_latent_mu"
     if model_name in ("fastopic", "lda", "hicot", "glocom"):
         return "argmax_theta"
-    if model_name == "bertopic":
+    if model_name in ("bertopic", "sbert_kmeans"):
         return "kmeans_on_embeddings"
     return "unknown"
 
 
 # Every model covered here produces topic words natively (VAE-BM's own
 # decoder energy/freq view, FASTopic's/GloCOM's own extraction, LDA's own
-# components_, HiCOT's own beta, BERTopic's own c-TF-IDF) - never
-# "cluster-derived" for this set (that only applies to sbert_kmeans
-# elsewhere in this repo, not covered by this module).
+# components_, HiCOT's own beta, BERTopic's own c-TF-IDF) EXCEPT
+# sbert_kmeans, whose words are computed here, after the fact, from
+# cluster membership via class-based TF-IDF (models/
+# sbert_kmeans_adapter.py's own module docstring) - never a native
+# output of that model family, matching how experiment/runner.py's own
+# _topic_source_for_model() already treats it for the topic experiment.
 def topic_source_for_model(model_name: str) -> str:
+    if model_name == "sbert_kmeans":
+        return "cluster-derived"
     return "native"

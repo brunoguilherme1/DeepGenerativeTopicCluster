@@ -506,3 +506,46 @@ Silhouette/Davies-Bouldin/Calinski-Harabasz,
 scikit-learn functions, same citations) - reimplemented independently
 here, not imported, per this project's own stated independence from
 that repo (`models/base.py`'s own docstring).
+
+**`sbert_kmeans` added as a fifth `classification`/`cluster` model** -
+plain SBERT embeddings (`all-MiniLM-L6-v2` default) + scikit-learn
+KMeans, no trained topic model of its own. Mirrors DTEA's own registry
+(`document-topic-evaluatio-arena`'s README lists `sbert_kmeans` as a
+first-class baseline, "embedding + clustering") - included here as a
+cheap, always-available baseline to contrast against the four genuine
+topic models, and useful as a fast sanity check (or a fallback) when
+`fastopic`/`tensorflow` aren't installed in a given environment.
+`representation_source="embeddings"`, `assignment_source=
+"kmeans_on_embeddings"`, `topic_source="cluster-derived"` (its topic
+words come from class-based TF-IDF over cluster membership, computed
+after the fact - see `models/sbert_kmeans_adapter.py`'s own module
+docstring - never a native model output). `classification_runner.py`'s
+`_representation()` gained an `"embeddings"` branch to use it as SVM
+input directly - a standard "SBERT embeddings -> SVM" baseline in its
+own right, not merely a fallback for models with no theta/mu.
+
+**A real quirk inherited from HiCOT's own vendored code, observed on a
+real run, not fixed here** (per this project's own rule: document a
+methodological/model issue, don't silently change the model): scipy
+raises `ClusterWarning: The symmetric non-negative hollow observation
+matrix looks suspiciously like an uncondensed distance matrix` from
+`_hicot_source.py::HiCOT.create_group_topic()`'s call to
+`scipy.cluster.hierarchy.linkage(distances, ...)`, where `distances` is
+already a full pairwise (num_topics x num_topics) distance matrix, not
+the condensed 1-D form (or raw observation vectors) `linkage()` expects.
+scipy still runs - it silently reinterprets the square matrix as
+`num_topics` raw observations in `num_topics`-dimensional space and
+computes its OWN new pairwise distances from that, which is related to
+but not identical to clustering directly on the intended distance
+matrix. This is upstream `HiCOT.py` source, vendored verbatim (see
+`_hicot_source.py`'s own module docstring) - not something this project
+introduced or has silently corrected. It may contribute to occasional
+degenerate topic-grouping behavior (`create_group_topic()`'s HAC-based
+grouping), on top of the more likely dominant cause: this project's own
+`build_hicot()` reduces `epochs` to 50 from upstream's own 500 (a
+smoke-run default, not a paper reproduction, see
+`scientific_models.py`'s own module docstring) - a real fit at a much
+higher `K` (e.g. GoogleNews's 152 classes) with only 50 epochs across
+four jointly-trained loss terms is a plausible, sufficient explanation
+for a collapsed/degenerate clustering on its own, without needing the
+scipy quirk to explain it.

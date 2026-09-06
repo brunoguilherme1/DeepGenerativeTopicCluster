@@ -28,6 +28,7 @@ MODEL_DISPLAY_NAMES = {
     "glocom": "GloCOM",
     "lda": "LDA",
     "hicot": "HiCOT",
+    "sbert_kmeans": "SBERT+KMeans",
 }
 METRIC_ORDER = ["cv", "purity", "nmi", "td"]
 METRIC_DISPLAY_NAMES = {"cv": "C_V", "purity": "Purity", "nmi": "NMI", "td": "TD"}
