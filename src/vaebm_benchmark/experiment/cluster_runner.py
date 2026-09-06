@@ -254,6 +254,17 @@ def run_single(model_name: str, dataset_id: str, seed: int = 42, voc_size: int =
             runtime_seconds=runtime, status="error", error=f"{exc}\n{traceback.format_exc(limit=3)}",
             **empty_metrics,
         )
+    finally:
+        # Best-effort GPU/accelerator memory release before the NEXT
+        # (model, dataset, seed) combination tries to fit - see
+        # utils/gpu_memory.py's own module docstring for why.
+        from vaebm_benchmark.utils.gpu_memory import release_accelerator_memory
+
+        try:
+            del model
+        except NameError:
+            pass
+        release_accelerator_memory()
 
 
 def run_sweep(
@@ -271,11 +282,25 @@ def run_sweep(
     running one - see experiment/cluster_report.py::aggregate_cluster_results,
     which consumes exactly this flat list. Nothing here is lost or
     pre-averaged; every individual seed's result is still in the
-    returned list and gets persisted to cluster_results.csv/json."""
+    returned list and gets persisted to cluster_results.csv/json.
+
+    Prints a one-line status per (model, dataset, seed) combination AS
+    IT FINISHES, so progress is visible during a long run and partial
+    results survive even if a later combination is interrupted."""
     seed_list = seeds if seeds else [seed]
     results = []
+    total = len(datasets) * len(models) * len(seed_list)
+    count = 0
     for dataset_id in datasets:
         for model_name in models:
             for s in seed_list:
-                results.append(run_single(model_name, dataset_id, seed=s, voc_size=voc_size))
+                count += 1
+                result = run_single(model_name, dataset_id, seed=s, voc_size=voc_size)
+                results.append(result)
+                if result.status == "ok":
+                    print(f"[{count}/{total}] model={model_name} dataset={dataset_id} seed={s}: ok "
+                          f"acc={result.acc} nmi={result.nmi}", flush=True)
+                else:
+                    print(f"[{count}/{total}] model={model_name} dataset={dataset_id} seed={s}: ERROR "
+                          f"{result.error.splitlines()[0]}", flush=True)
     return results

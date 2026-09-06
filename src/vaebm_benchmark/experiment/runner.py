@@ -435,15 +435,48 @@ def run_single(
             error=f"{exc}\n{traceback.format_exc(limit=3)}",
             evaluation_protocol=protocol, top_n=top_n, cv_source=cv_source, td_definition=td_definition,
         )
+    finally:
+        # Best-effort GPU/accelerator memory release before the NEXT
+        # (model, dataset, k) combination tries to fit - a heavy model
+        # (e.g. BGE-M3) can otherwise OOM purely because an EARLIER
+        # model in the same sweep left memory allocated/fragmented, not
+        # because the current combination itself doesn't fit. Runs after
+        # BOTH a successful fit and a caught exception (an OOM'd model
+        # is exactly the case that most needs this). `model` may be
+        # unbound if `_build_model`/`load_dataset` itself raised before
+        # ever assigning it.
+        from vaebm_benchmark.utils.gpu_memory import release_accelerator_memory
+
+        try:
+            del model
+        except NameError:
+            pass
+        release_accelerator_memory()
 
 
 def run_sweep(
     models: list[str], datasets: list[str], ks: list[int], seed: int = 42,
     protocol: str = "generic", cv_method: Optional[str] = None,
 ) -> list[ExperimentResult]:
+    """Prints a one-line status for each (model, dataset, k) combination
+    AS IT FINISHES (not only after the whole sweep completes), so
+    progress is visible during a long run and partial results survive
+    even if a later combination is interrupted - the final aggregated
+    table (scripts/run_experiment.py's own printing) still runs
+    afterward on the complete returned list, unchanged."""
     results = []
+    total = len(ks) * len(datasets) * len(models)
+    count = 0
     for k in ks:
         for dataset_id in datasets:
             for model_name in models:
-                results.append(run_single(model_name, dataset_id, k, seed=seed, protocol=protocol, cv_method=cv_method))
+                count += 1
+                result = run_single(model_name, dataset_id, k, seed=seed, protocol=protocol, cv_method=cv_method)
+                results.append(result)
+                if result.status == "ok":
+                    print(f"[{count}/{total}] model={model_name} dataset={dataset_id} k={k}: ok "
+                          f"(cv={result.cv} purity={result.purity} nmi={result.nmi} td={result.td})", flush=True)
+                else:
+                    print(f"[{count}/{total}] model={model_name} dataset={dataset_id} k={k}: ERROR "
+                          f"{result.error.splitlines()[0]}", flush=True)
     return results

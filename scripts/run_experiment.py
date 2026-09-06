@@ -178,11 +178,10 @@ def _run_topic(args) -> None:
 
     print(f"Running [topic]: models={models} datasets={datasets} k={ks} seed={args.seed} "
           f"protocol={args.protocol} cv_method={effective_cv_method}\n")
+    # run_sweep() itself now prints a one-line status per (model, dataset,
+    # k) combination as it finishes - no need to re-print errors here
+    # after the fact.
     results = run_sweep(models, datasets, ks, seed=args.seed, protocol=args.protocol, cv_method=args.cv_method)
-
-    for result in results:
-        if result.status != "ok":
-            print(f"[ERROR] model={result.model} dataset={result.dataset} k={result.k}: {result.error.splitlines()[0]}")
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     topics_dir = RESULTS_DIR / "experiment" / "topics"
@@ -246,14 +245,9 @@ def _run_cluster(args) -> None:
 
     seed_desc = f"seeds={args.seeds}" if args.seeds else f"seed={args.seed}"
     print(f"Running [cluster]: models={models} datasets={datasets} {seed_desc}\n")
+    # run_sweep() itself now prints a one-line status per combination as
+    # it finishes - no need to re-print after the fact.
     results = run_sweep(models, datasets, seed=args.seed, voc_size=args.voc_size, seeds=args.seeds)
-
-    for result in results:
-        if result.status != "ok":
-            print(f"[ERROR] model={result.model} dataset={result.dataset}: {result.error.splitlines()[0]}")
-        else:
-            print(f"[ok] model={result.model} dataset={result.dataset} "
-                  f"requested_k={result.requested_k} actual_k={result.actual_k} num_classes={result.num_classes}")
 
     cluster_dir = RESULTS_DIR / "cluster"
     cluster_dir.mkdir(parents=True, exist_ok=True)
@@ -309,12 +303,9 @@ def _run_classification(args) -> None:
 
     seeds = args.seeds if args.seeds else [args.seed]
     print(f"Running [classification]: models={models} datasets={datasets} k={ks} seeds={seeds}\n")
+    # run_sweep() itself now prints a one-line status per combination as
+    # it finishes - no need to re-print after the fact.
     results = run_sweep(models, datasets, ks, seeds, voc_size=args.voc_size, svm_kernel=args.svm_kernel, svm_C=args.svm_c)
-
-    for result in results:
-        if result.status != "ok":
-            print(f"[ERROR] model={result.model} dataset={result.dataset} k={result.k} seed={result.seed}: "
-                  f"{result.error.splitlines()[0]}")
 
     classification_dir = RESULTS_DIR / "classification"
     classification_dir.mkdir(parents=True, exist_ok=True)

@@ -121,6 +121,17 @@ def run_single(
             num_train_docs=0, num_test_docs=0,
             runtime_seconds=runtime, status="error", error=f"{exc}\n{traceback.format_exc(limit=3)}",
         )
+    finally:
+        # Best-effort GPU/accelerator memory release before the NEXT
+        # (model, dataset, k, seed) combination tries to fit - see
+        # utils/gpu_memory.py's own module docstring for why.
+        from vaebm_benchmark.utils.gpu_memory import release_accelerator_memory
+
+        try:
+            del model
+        except NameError:
+            pass
+        release_accelerator_memory()
 
 
 def run_sweep(
@@ -136,13 +147,25 @@ def run_sweep(
     combination. Aggregation (mean/std/CI across seeds) is a reporting
     concern - see classification_report.py::aggregate_classification_results,
     which consumes exactly this flat list. Every individual seed's result
-    is still in the returned list and gets persisted."""
+    is still in the returned list and gets persisted.
+
+    Prints a one-line status per combination AS IT FINISHES, so progress
+    is visible during a long run and partial results survive even if a
+    later combination is interrupted."""
     results = []
+    total = len(ks) * len(datasets) * len(models) * len(seeds)
+    count = 0
     for k in ks:
         for dataset_id in datasets:
             for model_name in models:
                 for seed in seeds:
-                    results.append(
-                        run_single(model_name, dataset_id, k, seed=seed, voc_size=voc_size, svm_kernel=svm_kernel, svm_C=svm_C)
-                    )
+                    count += 1
+                    result = run_single(model_name, dataset_id, k, seed=seed, voc_size=voc_size, svm_kernel=svm_kernel, svm_C=svm_C)
+                    results.append(result)
+                    if result.status == "ok":
+                        print(f"[{count}/{total}] model={model_name} dataset={dataset_id} k={k} seed={seed}: ok "
+                              f"accuracy={result.accuracy} f1={result.f1}", flush=True)
+                    else:
+                        print(f"[{count}/{total}] model={model_name} dataset={dataset_id} k={k} seed={seed}: ERROR "
+                              f"{result.error.splitlines()[0]}", flush=True)
     return results
