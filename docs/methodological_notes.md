@@ -549,3 +549,35 @@ higher `K` (e.g. GoogleNews's 152 classes) with only 50 epochs across
 four jointly-trained loss terms is a plausible, sufficient explanation
 for a collapsed/degenerate clustering on its own, without needing the
 scipy quirk to explain it.
+
+## 13. VAE-BM on a pip-only CUDA install: TF's auto-JIT disabled by default
+
+On a SLURM/Colab node where CUDA comes entirely from pip
+(`nvidia-*-cu12` wheels via torch/tensorflow's own dependencies, no
+system `/usr/local/cuda`), TensorFlow's automatic XLA GPU clustering
+fails outright the first time a `vaebm` combination reaches
+`Encoder.call()`:
+
+```
+error: libdevice not found at ./libdevice.10.bc
+...
+INTERNAL: Generating device code failed.
+[N/M] model=vaebm dataset=... k=...: ERROR Exception encountered when
+calling Encoder.call().
+```
+
+`libdevice.10.bc` ships with a full CUDA toolkit install (or the
+`nvidia-cuda-nvcc-cu12` pip package specifically) - a plain
+`tensorflow>=2.15` install doesn't pull it in, so TF's auto-JIT
+compiler has nothing to compile against and fails instead of silently
+falling back to non-JIT execution.
+
+Fixed by disabling TF's automatic JIT clustering by default
+(`models/vaebm.py`, `os.environ.setdefault("TF_XLA_FLAGS",
+"--tf_xla_auto_jit=0")`, set immediately before `import tensorflow`) -
+this is a compute-backend setting only, never a change to VAE-BM's own
+math/architecture (see this file's own governing instruction at the
+top of `models/vaebm.py`). A user who has a genuine CUDA toolkit with
+`libdevice.10.bc` available can still opt back into auto-JIT by setting
+`TF_XLA_FLAGS` themselves before this module is imported -
+`setdefault()` never overrides an explicit value.

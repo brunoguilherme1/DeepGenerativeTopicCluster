@@ -32,7 +32,18 @@ FASTopic's transform() or GloCOM's get_theta() are.
 
 from __future__ import annotations
 
+import os
 from typing import List, Optional, Sequence, Union
+
+# TF's auto-JIT GPU clustering needs libdevice.10.bc (from a full CUDA
+# toolkit install) to compile HLO modules - a pip-only CUDA install (just
+# the nvidia-*-cu12 wheels, no system /usr/local/cuda) doesn't ship it, so
+# auto-JIT fails with "libdevice not found" instead of silently falling
+# back. Disabled by default (never a change to VAE-BM's own math/
+# architecture - purely a compute-backend setting); a user with a real
+# CUDA toolkit + libdevice available can still opt back in by setting
+# TF_XLA_FLAGS themselves before this import runs.
+os.environ.setdefault("TF_XLA_FLAGS", "--tf_xla_auto_jit=0")
 
 import numpy as np
 import tensorflow as tf
