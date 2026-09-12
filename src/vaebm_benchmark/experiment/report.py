@@ -20,6 +20,12 @@ DATASET_DISPLAY_NAMES = {
     "hicot_agnews": "AGNews (HiCOT)",
     "hicot_search_snippets": "SearchSnippets (HiCOT)",
     "hicot_google_news": "GoogleNews (HiCOT)",
+    "stack_overflow": "StackOverflow",
+    "biomedical": "Biomedical",
+    "google_news_ts": "GoogleNews-TS",
+    "google_news_t": "GoogleNews-T",
+    "google_news_s": "GoogleNews-S",
+    "tweet": "Tweet",
 }
 MODEL_DISPLAY_NAMES = {
     "vaebm": "VAE-BM",
@@ -29,6 +35,20 @@ MODEL_DISPLAY_NAMES = {
     "lda": "LDA",
     "hicot": "HiCOT",
     "sbert_kmeans": "SBERT+KMeans",
+    # The 11 SBERT+KMeans embedder variants from the sbert11_ecrtm_hicot
+    # sweep (scripts/run_sbert11_sweep.py) - each a --sbert-configs entry,
+    # never conflated with bare "sbert_kmeans" above.
+    "sbert_minilm": "SBERT-MiniLM",
+    "sbert_mpnet": "SBERT-MPNet",
+    "sbert_t5": "SBERT-T5",
+    "sbert_e5": "SBERT-E5",
+    "sbert_bge": "SBERT-BGE",
+    "sbert_gte": "SBERT-GTE",
+    "sbert_msmpnet": "SBERT-MS-MPNet",
+    "sbert_msdistilbert": "SBERT-MS-DistilBERT",
+    "sbert_distilroberta": "SBERT-DistilRoBERTa",
+    "sbert_paraphrase": "SBERT-Paraphrase",
+    "sbert_distilbert": "SBERT-DistilBERT",
 }
 METRIC_ORDER = ["cv", "purity", "nmi", "td"]
 METRIC_DISPLAY_NAMES = {"cv": "C_V", "purity": "Purity", "nmi": "NMI", "td": "TD"}
