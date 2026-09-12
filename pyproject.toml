@@ -82,8 +82,14 @@ dev = ["pytest>=7.4"]
 # in `fastopic`/`glocom` below); HiCOT (models/hicot_adapter.py, vendored
 # model in models/_hicot_source.py) needs torch + sentence-transformers,
 # same as `glocom`'s own dependency set - no new package beyond what
-# fastopic+glocom already declare.
-scientific_experiments = ["vaebm-benchmark[fastopic,glocom,vaebm]"]
+# fastopic+glocom already declare. `datasets` is needed too - it's the
+# HF-backed `imdb` loader's own hard dependency (datasets/definitions/
+# hf_benchmarks.py), used by --experiment topic/cluster/classification
+# alike, but previously only declared under the `experiment`/
+# `sbert_experiment` extras - installing `scientific_experiments` alone
+# left every `imdb` combination failing with "requires the `datasets`
+# package" (found running the sbert11_ecrtm_hicot sweep).
+scientific_experiments = ["vaebm-benchmark[fastopic,glocom,vaebm]", "datasets>=2.19"]
 all = ["vaebm-benchmark[fastopic,glocom,vaebm,metrics,viz,experiment,scientific_experiments,dev]"]
 
 [tool.setuptools.packages.find]
