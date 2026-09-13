@@ -268,7 +268,9 @@ def cluster_results_to_rows(results: list[ClusterResult]) -> list[dict]:
             "experiment_type": "cluster",
             "model": r.model, "dataset": r.dataset, "seed": r.seed,
             "requested_k": r.requested_k, "actual_k": r.actual_k, "num_classes": r.num_classes,
+            "num_documents": r.num_documents,
             "representation_source": r.representation_source, "assignment_source": r.assignment_source,
+            "preprocessing_source": r.preprocessing_source,
             **{name: getattr(r, name) for name in CLUSTER_METRIC_ORDER},
             "runtime_seconds": round(r.runtime_seconds, 3), "status": r.status, "error": r.error,
         }

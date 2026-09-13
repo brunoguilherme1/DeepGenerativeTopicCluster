@@ -26,6 +26,19 @@ DATASET_DISPLAY_NAMES = {
     "google_news_t": "GoogleNews-T",
     "google_news_s": "GoogleNews-S",
     "tweet": "Tweet",
+    # Ported from document-topic-evaluatio-arena (DTEA)'s own registry -
+    # see datasets/definitions/hf_benchmarks.py / s2wtm_benchmarks.py.
+    "agnews_full": "AGNews-Full",
+    "banking77": "Banking77",
+    "bbc_news": "BBCNews",
+    "dblp": "DBLP",
+    "dbpedia_14": "DBpedia14",
+    "m10": "M10",
+    "pascal_flickr": "PascalFlickr",
+    "tweet_eval_emotion": "TweetEval-Emotion",
+    "tweet_eval_sentiment": "TweetEval-Sentiment",
+    "yahoo_answers_topics": "YahooAnswers",
+    "20ng_s2wtm": "20NG-S2WTM",
 }
 MODEL_DISPLAY_NAMES = {
     "vaebm": "VAE-BM",

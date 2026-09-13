@@ -15,6 +15,7 @@ from vaebm_benchmark.datasets.download_utils import encode_labels
 
 class HFDatasetSource(BenchmarkDataset):
     _repo_id: str = ""
+    _config_name: str | None = None  # e.g. "sentiment"/"emotion" for cardiffnlp/tweet_eval
     _revision: str = ""
     _splits: tuple[str, ...] = ("train", "test")
     _text_fields: tuple[str, ...] = ("text",)
@@ -34,7 +35,7 @@ class HFDatasetSource(BenchmarkDataset):
         out_path = self.raw_dir() / "data.tsv"
         with open(out_path, "w", encoding="utf-8") as f:
             for split in self._splits:
-                hf_split = load_dataset(self._repo_id, revision=self._revision, split=split)
+                hf_split = load_dataset(self._repo_id, self._config_name, revision=self._revision, split=split)
                 label_names = getattr(hf_split.features[self._label_field], "names", None)
                 for row in hf_split:
                     text = " ".join(str(row[field]).strip() for field in self._text_fields if row.get(field))
@@ -66,6 +67,79 @@ class IMDBDataset(HFDatasetSource):
     _label_field = "label"
 
 
+class AGNewsFullDataset(HFDatasetSource):
+    """Full AG News classification benchmark (120k train + 7.6k test) -
+    distinct from `agnews_short` (the 8,000-doc short-text-clustering
+    subsample from the TopicClusterDocument mirror, aliased as `agnews`)
+    - same underlying corpus, different standard benchmark cut, never
+    merged with it."""
+
+    dataset_id = "agnews_full"
+    _repo_id = "fancyzhx/ag_news"
+    _revision = "eb185aade064a813bc0b7f42de02595523103ca4"
+    _splits = ("train", "test")
+    _text_fields = ("text",)
+    _label_field = "label"
+
+
+class DBpedia14Dataset(HFDatasetSource):
+    dataset_id = "dbpedia_14"
+    _repo_id = "fancyzhx/dbpedia_14"
+    _revision = "9abd46cf7fc8b4c64290f26993c540b92aa145ac"
+    _splits = ("train", "test")
+    _text_fields = ("title", "content")
+    _label_field = "label"
+
+
+class YahooAnswersTopicsDataset(HFDatasetSource):
+    dataset_id = "yahoo_answers_topics"
+    _repo_id = "community-datasets/yahoo_answers_topics"
+    _revision = "6652a1e7c94f7260a0bfd0c9092dd48e2d536ea1"
+    _splits = ("train", "test")
+    _text_fields = ("question_title", "question_content", "best_answer")
+    _label_field = "topic"
+
+
+class Banking77Dataset(HFDatasetSource):
+    """Uses the `mteb/banking77` mirror (used by the MTEB benchmark)
+    rather than the original PolyAI/banking77 repo, which still ships
+    only a dataset-loading script and is unloadable under current
+    `datasets` versions."""
+
+    dataset_id = "banking77"
+    _repo_id = "mteb/banking77"
+    _revision = "18072d2685ea682290f7b8924d94c62acc19c0b2"
+    _splits = ("train", "test")
+    _text_fields = ("text",)
+    _label_field = "label_text"  # human-readable intent name; plain `label` is a bare int, not a ClassLabel
+
+
+class TweetEvalSentimentDataset(HFDatasetSource):
+    dataset_id = "tweet_eval_sentiment"
+    _repo_id = "cardiffnlp/tweet_eval"
+    _config_name = "sentiment"
+    _revision = "b3a375baf0f409c77e6bc7aa35102b7b3534f8be"
+    _splits = ("train", "validation", "test")
+    _text_fields = ("text",)
+    _label_field = "label"
+
+
+class TweetEvalEmotionDataset(HFDatasetSource):
+    dataset_id = "tweet_eval_emotion"
+    _repo_id = "cardiffnlp/tweet_eval"
+    _config_name = "emotion"
+    _revision = "b3a375baf0f409c77e6bc7aa35102b7b3534f8be"
+    _splits = ("train", "validation", "test")
+    _text_fields = ("text",)
+    _label_field = "label"
+
+
 DATASETS = {
     "imdb": IMDBDataset,
+    "agnews_full": AGNewsFullDataset,
+    "dbpedia_14": DBpedia14Dataset,
+    "yahoo_answers_topics": YahooAnswersTopicsDataset,
+    "banking77": Banking77Dataset,
+    "tweet_eval_sentiment": TweetEvalSentimentDataset,
+    "tweet_eval_emotion": TweetEvalEmotionDataset,
 }

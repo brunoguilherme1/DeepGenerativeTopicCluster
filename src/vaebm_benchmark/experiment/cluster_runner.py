@@ -89,6 +89,13 @@ class ClusterResult:
     calinski_harabasz: Optional[float] = None
     representation_source: str = ""
     assignment_source: str = ""
+    num_documents: int = 0
+    # "hicot_official_artifact_verbatim" (hicot on a hicot_* dataset - no
+    # extra preprocessing beyond HiCOT's own official artifacts),
+    # "stopwords_removed_en" (hicot on any OTHER dataset - see
+    # utils/text_preprocessing.py's own module docstring for why), or
+    # "none" (every other model, every dataset - unchanged text).
+    preprocessing_source: str = "none"
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -177,6 +184,24 @@ def _build_sbert_kmeans(k: int, seed: int, voc_size: int):
     return build_sbert_kmeans(k, seed, voc_size)
 
 
+def _build_sbert_variant(embedder: str):
+    """Returns a CLUSTER_MODEL_BUILDERS-compatible builder for a named
+    SBERT+KMeans embedder variant - reuses SBERTKMeansAdapter as-is (no
+    duplicated clustering/c-TF-IDF logic), only the embedder name differs
+    from bare "sbert_kmeans" (all-MiniLM-L6-v2). Mirrors experiment/
+    runner.py's own register_sbert_kmeans_variants() mechanism for the
+    topic experiment, at the fixed set of named variants this experiment
+    actually runs (not a generic --sbert-configs CLI, which this
+    experiment doesn't have)."""
+
+    def _builder(k: int, seed: int, voc_size: int):
+        from vaebm_benchmark.models.sbert_kmeans_adapter import SBERTKMeansAdapter
+
+        return SBERTKMeansAdapter(n_clusters=k, embedder=embedder, random_state=seed)
+
+    return _builder
+
+
 CLUSTER_MODEL_BUILDERS = {
     "vaebm": _build_vaebm,
     "bertopic": _build_bertopic,
@@ -185,6 +210,10 @@ CLUSTER_MODEL_BUILDERS = {
     "lda": _build_lda,
     "hicot": _build_hicot,
     "sbert_kmeans": _build_sbert_kmeans,
+    "sbert_gte": _build_sbert_variant("thenlper/gte-large"),
+    "sbert_bge": _build_sbert_variant("BAAI/bge-large-en-v1.5"),
+    "sbert_mpnet": _build_sbert_variant("sentence-transformers/all-mpnet-base-v2"),
+    "sbert_minilm": _build_sbert_variant("sentence-transformers/all-MiniLM-L6-v2"),
 }
 
 
@@ -215,8 +244,30 @@ def run_single(model_name: str, dataset_id: str, seed: int = 42, voc_size: int =
         documents, labels, num_classes = load_dataset(resolved_dataset_id)
         requested_k = num_classes  # labels inspected ONLY to obtain K, never passed to fit()
 
+        # HiCOT's own generic/self-fit path (models/hicot_adapter.py)
+        # builds its vocabulary via a plain CountVectorizer with no
+        # stopword filtering - unlike lda_adapter.py/vaebm.py, which
+        # already pass stop_words="english". Applied ONLY for
+        # model=hicot on a non-hicot_* dataset; hicot_* datasets keep
+        # HiCOT's own official artifacts verbatim (no extra pass), and
+        # every other model's text is left untouched either way. Order/
+        # labels/document count are all preserved - see
+        # utils/text_preprocessing.py's own module docstring.
+        is_hicot_official_dataset = resolved_dataset_id.startswith("hicot_")
+        if model_name == "hicot" and not is_hicot_official_dataset:
+            from vaebm_benchmark.utils.text_preprocessing import remove_english_stopwords
+
+            fit_documents = remove_english_stopwords(documents)
+            preprocessing_source = "stopwords_removed_en"
+        elif model_name == "hicot" and is_hicot_official_dataset:
+            fit_documents = documents
+            preprocessing_source = "hicot_official_artifact_verbatim"
+        else:
+            fit_documents = documents
+            preprocessing_source = "none"
+
         model = CLUSTER_MODEL_BUILDERS[model_name](requested_k, seed, voc_size)
-        model.fit(documents)  # labels never passed here
+        model.fit(fit_documents)  # labels never passed here
 
         representation_source = representation_source_for_model(model_name)
         assignment_source = assignment_source_for_model(model_name)
@@ -226,12 +277,16 @@ def run_single(model_name: str, dataset_id: str, seed: int = 42, voc_size: int =
         # get_document_clusters() otherwise (vaebm's KMeans-on-mu,
         # bertopic's KMeans-on-embeddings - both UNCHANGED). Same
         # feature_space also feeds the label-free geometry metrics below.
+        # Queried with the SAME text the model was fit on (fit_documents -
+        # identical to `documents` except for hicot on a non-hicot_*
+        # dataset, where both fit and inference use the stopword-removed
+        # text consistently, never a fit/inference mismatch).
         if assignment_source == "argmax_theta":
-            feature_space = model.get_document_topics(documents)
+            feature_space = model.get_document_topics(fit_documents)
             clusters = [int(i) for i in np.argmax(np.asarray(feature_space), axis=1)]
         else:
-            clusters = model.get_document_clusters(documents)
-            feature_space = model.get_document_embeddings(documents)  # mu (vaebm) or embeddings (bertopic)
+            clusters = model.get_document_clusters(fit_documents)
+            feature_space = model.get_document_embeddings(fit_documents)  # mu (vaebm) or embeddings (bertopic)
         actual_k = len(set(clusters))
 
         label_metrics = compute_clustering_metrics(clusters, labels, LABEL_METRIC_IDS)
@@ -249,6 +304,7 @@ def run_single(model_name: str, dataset_id: str, seed: int = 42, voc_size: int =
             experiment="cluster", model=model_name, dataset=dataset_id, seed=seed,
             requested_k=requested_k, actual_k=actual_k, num_classes=num_classes,
             representation_source=representation_source, assignment_source=assignment_source,
+            num_documents=len(documents), preprocessing_source=preprocessing_source,
             runtime_seconds=runtime, status="ok",
             **label_metrics, **geometry_metrics,
         )
