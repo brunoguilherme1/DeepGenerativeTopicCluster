@@ -22,3 +22,7 @@ vaebm_training.csv
 # download, never meant to be committed. metrics/palmetto.py's own
 # DEFAULT_JAR/DEFAULT_WIKI_INDEX point here.
 tools/palmetto/
+run_sweep.sbatch
+resume_sweep.sbatch
+sweep_slurm_*.out
+resume_slurm_*.out
