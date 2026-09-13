@@ -1,0 +1,150 @@
+
+=== attempt 1 (exit=0, 8.0s) ===
+[setup_palmetto] Palmetto already installed and verified at tools/palmetto/palmetto.jar/tools/palmetto/wiki_data/wikipedia_bd - skipping setup.
+Running [topic]: models=['sbert_msmpnet'] datasets=['google_news_t'] k=[100] seed=42 protocol=ecrtm_hicot cv_method=palmetto
+
+[1/1] model=sbert_msmpnet dataset=google_news_t k=100: ERROR 401 Client Error. (Request ID: Root=1-6aa67107-32b1563232c6dc1c39a1b9a4;641b8881-6bce-4986-8013-e7dab77d42ef)
+
+K = 100 Topics
+
+                          GoogleNews-T
+Model             C_V    Purity   NMI      TD
+------------------------------------------------
+SBERT-MS-MPNet   ERROR   ERROR   ERROR   ERROR
+
+Results appended to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment_results.csv
+Results merged into: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment_results.json
+Topics written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment/topics/
+Table written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/table_k100.txt
+Table written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/table_k100.tex
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789292802.353849 3969860 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1789292802.395149 3969860 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX512_FP16 AVX_VNNI AMX_TILE AMX_INT8 AMX_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789292803.319025 3969860 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+
+=== attempt 2 (exit=0, 8.7s) ===
+[setup_palmetto] Palmetto already installed and verified at tools/palmetto/palmetto.jar/tools/palmetto/wiki_data/wikipedia_bd - skipping setup.
+Running [topic]: models=['sbert_msmpnet'] datasets=['google_news_t'] k=[100] seed=42 protocol=ecrtm_hicot cv_method=palmetto
+
+[1/1] model=sbert_msmpnet dataset=google_news_t k=100: ERROR 401 Client Error. (Request ID: Root=1-6aa67123-38fb4f96405bbca63a01adbf;837adc76-e724-4490-bba5-ba0693ba50e5)
+
+K = 100 Topics
+
+                          GoogleNews-T
+Model             C_V    Purity   NMI      TD
+------------------------------------------------
+SBERT-MS-MPNet   ERROR   ERROR   ERROR   ERROR
+
+Results appended to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment_results.csv
+Results merged into: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment_results.json
+Topics written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment/topics/
+Table written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/table_k100.txt
+Table written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/table_k100.tex
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789292831.179637 3970805 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1789292831.220450 3970805 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX512_FP16 AVX_VNNI AMX_TILE AMX_INT8 AMX_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789292832.132678 3970805 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+
+=== attempt 3 (exit=0, 11.4s) ===
+[setup_palmetto] Palmetto already installed and verified at tools/palmetto/palmetto.jar/tools/palmetto/wiki_data/wikipedia_bd - skipping setup.
+Running [topic]: models=['sbert_msmpnet'] datasets=['google_news_t'] k=[100] seed=42 protocol=ecrtm_hicot cv_method=palmetto
+
+[1/1] model=sbert_msmpnet dataset=google_news_t k=100: ERROR 401 Client Error. (Request ID: Root=1-6aa67143-1f0e6064547629bf100437f9;ae7eae43-8593-4d4a-9a0d-4ef321c6c505)
+
+K = 100 Topics
+
+                          GoogleNews-T
+Model             C_V    Purity   NMI      TD
+------------------------------------------------
+SBERT-MS-MPNet   ERROR   ERROR   ERROR   ERROR
+
+Results appended to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment_results.csv
+Results merged into: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment_results.json
+Topics written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment/topics/
+Table written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/table_k100.txt
+Table written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/table_k100.tex
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789292859.808877 3971479 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1789292859.877642 3971479 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX512_FP16 AVX_VNNI AMX_TILE AMX_INT8 AMX_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789292861.406376 3971479 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+
+=== attempt 1 (exit=0, 9.3s) ===
+[setup_palmetto] Palmetto already installed and verified at tools/palmetto/palmetto.jar/tools/palmetto/wiki_data/wikipedia_bd - skipping setup.
+Running [topic]: models=['sbert_msmpnet'] datasets=['google_news_t'] k=[100] seed=42 protocol=ecrtm_hicot cv_method=palmetto
+
+[1/1] model=sbert_msmpnet dataset=google_news_t k=100: ERROR 401 Client Error. (Request ID: Root=1-6aa6f3ed-6a4a1c7b20338cae255bfe2b;4718e6c6-e1e4-44d5-9dd2-db770b046ec9)
+
+K = 100 Topics
+
+                          GoogleNews-T
+Model             C_V    Purity   NMI      TD
+------------------------------------------------
+SBERT-MS-MPNet   ERROR   ERROR   ERROR   ERROR
+
+Results appended to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment_results.csv
+Results merged into: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment_results.json
+Topics written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment/topics/
+Table written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/table_k100.txt
+Table written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/table_k100.tex
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789326311.729431  914579 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1789326311.770244  914579 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX512_FP16 AVX_VNNI AMX_TILE AMX_INT8 AMX_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789326312.680713  914579 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+
+=== attempt 2 (exit=0, 11.3s) ===
+[setup_palmetto] Palmetto already installed and verified at tools/palmetto/palmetto.jar/tools/palmetto/wiki_data/wikipedia_bd - skipping setup.
+Running [topic]: models=['sbert_msmpnet'] datasets=['google_news_t'] k=[100] seed=42 protocol=ecrtm_hicot cv_method=palmetto
+
+[1/1] model=sbert_msmpnet dataset=google_news_t k=100: ERROR 401 Client Error. (Request ID: Root=1-6aa6f40d-755d7af4437558d61bfb18ff;aeffbecd-48c0-45f2-bcc5-c37af697933c)
+
+K = 100 Topics
+
+                          GoogleNews-T
+Model             C_V    Purity   NMI      TD
+------------------------------------------------
+SBERT-MS-MPNet   ERROR   ERROR   ERROR   ERROR
+
+Results appended to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment_results.csv
+Results merged into: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment_results.json
+Topics written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment/topics/
+Table written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/table_k100.txt
+Table written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/table_k100.tex
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789326341.811685  915410 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1789326341.881513  915410 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX512_FP16 AVX_VNNI AMX_TILE AMX_INT8 AMX_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789326343.424312  915410 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+
+=== attempt 3 (exit=0, 9.8s) ===
+[setup_palmetto] Palmetto already installed and verified at tools/palmetto/palmetto.jar/tools/palmetto/wiki_data/wikipedia_bd - skipping setup.
+Running [topic]: models=['sbert_msmpnet'] datasets=['google_news_t'] k=[100] seed=42 protocol=ecrtm_hicot cv_method=palmetto
+
+[1/1] model=sbert_msmpnet dataset=google_news_t k=100: ERROR 401 Client Error. (Request ID: Root=1-6aa6f42a-51eb56fb05a304ad73e5de68;7f08d78d-ddcd-4aa6-bfe5-7e125ff11438)
+
+K = 100 Topics
+
+                          GoogleNews-T
+Model             C_V    Purity   NMI      TD
+------------------------------------------------
+SBERT-MS-MPNet   ERROR   ERROR   ERROR   ERROR
+
+Results appended to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment_results.csv
+Results merged into: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment_results.json
+Topics written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment/topics/
+Table written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/table_k100.txt
+Table written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/table_k100.tex
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789326373.292253  916896 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1789326373.359830  916896 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX512_FP16 AVX_VNNI AMX_TILE AMX_INT8 AMX_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789326374.862095  916896 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.

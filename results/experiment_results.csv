@@ -1,0 +1,2 @@
+model,dataset,k,cv,purity,nmi,td,seed,runtime_seconds,status,error,evaluation_protocol,top_n,cv_source,td_definition,assignment_source,topic_source
+sbert_kmeans,hicot_20ng,50,0.6456470305603941,0.6093070147511408,0.5197334742157516,0.43333333333333335,42,66.075,ok,,ecrtm_hicot,15,cv_local_corpus,dieng_unique_words_top15,kmeans_on_embeddings,cluster-derived

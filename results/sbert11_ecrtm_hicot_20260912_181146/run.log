@@ -1,0 +1,1478 @@
+[2026-09-12 18:11:46] SWEEP_START run_dir=/raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146
+[2026-09-12 18:11:46] MONITOR tail -f /shared/dgx-raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/run.log
+[2026-09-12 18:11:46] MONITOR cat /shared/dgx-raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/current_status.txt
+[2026-09-12 18:11:46] MONITOR cat /shared/dgx-raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/progress.txt
+[2026-09-12 18:11:46] SETUP_START palmetto/wikipedia index check
+[2026-09-12 18:11:46] SETUP_OK palmetto/wikipedia index ready
+[2026-09-12 18:11:46] START model=sbert_minilm dataset=20ng k=50 attempt=1 progress=1/330
+[2026-09-12 18:13:34] OK model=sbert_minilm dataset=20ng k=50 runtime=108s cv_source=palmetto_wikipedia progress=1/330
+[2026-09-12 18:13:34] START model=sbert_minilm dataset=20ng k=100 attempt=1 progress=2/330
+[2026-09-12 18:15:39] OK model=sbert_minilm dataset=20ng k=100 runtime=125s cv_source=palmetto_wikipedia progress=2/330
+[2026-09-12 18:15:39] START model=sbert_minilm dataset=imdb k=50 attempt=1 progress=3/330
+[2026-09-12 18:15:43] ERROR model=sbert_minilm dataset=imdb k=50 attempt=1 error="imdb requires the `datasets` package: pip install datasets"
+[2026-09-12 18:15:43] RETRY model=sbert_minilm dataset=imdb k=50 attempt=2
+[2026-09-12 18:16:03] START model=sbert_minilm dataset=imdb k=50 attempt=2 progress=3/330
+[2026-09-12 18:16:09] ERROR model=sbert_minilm dataset=imdb k=50 attempt=2 error="imdb requires the `datasets` package: pip install datasets"
+[2026-09-12 18:16:09] RETRY model=sbert_minilm dataset=imdb k=50 attempt=3
+[2026-09-12 18:16:29] START model=sbert_minilm dataset=imdb k=50 attempt=3 progress=3/330
+[2026-09-12 18:16:35] ERROR model=sbert_minilm dataset=imdb k=50 attempt=3 error="imdb requires the `datasets` package: pip install datasets"
+[2026-09-12 18:16:35] ERROR model=sbert_minilm dataset=imdb k=50 FINAL after 3 attempts, giving up progress=3/330
+[2026-09-12 18:16:35] START model=sbert_minilm dataset=imdb k=100 attempt=1 progress=4/330
+[2026-09-12 18:16:40] ERROR model=sbert_minilm dataset=imdb k=100 attempt=1 error="imdb requires the `datasets` package: pip install datasets"
+[2026-09-12 18:16:40] RETRY model=sbert_minilm dataset=imdb k=100 attempt=2
+[2026-09-12 18:17:00] START model=sbert_minilm dataset=imdb k=100 attempt=2 progress=4/330
+[2026-09-12 18:17:06] ERROR model=sbert_minilm dataset=imdb k=100 attempt=2 error="imdb requires the `datasets` package: pip install datasets"
+[2026-09-12 18:17:06] RETRY model=sbert_minilm dataset=imdb k=100 attempt=3
+[2026-09-12 18:17:26] START model=sbert_minilm dataset=imdb k=100 attempt=3 progress=4/330
+[2026-09-12 18:17:32] ERROR model=sbert_minilm dataset=imdb k=100 attempt=3 error="imdb requires the `datasets` package: pip install datasets"
+[2026-09-12 18:17:32] ERROR model=sbert_minilm dataset=imdb k=100 FINAL after 3 attempts, giving up progress=4/330
+[2026-09-12 18:17:32] START model=sbert_minilm dataset=agnews_short k=50 attempt=1 progress=5/330
+[2026-09-12 18:18:58] OK model=sbert_minilm dataset=agnews_short k=50 runtime=86s cv_source=palmetto_wikipedia progress=5/330
+[2026-09-12 18:18:58] START model=sbert_minilm dataset=agnews_short k=100 attempt=1 progress=6/330
+[2026-09-12 18:21:15] OK model=sbert_minilm dataset=agnews_short k=100 runtime=137s cv_source=palmetto_wikipedia progress=6/330
+[2026-09-12 18:21:15] START model=sbert_minilm dataset=search_snippets k=50 attempt=1 progress=7/330
+[2026-09-12 18:22:51] OK model=sbert_minilm dataset=search_snippets k=50 runtime=96s cv_source=palmetto_wikipedia progress=7/330
+[2026-09-12 18:22:51] START model=sbert_minilm dataset=search_snippets k=100 attempt=1 progress=8/330
+[2026-09-12 18:25:27] OK model=sbert_minilm dataset=search_snippets k=100 runtime=156s cv_source=palmetto_wikipedia progress=8/330
+[2026-09-12 18:25:27] START model=sbert_minilm dataset=stack_overflow k=50 attempt=1 progress=9/330
+[2026-09-12 18:26:41] OK model=sbert_minilm dataset=stack_overflow k=50 runtime=74s cv_source=palmetto_wikipedia progress=9/330
+[2026-09-12 18:26:41] START model=sbert_minilm dataset=stack_overflow k=100 attempt=1 progress=10/330
+[2026-09-12 18:28:53] OK model=sbert_minilm dataset=stack_overflow k=100 runtime=132s cv_source=palmetto_wikipedia progress=10/330
+[2026-09-12 18:28:53] START model=sbert_minilm dataset=biomedical k=50 attempt=1 progress=11/330
+[2026-09-12 18:30:04] OK model=sbert_minilm dataset=biomedical k=50 runtime=71s cv_source=palmetto_wikipedia progress=11/330
+[2026-09-12 18:30:04] START model=sbert_minilm dataset=biomedical k=100 attempt=1 progress=12/330
+[2026-09-12 18:31:54] OK model=sbert_minilm dataset=biomedical k=100 runtime=111s cv_source=palmetto_wikipedia progress=12/330
+[2026-09-12 18:31:54] START model=sbert_minilm dataset=google_news_ts k=50 attempt=1 progress=13/330
+[2026-09-12 18:33:26] OK model=sbert_minilm dataset=google_news_ts k=50 runtime=92s cv_source=palmetto_wikipedia progress=13/330
+[2026-09-12 18:33:26] START model=sbert_minilm dataset=google_news_ts k=100 attempt=1 progress=14/330
+[2026-09-12 18:36:16] OK model=sbert_minilm dataset=google_news_ts k=100 runtime=170s cv_source=palmetto_wikipedia progress=14/330
+[2026-09-12 18:36:16] START model=sbert_minilm dataset=google_news_t k=50 attempt=1 progress=15/330
+[2026-09-12 18:37:53] OK model=sbert_minilm dataset=google_news_t k=50 runtime=97s cv_source=palmetto_wikipedia progress=15/330
+[2026-09-12 18:37:53] START model=sbert_minilm dataset=google_news_t k=100 attempt=1 progress=16/330
+[2026-09-12 18:41:01] OK model=sbert_minilm dataset=google_news_t k=100 runtime=188s cv_source=palmetto_wikipedia progress=16/330
+[2026-09-12 18:41:01] START model=sbert_minilm dataset=google_news_s k=50 attempt=1 progress=17/330
+[2026-09-12 18:42:38] OK model=sbert_minilm dataset=google_news_s k=50 runtime=97s cv_source=palmetto_wikipedia progress=17/330
+[2026-09-12 18:42:38] START model=sbert_minilm dataset=google_news_s k=100 attempt=1 progress=18/330
+[2026-09-12 18:45:27] OK model=sbert_minilm dataset=google_news_s k=100 runtime=169s cv_source=palmetto_wikipedia progress=18/330
+[2026-09-12 18:45:27] START model=sbert_minilm dataset=tweet k=50 attempt=1 progress=19/330
+[2026-09-12 18:47:06] OK model=sbert_minilm dataset=tweet k=50 runtime=99s cv_source=palmetto_wikipedia progress=19/330
+[2026-09-12 18:47:06] START model=sbert_minilm dataset=tweet k=100 attempt=1 progress=20/330
+[2026-09-12 18:49:56] OK model=sbert_minilm dataset=tweet k=100 runtime=170s cv_source=palmetto_wikipedia progress=20/330
+[2026-09-12 18:49:56] START model=sbert_minilm dataset=hicot_20ng k=50 attempt=1 progress=21/330
+[2026-09-12 18:53:19] OK model=sbert_minilm dataset=hicot_20ng k=50 runtime=203s cv_source=palmetto_wikipedia progress=21/330
+[2026-09-12 18:53:19] START model=sbert_minilm dataset=hicot_20ng k=100 attempt=1 progress=22/330
+[2026-09-12 18:58:49] OK model=sbert_minilm dataset=hicot_20ng k=100 runtime=329s cv_source=palmetto_wikipedia progress=22/330
+[2026-09-12 18:58:49] START model=sbert_minilm dataset=hicot_imdb k=50 attempt=1 progress=23/330
+[2026-09-12 19:06:20] OK model=sbert_minilm dataset=hicot_imdb k=50 runtime=452s cv_source=palmetto_wikipedia progress=23/330
+[2026-09-12 19:06:20] START model=sbert_minilm dataset=hicot_imdb k=100 attempt=1 progress=24/330
+[2026-09-12 19:18:13] OK model=sbert_minilm dataset=hicot_imdb k=100 runtime=713s cv_source=palmetto_wikipedia progress=24/330
+[2026-09-12 19:18:13] START model=sbert_minilm dataset=hicot_agnews k=50 attempt=1 progress=25/330
+[2026-09-12 19:20:18] OK model=sbert_minilm dataset=hicot_agnews k=50 runtime=125s cv_source=palmetto_wikipedia progress=25/330
+[2026-09-12 19:20:18] START model=sbert_minilm dataset=hicot_agnews k=100 attempt=1 progress=26/330
+[2026-09-12 19:23:27] OK model=sbert_minilm dataset=hicot_agnews k=100 runtime=188s cv_source=palmetto_wikipedia progress=26/330
+[2026-09-12 19:23:27] START model=sbert_minilm dataset=hicot_search_snippets k=50 attempt=1 progress=27/330
+[2026-09-12 19:25:08] OK model=sbert_minilm dataset=hicot_search_snippets k=50 runtime=102s cv_source=palmetto_wikipedia progress=27/330
+[2026-09-12 19:25:08] START model=sbert_minilm dataset=hicot_search_snippets k=100 attempt=1 progress=28/330
+[2026-09-12 19:27:51] OK model=sbert_minilm dataset=hicot_search_snippets k=100 runtime=163s cv_source=palmetto_wikipedia progress=28/330
+[2026-09-12 19:27:51] START model=sbert_minilm dataset=hicot_google_news k=50 attempt=1 progress=29/330
+[2026-09-12 19:29:34] OK model=sbert_minilm dataset=hicot_google_news k=50 runtime=103s cv_source=palmetto_wikipedia progress=29/330
+[2026-09-12 19:29:34] START model=sbert_minilm dataset=hicot_google_news k=100 attempt=1 progress=30/330
+[2026-09-12 19:32:41] OK model=sbert_minilm dataset=hicot_google_news k=100 runtime=187s cv_source=palmetto_wikipedia progress=30/330
+[2026-09-12 19:32:41] START model=sbert_mpnet dataset=20ng k=50 attempt=1 progress=31/330
+[2026-09-12 19:37:01] OK model=sbert_mpnet dataset=20ng k=50 runtime=259s cv_source=palmetto_wikipedia progress=31/330
+[2026-09-12 19:37:01] START model=sbert_mpnet dataset=20ng k=100 attempt=1 progress=32/330
+[2026-09-12 19:41:46] OK model=sbert_mpnet dataset=20ng k=100 runtime=285s cv_source=palmetto_wikipedia progress=32/330
+[2026-09-12 19:41:46] START model=sbert_mpnet dataset=imdb k=50 attempt=1 progress=33/330
+[2026-09-12 19:53:51] OK model=sbert_mpnet dataset=imdb k=50 runtime=726s cv_source=palmetto_wikipedia progress=33/330
+[2026-09-12 19:53:51] START model=sbert_mpnet dataset=imdb k=100 attempt=1 progress=34/330
+[2026-09-12 20:06:56] OK model=sbert_mpnet dataset=imdb k=100 runtime=785s cv_source=palmetto_wikipedia progress=34/330
+[2026-09-12 20:06:56] START model=sbert_mpnet dataset=agnews_short k=50 attempt=1 progress=35/330
+[2026-09-12 20:08:31] OK model=sbert_mpnet dataset=agnews_short k=50 runtime=95s cv_source=palmetto_wikipedia progress=35/330
+[2026-09-12 20:08:31] START model=sbert_mpnet dataset=agnews_short k=100 attempt=1 progress=36/330
+[2026-09-12 20:11:09] OK model=sbert_mpnet dataset=agnews_short k=100 runtime=158s cv_source=palmetto_wikipedia progress=36/330
+[2026-09-12 20:11:09] START model=sbert_mpnet dataset=search_snippets k=50 attempt=1 progress=37/330
+[2026-09-12 20:13:07] OK model=sbert_mpnet dataset=search_snippets k=50 runtime=118s cv_source=palmetto_wikipedia progress=37/330
+[2026-09-12 20:13:07] START model=sbert_mpnet dataset=search_snippets k=100 attempt=1 progress=38/330
+[2026-09-12 20:16:17] OK model=sbert_mpnet dataset=search_snippets k=100 runtime=190s cv_source=palmetto_wikipedia progress=38/330
+[2026-09-12 20:16:17] START model=sbert_mpnet dataset=stack_overflow k=50 attempt=1 progress=39/330
+[2026-09-12 20:17:49] OK model=sbert_mpnet dataset=stack_overflow k=50 runtime=92s cv_source=palmetto_wikipedia progress=39/330
+[2026-09-12 20:17:49] START model=sbert_mpnet dataset=stack_overflow k=100 attempt=1 progress=40/330
+[2026-09-12 20:20:28] OK model=sbert_mpnet dataset=stack_overflow k=100 runtime=158s cv_source=palmetto_wikipedia progress=40/330
+[2026-09-12 20:20:28] START model=sbert_mpnet dataset=biomedical k=50 attempt=1 progress=41/330
+[2026-09-12 20:22:05] OK model=sbert_mpnet dataset=biomedical k=50 runtime=98s cv_source=palmetto_wikipedia progress=41/330
+[2026-09-12 20:22:05] START model=sbert_mpnet dataset=biomedical k=100 attempt=1 progress=42/330
+[2026-09-12 20:24:25] OK model=sbert_mpnet dataset=biomedical k=100 runtime=139s cv_source=palmetto_wikipedia progress=42/330
+[2026-09-12 20:24:25] START model=sbert_mpnet dataset=google_news_ts k=50 attempt=1 progress=43/330
+[2026-09-12 20:26:15] OK model=sbert_mpnet dataset=google_news_ts k=50 runtime=110s cv_source=palmetto_wikipedia progress=43/330
+[2026-09-12 20:26:15] START model=sbert_mpnet dataset=google_news_ts k=100 attempt=1 progress=44/330
+[2026-09-12 20:29:20] OK model=sbert_mpnet dataset=google_news_ts k=100 runtime=185s cv_source=palmetto_wikipedia progress=44/330
+[2026-09-12 20:29:20] START model=sbert_mpnet dataset=google_news_t k=50 attempt=1 progress=45/330
+[2026-09-12 20:31:03] OK model=sbert_mpnet dataset=google_news_t k=50 runtime=103s cv_source=palmetto_wikipedia progress=45/330
+[2026-09-12 20:31:03] START model=sbert_mpnet dataset=google_news_t k=100 attempt=1 progress=46/330
+[2026-09-12 20:34:28] OK model=sbert_mpnet dataset=google_news_t k=100 runtime=205s cv_source=palmetto_wikipedia progress=46/330
+[2026-09-12 20:34:28] START model=sbert_mpnet dataset=google_news_s k=50 attempt=1 progress=47/330
+[2026-09-12 20:36:14] OK model=sbert_mpnet dataset=google_news_s k=50 runtime=106s cv_source=palmetto_wikipedia progress=47/330
+[2026-09-12 20:36:14] START model=sbert_mpnet dataset=google_news_s k=100 attempt=1 progress=48/330
+[2026-09-12 20:39:32] OK model=sbert_mpnet dataset=google_news_s k=100 runtime=198s cv_source=palmetto_wikipedia progress=48/330
+[2026-09-12 20:39:32] START model=sbert_mpnet dataset=tweet k=50 attempt=1 progress=49/330
+[2026-09-12 20:41:17] OK model=sbert_mpnet dataset=tweet k=50 runtime=105s cv_source=palmetto_wikipedia progress=49/330
+[2026-09-12 20:41:17] START model=sbert_mpnet dataset=tweet k=100 attempt=1 progress=50/330
+[2026-09-12 20:44:19] OK model=sbert_mpnet dataset=tweet k=100 runtime=182s cv_source=palmetto_wikipedia progress=50/330
+[2026-09-12 20:44:19] START model=sbert_mpnet dataset=hicot_20ng k=50 attempt=1 progress=51/330
+[2026-09-12 20:49:01] OK model=sbert_mpnet dataset=hicot_20ng k=50 runtime=282s cv_source=palmetto_wikipedia progress=51/330
+[2026-09-12 20:49:01] START model=sbert_mpnet dataset=hicot_20ng k=100 attempt=1 progress=52/330
+[2026-09-12 20:56:02] OK model=sbert_mpnet dataset=hicot_20ng k=100 runtime=422s cv_source=palmetto_wikipedia progress=52/330
+[2026-09-12 20:56:02] START model=sbert_mpnet dataset=hicot_imdb k=50 attempt=1 progress=53/330
+[2026-09-12 21:07:01] OK model=sbert_mpnet dataset=hicot_imdb k=50 runtime=658s cv_source=palmetto_wikipedia progress=53/330
+[2026-09-12 21:07:01] START model=sbert_mpnet dataset=hicot_imdb k=100 attempt=1 progress=54/330
+[2026-09-12 21:22:51] OK model=sbert_mpnet dataset=hicot_imdb k=100 runtime=950s cv_source=palmetto_wikipedia progress=54/330
+[2026-09-12 21:22:51] START model=sbert_mpnet dataset=hicot_agnews k=50 attempt=1 progress=55/330
+[2026-09-12 21:24:57] OK model=sbert_mpnet dataset=hicot_agnews k=50 runtime=126s cv_source=palmetto_wikipedia progress=55/330
+[2026-09-12 21:24:57] START model=sbert_mpnet dataset=hicot_agnews k=100 attempt=1 progress=56/330
+[2026-09-12 21:28:16] OK model=sbert_mpnet dataset=hicot_agnews k=100 runtime=199s cv_source=palmetto_wikipedia progress=56/330
+[2026-09-12 21:28:16] START model=sbert_mpnet dataset=hicot_search_snippets k=50 attempt=1 progress=57/330
+[2026-09-12 21:30:05] OK model=sbert_mpnet dataset=hicot_search_snippets k=50 runtime=109s cv_source=palmetto_wikipedia progress=57/330
+[2026-09-12 21:30:05] START model=sbert_mpnet dataset=hicot_search_snippets k=100 attempt=1 progress=58/330
+[2026-09-12 21:33:07] OK model=sbert_mpnet dataset=hicot_search_snippets k=100 runtime=182s cv_source=palmetto_wikipedia progress=58/330
+[2026-09-12 21:33:07] START model=sbert_mpnet dataset=hicot_google_news k=50 attempt=1 progress=59/330
+[2026-09-12 21:34:49] OK model=sbert_mpnet dataset=hicot_google_news k=50 runtime=102s cv_source=palmetto_wikipedia progress=59/330
+[2026-09-12 21:34:49] START model=sbert_mpnet dataset=hicot_google_news k=100 attempt=1 progress=60/330
+[2026-09-12 21:38:15] OK model=sbert_mpnet dataset=hicot_google_news k=100 runtime=207s cv_source=palmetto_wikipedia progress=60/330
+[2026-09-12 21:38:15] START model=sbert_t5 dataset=20ng k=50 attempt=1 progress=61/330
+[2026-09-12 21:43:27] OK model=sbert_t5 dataset=20ng k=50 runtime=311s cv_source=palmetto_wikipedia progress=61/330
+[2026-09-12 21:43:27] START model=sbert_t5 dataset=20ng k=100 attempt=1 progress=62/330
+[2026-09-12 21:48:56] OK model=sbert_t5 dataset=20ng k=100 runtime=329s cv_source=palmetto_wikipedia progress=62/330
+[2026-09-12 21:48:56] START model=sbert_t5 dataset=imdb k=50 attempt=1 progress=63/330
+[2026-09-12 22:04:59] OK model=sbert_t5 dataset=imdb k=50 runtime=964s cv_source=palmetto_wikipedia progress=63/330
+[2026-09-12 22:04:59] START model=sbert_t5 dataset=imdb k=100 attempt=1 progress=64/330
+[2026-09-12 22:22:01] OK model=sbert_t5 dataset=imdb k=100 runtime=1022s cv_source=palmetto_wikipedia progress=64/330
+[2026-09-12 22:22:01] START model=sbert_t5 dataset=agnews_short k=50 attempt=1 progress=65/330
+[2026-09-12 22:23:48] OK model=sbert_t5 dataset=agnews_short k=50 runtime=107s cv_source=palmetto_wikipedia progress=65/330
+[2026-09-12 22:23:48] START model=sbert_t5 dataset=agnews_short k=100 attempt=1 progress=66/330
+[2026-09-12 22:26:39] OK model=sbert_t5 dataset=agnews_short k=100 runtime=171s cv_source=palmetto_wikipedia progress=66/330
+[2026-09-12 22:26:39] START model=sbert_t5 dataset=search_snippets k=50 attempt=1 progress=67/330
+[2026-09-12 22:28:52] OK model=sbert_t5 dataset=search_snippets k=50 runtime=133s cv_source=palmetto_wikipedia progress=67/330
+[2026-09-12 22:28:52] START model=sbert_t5 dataset=search_snippets k=100 attempt=1 progress=68/330
+[2026-09-12 22:32:20] OK model=sbert_t5 dataset=search_snippets k=100 runtime=208s cv_source=palmetto_wikipedia progress=68/330
+[2026-09-12 22:32:20] START model=sbert_t5 dataset=stack_overflow k=50 attempt=1 progress=69/330
+[2026-09-12 22:33:57] OK model=sbert_t5 dataset=stack_overflow k=50 runtime=97s cv_source=palmetto_wikipedia progress=69/330
+[2026-09-12 22:33:57] START model=sbert_t5 dataset=stack_overflow k=100 attempt=1 progress=70/330
+[2026-09-12 22:36:41] OK model=sbert_t5 dataset=stack_overflow k=100 runtime=164s cv_source=palmetto_wikipedia progress=70/330
+[2026-09-12 22:36:41] START model=sbert_t5 dataset=biomedical k=50 attempt=1 progress=71/330
+[2026-09-12 22:38:36] OK model=sbert_t5 dataset=biomedical k=50 runtime=115s cv_source=palmetto_wikipedia progress=71/330
+[2026-09-12 22:38:36] START model=sbert_t5 dataset=biomedical k=100 attempt=1 progress=72/330
+[2026-09-12 22:41:06] OK model=sbert_t5 dataset=biomedical k=100 runtime=150s cv_source=palmetto_wikipedia progress=72/330
+[2026-09-12 22:41:06] START model=sbert_t5 dataset=google_news_ts k=50 attempt=1 progress=73/330
+[2026-09-12 22:43:20] OK model=sbert_t5 dataset=google_news_ts k=50 runtime=134s cv_source=palmetto_wikipedia progress=73/330
+[2026-09-12 22:43:20] START model=sbert_t5 dataset=google_news_ts k=100 attempt=1 progress=74/330
+[2026-09-12 22:46:52] OK model=sbert_t5 dataset=google_news_ts k=100 runtime=212s cv_source=palmetto_wikipedia progress=74/330
+[2026-09-12 22:46:52] START model=sbert_t5 dataset=google_news_t k=50 attempt=1 progress=75/330
+[2026-09-12 22:48:41] OK model=sbert_t5 dataset=google_news_t k=50 runtime=109s cv_source=palmetto_wikipedia progress=75/330
+[2026-09-12 22:48:41] START model=sbert_t5 dataset=google_news_t k=100 attempt=1 progress=76/330
+[2026-09-12 22:52:06] OK model=sbert_t5 dataset=google_news_t k=100 runtime=205s cv_source=palmetto_wikipedia progress=76/330
+[2026-09-12 22:52:06] START model=sbert_t5 dataset=google_news_s k=50 attempt=1 progress=77/330
+[2026-09-12 22:54:16] OK model=sbert_t5 dataset=google_news_s k=50 runtime=131s cv_source=palmetto_wikipedia progress=77/330
+[2026-09-12 22:54:16] START model=sbert_t5 dataset=google_news_s k=100 attempt=1 progress=78/330
+[2026-09-12 22:57:42] OK model=sbert_t5 dataset=google_news_s k=100 runtime=206s cv_source=palmetto_wikipedia progress=78/330
+[2026-09-12 22:57:42] START model=sbert_t5 dataset=tweet k=50 attempt=1 progress=79/330
+[2026-09-12 22:59:22] OK model=sbert_t5 dataset=tweet k=50 runtime=100s cv_source=palmetto_wikipedia progress=79/330
+[2026-09-12 22:59:22] START model=sbert_t5 dataset=tweet k=100 attempt=1 progress=80/330
+[2026-09-12 23:02:25] OK model=sbert_t5 dataset=tweet k=100 runtime=184s cv_source=palmetto_wikipedia progress=80/330
+[2026-09-12 23:02:25] START model=sbert_t5 dataset=hicot_20ng k=50 attempt=1 progress=81/330
+[2026-09-12 23:08:27] OK model=sbert_t5 dataset=hicot_20ng k=50 runtime=362s cv_source=palmetto_wikipedia progress=81/330
+[2026-09-12 23:08:27] START model=sbert_t5 dataset=hicot_20ng k=100 attempt=1 progress=82/330
+[2026-09-12 23:16:14] OK model=sbert_t5 dataset=hicot_20ng k=100 runtime=466s cv_source=palmetto_wikipedia progress=82/330
+[2026-09-12 23:16:14] START model=sbert_t5 dataset=hicot_imdb k=50 attempt=1 progress=83/330
+[2026-09-12 23:29:58] OK model=sbert_t5 dataset=hicot_imdb k=50 runtime=824s cv_source=palmetto_wikipedia progress=83/330
+[2026-09-12 23:29:58] START model=sbert_t5 dataset=hicot_imdb k=100 attempt=1 progress=84/330
+[2026-09-12 23:48:38] OK model=sbert_t5 dataset=hicot_imdb k=100 runtime=1120s cv_source=palmetto_wikipedia progress=84/330
+[2026-09-12 23:48:38] START model=sbert_t5 dataset=hicot_agnews k=50 attempt=1 progress=85/330
+[2026-09-12 23:51:05] OK model=sbert_t5 dataset=hicot_agnews k=50 runtime=147s cv_source=palmetto_wikipedia progress=85/330
+[2026-09-12 23:51:05] START model=sbert_t5 dataset=hicot_agnews k=100 attempt=1 progress=86/330
+[2026-09-12 23:54:48] OK model=sbert_t5 dataset=hicot_agnews k=100 runtime=223s cv_source=palmetto_wikipedia progress=86/330
+[2026-09-12 23:54:48] START model=sbert_t5 dataset=hicot_search_snippets k=50 attempt=1 progress=87/330
+[2026-09-12 23:56:52] OK model=sbert_t5 dataset=hicot_search_snippets k=50 runtime=125s cv_source=palmetto_wikipedia progress=87/330
+[2026-09-12 23:56:52] START model=sbert_t5 dataset=hicot_search_snippets k=100 attempt=1 progress=88/330
+[2026-09-13 00:00:10] OK model=sbert_t5 dataset=hicot_search_snippets k=100 runtime=198s cv_source=palmetto_wikipedia progress=88/330
+[2026-09-13 00:00:10] START model=sbert_t5 dataset=hicot_google_news k=50 attempt=1 progress=89/330
+[2026-09-13 00:01:59] OK model=sbert_t5 dataset=hicot_google_news k=50 runtime=109s cv_source=palmetto_wikipedia progress=89/330
+[2026-09-13 00:01:59] START model=sbert_t5 dataset=hicot_google_news k=100 attempt=1 progress=90/330
+[2026-09-13 00:05:21] OK model=sbert_t5 dataset=hicot_google_news k=100 runtime=202s cv_source=palmetto_wikipedia progress=90/330
+[2026-09-13 00:05:21] START model=sbert_e5 dataset=20ng k=50 attempt=1 progress=91/330
+[2026-09-13 00:17:43] OK model=sbert_e5 dataset=20ng k=50 runtime=742s cv_source=palmetto_wikipedia progress=91/330
+[2026-09-13 00:17:43] START model=sbert_e5 dataset=20ng k=100 attempt=1 progress=92/330
+[2026-09-13 00:30:32] OK model=sbert_e5 dataset=20ng k=100 runtime=769s cv_source=palmetto_wikipedia progress=92/330
+[2026-09-13 00:30:32] START model=sbert_e5 dataset=imdb k=50 attempt=1 progress=93/330
+[2026-09-13 01:08:28] OK model=sbert_e5 dataset=imdb k=50 runtime=2276s cv_source=palmetto_wikipedia progress=93/330
+[2026-09-13 01:08:28] START model=sbert_e5 dataset=imdb k=100 attempt=1 progress=94/330
+[2026-09-13 01:47:46] OK model=sbert_e5 dataset=imdb k=100 runtime=2358s cv_source=palmetto_wikipedia progress=94/330
+[2026-09-13 01:47:46] START model=sbert_e5 dataset=agnews_short k=50 attempt=1 progress=95/330
+[2026-09-13 01:50:05] OK model=sbert_e5 dataset=agnews_short k=50 runtime=139s cv_source=palmetto_wikipedia progress=95/330
+[2026-09-13 01:50:05] START model=sbert_e5 dataset=agnews_short k=100 attempt=1 progress=96/330
+[2026-09-13 01:53:15] OK model=sbert_e5 dataset=agnews_short k=100 runtime=190s cv_source=palmetto_wikipedia progress=96/330
+[2026-09-13 01:53:15] START model=sbert_e5 dataset=search_snippets k=50 attempt=1 progress=97/330
+[2026-09-13 01:56:03] OK model=sbert_e5 dataset=search_snippets k=50 runtime=168s cv_source=palmetto_wikipedia progress=97/330
+[2026-09-13 01:56:03] START model=sbert_e5 dataset=search_snippets k=100 attempt=1 progress=98/330
+[2026-09-13 02:00:08] OK model=sbert_e5 dataset=search_snippets k=100 runtime=245s cv_source=palmetto_wikipedia progress=98/330
+[2026-09-13 02:00:08] START model=sbert_e5 dataset=stack_overflow k=50 attempt=1 progress=99/330
+[2026-09-13 02:02:21] OK model=sbert_e5 dataset=stack_overflow k=50 runtime=133s cv_source=palmetto_wikipedia progress=99/330
+[2026-09-13 02:02:21] START model=sbert_e5 dataset=stack_overflow k=100 attempt=1 progress=100/330
+[2026-09-13 02:05:45] OK model=sbert_e5 dataset=stack_overflow k=100 runtime=204s cv_source=palmetto_wikipedia progress=100/330
+[2026-09-13 02:05:45] START model=sbert_e5 dataset=biomedical k=50 attempt=1 progress=101/330
+[2026-09-13 02:08:26] OK model=sbert_e5 dataset=biomedical k=50 runtime=161s cv_source=palmetto_wikipedia progress=101/330
+[2026-09-13 02:08:26] START model=sbert_e5 dataset=biomedical k=100 attempt=1 progress=102/330
+[2026-09-13 02:11:58] OK model=sbert_e5 dataset=biomedical k=100 runtime=212s cv_source=palmetto_wikipedia progress=102/330
+[2026-09-13 02:11:58] START model=sbert_e5 dataset=google_news_ts k=50 attempt=1 progress=103/330
+[2026-09-13 02:14:41] OK model=sbert_e5 dataset=google_news_ts k=50 runtime=163s cv_source=palmetto_wikipedia progress=103/330
+[2026-09-13 02:14:41] START model=sbert_e5 dataset=google_news_ts k=100 attempt=1 progress=104/330
+[2026-09-13 02:18:50] OK model=sbert_e5 dataset=google_news_ts k=100 runtime=249s cv_source=palmetto_wikipedia progress=104/330
+[2026-09-13 02:18:50] START model=sbert_e5 dataset=google_news_t k=50 attempt=1 progress=105/330
+[2026-09-13 02:20:53] OK model=sbert_e5 dataset=google_news_t k=50 runtime=123s cv_source=palmetto_wikipedia progress=105/330
+[2026-09-13 02:20:53] START model=sbert_e5 dataset=google_news_t k=100 attempt=1 progress=106/330
+[2026-09-13 02:24:30] OK model=sbert_e5 dataset=google_news_t k=100 runtime=218s cv_source=palmetto_wikipedia progress=106/330
+[2026-09-13 02:24:30] START model=sbert_e5 dataset=google_news_s k=50 attempt=1 progress=107/330
+[2026-09-13 02:27:05] OK model=sbert_e5 dataset=google_news_s k=50 runtime=154s cv_source=palmetto_wikipedia progress=107/330
+[2026-09-13 02:27:05] START model=sbert_e5 dataset=google_news_s k=100 attempt=1 progress=108/330
+[2026-09-13 02:31:06] OK model=sbert_e5 dataset=google_news_s k=100 runtime=241s cv_source=palmetto_wikipedia progress=108/330
+[2026-09-13 02:31:06] START model=sbert_e5 dataset=tweet k=50 attempt=1 progress=109/330
+[2026-09-13 02:32:53] OK model=sbert_e5 dataset=tweet k=50 runtime=107s cv_source=palmetto_wikipedia progress=109/330
+[2026-09-13 02:32:53] START model=sbert_e5 dataset=tweet k=100 attempt=1 progress=110/330
+[2026-09-13 02:35:54] OK model=sbert_e5 dataset=tweet k=100 runtime=182s cv_source=palmetto_wikipedia progress=110/330
+[2026-09-13 02:35:54] START model=sbert_e5 dataset=hicot_20ng k=50 attempt=1 progress=111/330
+[2026-09-13 02:44:14] OK model=sbert_e5 dataset=hicot_20ng k=50 runtime=500s cv_source=palmetto_wikipedia progress=111/330
+[2026-09-13 02:44:14] START model=sbert_e5 dataset=hicot_20ng k=100 attempt=1 progress=112/330
+[2026-09-13 02:54:42] OK model=sbert_e5 dataset=hicot_20ng k=100 runtime=628s cv_source=palmetto_wikipedia progress=112/330
+[2026-09-13 02:54:42] START model=sbert_e5 dataset=hicot_imdb k=50 attempt=1 progress=113/330
+[2026-09-13 03:14:02] OK model=sbert_e5 dataset=hicot_imdb k=50 runtime=1160s cv_source=palmetto_wikipedia progress=113/330
+[2026-09-13 03:14:02] START model=sbert_e5 dataset=hicot_imdb k=100 attempt=1 progress=114/330
+[2026-09-13 03:38:38] OK model=sbert_e5 dataset=hicot_imdb k=100 runtime=1476s cv_source=palmetto_wikipedia progress=114/330
+[2026-09-13 03:38:38] START model=sbert_e5 dataset=hicot_agnews k=50 attempt=1 progress=115/330
+[2026-09-13 03:41:27] OK model=sbert_e5 dataset=hicot_agnews k=50 runtime=169s cv_source=palmetto_wikipedia progress=115/330
+[2026-09-13 03:41:27] START model=sbert_e5 dataset=hicot_agnews k=100 attempt=1 progress=116/330
+[2026-09-13 03:45:42] OK model=sbert_e5 dataset=hicot_agnews k=100 runtime=256s cv_source=palmetto_wikipedia progress=116/330
+[2026-09-13 03:45:42] START model=sbert_e5 dataset=hicot_search_snippets k=50 attempt=1 progress=117/330
+[2026-09-13 03:48:16] OK model=sbert_e5 dataset=hicot_search_snippets k=50 runtime=154s cv_source=palmetto_wikipedia progress=117/330
+[2026-09-13 03:48:16] START model=sbert_e5 dataset=hicot_search_snippets k=100 attempt=1 progress=118/330
+[2026-09-13 03:52:17] OK model=sbert_e5 dataset=hicot_search_snippets k=100 runtime=241s cv_source=palmetto_wikipedia progress=118/330
+[2026-09-13 03:52:17] START model=sbert_e5 dataset=hicot_google_news k=50 attempt=1 progress=119/330
+[2026-09-13 03:54:16] OK model=sbert_e5 dataset=hicot_google_news k=50 runtime=119s cv_source=palmetto_wikipedia progress=119/330
+[2026-09-13 03:54:16] START model=sbert_e5 dataset=hicot_google_news k=100 attempt=1 progress=120/330
+[2026-09-13 03:58:00] OK model=sbert_e5 dataset=hicot_google_news k=100 runtime=224s cv_source=palmetto_wikipedia progress=120/330
+[2026-09-13 03:58:00] START model=sbert_bge dataset=20ng k=50 attempt=1 progress=121/330
+[2026-09-13 04:10:23] OK model=sbert_bge dataset=20ng k=50 runtime=743s cv_source=palmetto_wikipedia progress=121/330
+[2026-09-13 04:10:23] START model=sbert_bge dataset=20ng k=100 attempt=1 progress=122/330
+[2026-09-13 04:23:13] OK model=sbert_bge dataset=20ng k=100 runtime=770s cv_source=palmetto_wikipedia progress=122/330
+[2026-09-13 04:23:13] START model=sbert_bge dataset=imdb k=50 attempt=1 progress=123/330
+[2026-09-13 05:01:13] OK model=sbert_bge dataset=imdb k=50 runtime=2280s cv_source=palmetto_wikipedia progress=123/330
+[2026-09-13 05:01:13] START model=sbert_bge dataset=imdb k=100 attempt=1 progress=124/330
+[2026-09-13 05:40:40] OK model=sbert_bge dataset=imdb k=100 runtime=2367s cv_source=palmetto_wikipedia progress=124/330
+[2026-09-13 05:40:40] START model=sbert_bge dataset=agnews_short k=50 attempt=1 progress=125/330
+[2026-09-13 05:42:49] OK model=sbert_bge dataset=agnews_short k=50 runtime=129s cv_source=palmetto_wikipedia progress=125/330
+[2026-09-13 05:42:49] START model=sbert_bge dataset=agnews_short k=100 attempt=1 progress=126/330
+[2026-09-13 05:46:05] OK model=sbert_bge dataset=agnews_short k=100 runtime=196s cv_source=palmetto_wikipedia progress=126/330
+[2026-09-13 05:46:05] START model=sbert_bge dataset=search_snippets k=50 attempt=1 progress=127/330
+[2026-09-13 05:48:58] OK model=sbert_bge dataset=search_snippets k=50 runtime=173s cv_source=palmetto_wikipedia progress=127/330
+[2026-09-13 05:48:58] START model=sbert_bge dataset=search_snippets k=100 attempt=1 progress=128/330
+[2026-09-13 05:53:00] OK model=sbert_bge dataset=search_snippets k=100 runtime=242s cv_source=palmetto_wikipedia progress=128/330
+[2026-09-13 05:53:00] START model=sbert_bge dataset=stack_overflow k=50 attempt=1 progress=129/330
+[2026-09-13 05:55:18] OK model=sbert_bge dataset=stack_overflow k=50 runtime=138s cv_source=palmetto_wikipedia progress=129/330
+[2026-09-13 05:55:18] START model=sbert_bge dataset=stack_overflow k=100 attempt=1 progress=130/330
+[2026-09-13 05:58:48] OK model=sbert_bge dataset=stack_overflow k=100 runtime=210s cv_source=palmetto_wikipedia progress=130/330
+[2026-09-13 05:58:48] START model=sbert_bge dataset=biomedical k=50 attempt=1 progress=131/330
+[2026-09-13 06:01:32] OK model=sbert_bge dataset=biomedical k=50 runtime=164s cv_source=palmetto_wikipedia progress=131/330
+[2026-09-13 06:01:32] START model=sbert_bge dataset=biomedical k=100 attempt=1 progress=132/330
+[2026-09-13 06:05:01] OK model=sbert_bge dataset=biomedical k=100 runtime=209s cv_source=palmetto_wikipedia progress=132/330
+[2026-09-13 06:05:01] START model=sbert_bge dataset=google_news_ts k=50 attempt=1 progress=133/330
+[2026-09-13 06:07:42] OK model=sbert_bge dataset=google_news_ts k=50 runtime=162s cv_source=palmetto_wikipedia progress=133/330
+[2026-09-13 06:07:42] START model=sbert_bge dataset=google_news_ts k=100 attempt=1 progress=134/330
+[2026-09-13 06:11:45] OK model=sbert_bge dataset=google_news_ts k=100 runtime=243s cv_source=palmetto_wikipedia progress=134/330
+[2026-09-13 06:11:45] START model=sbert_bge dataset=google_news_t k=50 attempt=1 progress=135/330
+[2026-09-13 06:13:45] OK model=sbert_bge dataset=google_news_t k=50 runtime=120s cv_source=palmetto_wikipedia progress=135/330
+[2026-09-13 06:13:45] START model=sbert_bge dataset=google_news_t k=100 attempt=1 progress=136/330
+[2026-09-13 06:17:27] OK model=sbert_bge dataset=google_news_t k=100 runtime=222s cv_source=palmetto_wikipedia progress=136/330
+[2026-09-13 06:17:27] START model=sbert_bge dataset=google_news_s k=50 attempt=1 progress=137/330
+[2026-09-13 06:19:58] OK model=sbert_bge dataset=google_news_s k=50 runtime=151s cv_source=palmetto_wikipedia progress=137/330
+[2026-09-13 06:19:58] START model=sbert_bge dataset=google_news_s k=100 attempt=1 progress=138/330
+[2026-09-13 06:23:50] OK model=sbert_bge dataset=google_news_s k=100 runtime=231s cv_source=palmetto_wikipedia progress=138/330
+[2026-09-13 06:23:50] START model=sbert_bge dataset=tweet k=50 attempt=1 progress=139/330
+[2026-09-13 06:25:35] OK model=sbert_bge dataset=tweet k=50 runtime=105s cv_source=palmetto_wikipedia progress=139/330
+[2026-09-13 06:25:35] START model=sbert_bge dataset=tweet k=100 attempt=1 progress=140/330
+[2026-09-13 06:28:45] OK model=sbert_bge dataset=tweet k=100 runtime=190s cv_source=palmetto_wikipedia progress=140/330
+[2026-09-13 06:28:45] START model=sbert_bge dataset=hicot_20ng k=50 attempt=1 progress=141/330
+[2026-09-13 06:37:09] OK model=sbert_bge dataset=hicot_20ng k=50 runtime=504s cv_source=palmetto_wikipedia progress=141/330
+[2026-09-13 06:37:09] START model=sbert_bge dataset=hicot_20ng k=100 attempt=1 progress=142/330
+[2026-09-13 06:47:42] OK model=sbert_bge dataset=hicot_20ng k=100 runtime=633s cv_source=palmetto_wikipedia progress=142/330
+[2026-09-13 06:47:42] START model=sbert_bge dataset=hicot_imdb k=50 attempt=1 progress=143/330
+[2026-09-13 07:07:24] OK model=sbert_bge dataset=hicot_imdb k=50 runtime=1182s cv_source=palmetto_wikipedia progress=143/330
+[2026-09-13 07:07:24] START model=sbert_bge dataset=hicot_imdb k=100 attempt=1 progress=144/330
+[2026-09-13 07:32:05] OK model=sbert_bge dataset=hicot_imdb k=100 runtime=1481s cv_source=palmetto_wikipedia progress=144/330
+[2026-09-13 07:32:05] START model=sbert_bge dataset=hicot_agnews k=50 attempt=1 progress=145/330
+[2026-09-13 07:34:55] OK model=sbert_bge dataset=hicot_agnews k=50 runtime=170s cv_source=palmetto_wikipedia progress=145/330
+[2026-09-13 07:34:55] START model=sbert_bge dataset=hicot_agnews k=100 attempt=1 progress=146/330
+[2026-09-13 07:39:03] OK model=sbert_bge dataset=hicot_agnews k=100 runtime=248s cv_source=palmetto_wikipedia progress=146/330
+[2026-09-13 07:39:03] START model=sbert_bge dataset=hicot_search_snippets k=50 attempt=1 progress=147/330
+[2026-09-13 07:41:35] OK model=sbert_bge dataset=hicot_search_snippets k=50 runtime=152s cv_source=palmetto_wikipedia progress=147/330
+[2026-09-13 07:41:35] START model=sbert_bge dataset=hicot_search_snippets k=100 attempt=1 progress=148/330
+[2026-09-13 07:45:25] OK model=sbert_bge dataset=hicot_search_snippets k=100 runtime=231s cv_source=palmetto_wikipedia progress=148/330
+[2026-09-13 07:45:25] START model=sbert_bge dataset=hicot_google_news k=50 attempt=1 progress=149/330
+[2026-09-13 07:47:23] OK model=sbert_bge dataset=hicot_google_news k=50 runtime=118s cv_source=palmetto_wikipedia progress=149/330
+[2026-09-13 07:47:23] START model=sbert_bge dataset=hicot_google_news k=100 attempt=1 progress=150/330
+[2026-09-13 07:51:06] OK model=sbert_bge dataset=hicot_google_news k=100 runtime=223s cv_source=palmetto_wikipedia progress=150/330
+[2026-09-13 07:51:06] START model=sbert_gte dataset=20ng k=50 attempt=1 progress=151/330
+[2026-09-13 07:53:30] OK model=sbert_gte dataset=20ng k=50 runtime=144s cv_source=palmetto_wikipedia progress=151/330
+[2026-09-13 07:53:30] START model=sbert_gte dataset=20ng k=100 attempt=1 progress=152/330
+[2026-09-13 07:56:25] OK model=sbert_gte dataset=20ng k=100 runtime=174s cv_source=palmetto_wikipedia progress=152/330
+[2026-09-13 07:56:25] START model=sbert_gte dataset=imdb k=50 attempt=1 progress=153/330
+[2026-09-13 08:02:23] OK model=sbert_gte dataset=imdb k=50 runtime=359s cv_source=palmetto_wikipedia progress=153/330
+[2026-09-13 08:02:23] START model=sbert_gte dataset=imdb k=100 attempt=1 progress=154/330
+[2026-09-13 08:09:16] OK model=sbert_gte dataset=imdb k=100 runtime=413s cv_source=palmetto_wikipedia progress=154/330
+[2026-09-13 08:09:16] START model=sbert_gte dataset=agnews_short k=50 attempt=1 progress=155/330
+[2026-09-13 08:10:37] OK model=sbert_gte dataset=agnews_short k=50 runtime=81s cv_source=palmetto_wikipedia progress=155/330
+[2026-09-13 08:10:37] START model=sbert_gte dataset=agnews_short k=100 attempt=1 progress=156/330
+[2026-09-13 08:12:49] OK model=sbert_gte dataset=agnews_short k=100 runtime=132s cv_source=palmetto_wikipedia progress=156/330
+[2026-09-13 08:12:49] START model=sbert_gte dataset=search_snippets k=50 attempt=1 progress=157/330
+[2026-09-13 08:14:31] OK model=sbert_gte dataset=search_snippets k=50 runtime=102s cv_source=palmetto_wikipedia progress=157/330
+[2026-09-13 08:14:31] START model=sbert_gte dataset=search_snippets k=100 attempt=1 progress=158/330
+[2026-09-13 08:17:18] OK model=sbert_gte dataset=search_snippets k=100 runtime=167s cv_source=palmetto_wikipedia progress=158/330
+[2026-09-13 08:17:18] START model=sbert_gte dataset=stack_overflow k=50 attempt=1 progress=159/330
+[2026-09-13 08:18:38] OK model=sbert_gte dataset=stack_overflow k=50 runtime=80s cv_source=palmetto_wikipedia progress=159/330
+[2026-09-13 08:18:38] START model=sbert_gte dataset=stack_overflow k=100 attempt=1 progress=160/330
+[2026-09-13 08:21:01] OK model=sbert_gte dataset=stack_overflow k=100 runtime=143s cv_source=palmetto_wikipedia progress=160/330
+[2026-09-13 08:21:01] START model=sbert_gte dataset=biomedical k=50 attempt=1 progress=161/330
+[2026-09-13 08:22:24] OK model=sbert_gte dataset=biomedical k=50 runtime=83s cv_source=palmetto_wikipedia progress=161/330
+[2026-09-13 08:22:24] START model=sbert_gte dataset=biomedical k=100 attempt=1 progress=162/330
+[2026-09-13 08:24:22] OK model=sbert_gte dataset=biomedical k=100 runtime=118s cv_source=palmetto_wikipedia progress=162/330
+[2026-09-13 08:24:22] START model=sbert_gte dataset=google_news_ts k=50 attempt=1 progress=163/330
+[2026-09-13 08:26:00] OK model=sbert_gte dataset=google_news_ts k=50 runtime=97s cv_source=palmetto_wikipedia progress=163/330
+[2026-09-13 08:26:00] START model=sbert_gte dataset=google_news_ts k=100 attempt=1 progress=164/330
+[2026-09-13 08:28:58] OK model=sbert_gte dataset=google_news_ts k=100 runtime=178s cv_source=palmetto_wikipedia progress=164/330
+[2026-09-13 08:28:58] START model=sbert_gte dataset=google_news_t k=50 attempt=1 progress=165/330
+[2026-09-13 08:30:37] OK model=sbert_gte dataset=google_news_t k=50 runtime=99s cv_source=palmetto_wikipedia progress=165/330
+[2026-09-13 08:30:37] START model=sbert_gte dataset=google_news_t k=100 attempt=1 progress=166/330
+[2026-09-13 08:33:52] OK model=sbert_gte dataset=google_news_t k=100 runtime=195s cv_source=palmetto_wikipedia progress=166/330
+[2026-09-13 08:33:52] START model=sbert_gte dataset=google_news_s k=50 attempt=1 progress=167/330
+[2026-09-13 08:35:26] OK model=sbert_gte dataset=google_news_s k=50 runtime=94s cv_source=palmetto_wikipedia progress=167/330
+[2026-09-13 08:35:26] START model=sbert_gte dataset=google_news_s k=100 attempt=1 progress=168/330
+[2026-09-13 08:38:24] OK model=sbert_gte dataset=google_news_s k=100 runtime=178s cv_source=palmetto_wikipedia progress=168/330
+[2026-09-13 08:38:24] START model=sbert_gte dataset=tweet k=50 attempt=1 progress=169/330
+[2026-09-13 08:39:58] OK model=sbert_gte dataset=tweet k=50 runtime=94s cv_source=palmetto_wikipedia progress=169/330
+[2026-09-13 08:39:58] START model=sbert_gte dataset=tweet k=100 attempt=1 progress=170/330
+[2026-09-13 08:42:58] OK model=sbert_gte dataset=tweet k=100 runtime=180s cv_source=palmetto_wikipedia progress=170/330
+[2026-09-13 08:42:58] START model=sbert_gte dataset=hicot_20ng k=50 attempt=1 progress=171/330
+[2026-09-13 08:46:35] OK model=sbert_gte dataset=hicot_20ng k=50 runtime=218s cv_source=palmetto_wikipedia progress=171/330
+[2026-09-13 08:46:35] START model=sbert_gte dataset=hicot_20ng k=100 attempt=1 progress=172/330
+[2026-09-13 08:52:21] OK model=sbert_gte dataset=hicot_20ng k=100 runtime=346s cv_source=palmetto_wikipedia progress=172/330
+[2026-09-13 08:52:21] START model=sbert_gte dataset=hicot_imdb k=50 attempt=1 progress=173/330
+[2026-09-13 09:01:03] OK model=sbert_gte dataset=hicot_imdb k=50 runtime=522s cv_source=palmetto_wikipedia progress=173/330
+[2026-09-13 09:01:03] START model=sbert_gte dataset=hicot_imdb k=100 attempt=1 progress=174/330
+[2026-09-13 09:14:59] OK model=sbert_gte dataset=hicot_imdb k=100 runtime=836s cv_source=palmetto_wikipedia progress=174/330
+[2026-09-13 09:14:59] START model=sbert_gte dataset=hicot_agnews k=50 attempt=1 progress=175/330
+[2026-09-13 09:16:51] OK model=sbert_gte dataset=hicot_agnews k=50 runtime=112s cv_source=palmetto_wikipedia progress=175/330
+[2026-09-13 09:16:51] START model=sbert_gte dataset=hicot_agnews k=100 attempt=1 progress=176/330
+[2026-09-13 09:20:09] OK model=sbert_gte dataset=hicot_agnews k=100 runtime=197s cv_source=palmetto_wikipedia progress=176/330
+[2026-09-13 09:20:09] START model=sbert_gte dataset=hicot_search_snippets k=50 attempt=1 progress=177/330
+[2026-09-13 09:21:49] OK model=sbert_gte dataset=hicot_search_snippets k=50 runtime=101s cv_source=palmetto_wikipedia progress=177/330
+[2026-09-13 09:21:49] START model=sbert_gte dataset=hicot_search_snippets k=100 attempt=1 progress=178/330
+[2026-09-13 09:24:43] OK model=sbert_gte dataset=hicot_search_snippets k=100 runtime=174s cv_source=palmetto_wikipedia progress=178/330
+[2026-09-13 09:24:43] START model=sbert_gte dataset=hicot_google_news k=50 attempt=1 progress=179/330
+[2026-09-13 09:26:17] OK model=sbert_gte dataset=hicot_google_news k=50 runtime=95s cv_source=palmetto_wikipedia progress=179/330
+[2026-09-13 09:26:17] START model=sbert_gte dataset=hicot_google_news k=100 attempt=1 progress=180/330
+[2026-09-13 09:29:37] OK model=sbert_gte dataset=hicot_google_news k=100 runtime=199s cv_source=palmetto_wikipedia progress=180/330
+[2026-09-13 09:29:37] START model=sbert_msmpnet dataset=20ng k=50 attempt=1 progress=181/330
+[2026-09-13 09:29:45] ERROR model=sbert_msmpnet dataset=20ng k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa66d07-31a206741c51492371aa23d1;93b15a34-8d66-41ae-b343-38ce20e5af43)"
+[2026-09-13 09:29:45] RETRY model=sbert_msmpnet dataset=20ng k=50 attempt=2
+[2026-09-13 09:30:05] START model=sbert_msmpnet dataset=20ng k=50 attempt=2 progress=181/330
+[2026-09-13 09:30:13] ERROR model=sbert_msmpnet dataset=20ng k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa66d24-6cc0f66a55b80f492fdd6da4;b4b49894-c739-4e32-9ffe-0471e542cd74)"
+[2026-09-13 09:30:13] RETRY model=sbert_msmpnet dataset=20ng k=50 attempt=3
+[2026-09-13 09:30:33] START model=sbert_msmpnet dataset=20ng k=50 attempt=3 progress=181/330
+[2026-09-13 09:30:43] ERROR model=sbert_msmpnet dataset=20ng k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa66d42-4305869e0531bf72594ec63d;2e2c4624-2657-4846-a56f-470e06247655)"
+[2026-09-13 09:30:43] ERROR model=sbert_msmpnet dataset=20ng k=50 FINAL after 3 attempts, giving up progress=181/330
+[2026-09-13 09:30:43] START model=sbert_msmpnet dataset=20ng k=100 attempt=1 progress=182/330
+[2026-09-13 09:30:51] ERROR model=sbert_msmpnet dataset=20ng k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa66d4a-4bfb97d4180d46ef09f7e0d2;b29aab2e-239f-4865-834f-4a3996c70983)"
+[2026-09-13 09:30:51] RETRY model=sbert_msmpnet dataset=20ng k=100 attempt=2
+[2026-09-13 09:31:11] START model=sbert_msmpnet dataset=20ng k=100 attempt=2 progress=182/330
+[2026-09-13 09:31:22] ERROR model=sbert_msmpnet dataset=20ng k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa66d68-552a253c73e756d4375f9297;7ba006de-eb34-49ff-9d9c-1e40def6aa29)"
+[2026-09-13 09:31:22] RETRY model=sbert_msmpnet dataset=20ng k=100 attempt=3
+[2026-09-13 09:31:42] START model=sbert_msmpnet dataset=20ng k=100 attempt=3 progress=182/330
+[2026-09-13 09:31:53] ERROR model=sbert_msmpnet dataset=20ng k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa66d87-1817024e7991a3ba76b810d6;8b746f7b-8b53-4d3c-a0bb-db860806b4ea)"
+[2026-09-13 09:31:53] ERROR model=sbert_msmpnet dataset=20ng k=100 FINAL after 3 attempts, giving up progress=182/330
+[2026-09-13 09:31:53] START model=sbert_msmpnet dataset=imdb k=50 attempt=1 progress=183/330
+[2026-09-13 09:32:03] ERROR model=sbert_msmpnet dataset=imdb k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa66d91-5f37c21b5dcc9ab82a79c073;206529d5-7f64-4ced-b0e5-96342d4d4906)"
+[2026-09-13 09:32:03] RETRY model=sbert_msmpnet dataset=imdb k=50 attempt=2
+[2026-09-13 09:32:23] START model=sbert_msmpnet dataset=imdb k=50 attempt=2 progress=183/330
+[2026-09-13 09:32:32] ERROR model=sbert_msmpnet dataset=imdb k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa66daf-4be7e15636fcf28b2f179a18;68ab3f58-dc35-4e5f-ba76-6de43911e417)"
+[2026-09-13 09:32:32] RETRY model=sbert_msmpnet dataset=imdb k=50 attempt=3
+[2026-09-13 09:32:52] START model=sbert_msmpnet dataset=imdb k=50 attempt=3 progress=183/330
+[2026-09-13 09:33:03] ERROR model=sbert_msmpnet dataset=imdb k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa66dcd-339e030b036f21fb644580e7;fcbe9b84-d9e1-47a7-9763-4beb39bd527e)"
+[2026-09-13 09:33:03] ERROR model=sbert_msmpnet dataset=imdb k=50 FINAL after 3 attempts, giving up progress=183/330
+[2026-09-13 09:33:03] START model=sbert_msmpnet dataset=imdb k=100 attempt=1 progress=184/330
+[2026-09-13 09:33:11] ERROR model=sbert_msmpnet dataset=imdb k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa66dd5-68524d68088e4e417c8e9791;6bfd7515-fe12-488c-acc1-f2bb846c858f)"
+[2026-09-13 09:33:11] RETRY model=sbert_msmpnet dataset=imdb k=100 attempt=2
+[2026-09-13 09:33:31] START model=sbert_msmpnet dataset=imdb k=100 attempt=2 progress=184/330
+[2026-09-13 09:33:41] ERROR model=sbert_msmpnet dataset=imdb k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa66df3-5d2605972558cef2235b6cb4;c2ec44c0-f600-4409-922a-183acbac373e)"
+[2026-09-13 09:33:41] RETRY model=sbert_msmpnet dataset=imdb k=100 attempt=3
+[2026-09-13 09:34:01] START model=sbert_msmpnet dataset=imdb k=100 attempt=3 progress=184/330
+[2026-09-13 09:34:11] ERROR model=sbert_msmpnet dataset=imdb k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa66e12-2f617512206677ef797b7137;cf72756c-0d63-4987-a68a-527a070450b5)"
+[2026-09-13 09:34:11] ERROR model=sbert_msmpnet dataset=imdb k=100 FINAL after 3 attempts, giving up progress=184/330
+[2026-09-13 09:34:11] START model=sbert_msmpnet dataset=agnews_short k=50 attempt=1 progress=185/330
+[2026-09-13 09:34:19] ERROR model=sbert_msmpnet dataset=agnews_short k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa66e1a-6efdb42627dc317c68097b8c;b5539abe-0f1d-4f9b-a1d3-042533b2058e)"
+[2026-09-13 09:34:19] RETRY model=sbert_msmpnet dataset=agnews_short k=50 attempt=2
+[2026-09-13 09:34:39] START model=sbert_msmpnet dataset=agnews_short k=50 attempt=2 progress=185/330
+[2026-09-13 09:34:50] ERROR model=sbert_msmpnet dataset=agnews_short k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa66e38-339c466973fd8dcd6f038565;0d99e104-e51d-4adb-9397-623027bb5750)"
+[2026-09-13 09:34:50] RETRY model=sbert_msmpnet dataset=agnews_short k=50 attempt=3
+[2026-09-13 09:35:10] START model=sbert_msmpnet dataset=agnews_short k=50 attempt=3 progress=185/330
+[2026-09-13 09:35:19] ERROR model=sbert_msmpnet dataset=agnews_short k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa66e55-020400a561802c51108d9734;a48bca6f-5e17-4207-9d8b-f6abd4354b30)"
+[2026-09-13 09:35:19] ERROR model=sbert_msmpnet dataset=agnews_short k=50 FINAL after 3 attempts, giving up progress=185/330
+[2026-09-13 09:35:19] START model=sbert_msmpnet dataset=agnews_short k=100 attempt=1 progress=186/330
+[2026-09-13 09:35:27] ERROR model=sbert_msmpnet dataset=agnews_short k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa66e5d-3c4ce17d51de5f845ad102a0;647f8c2f-7214-4848-84e7-55f3a0381a1e)"
+[2026-09-13 09:35:27] RETRY model=sbert_msmpnet dataset=agnews_short k=100 attempt=2
+[2026-09-13 09:35:47] START model=sbert_msmpnet dataset=agnews_short k=100 attempt=2 progress=186/330
+[2026-09-13 09:35:57] ERROR model=sbert_msmpnet dataset=agnews_short k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa66e7c-75bb2e98057896023ac37a95;757eb4ab-eb4c-4230-86bd-018efa1f2371)"
+[2026-09-13 09:35:57] RETRY model=sbert_msmpnet dataset=agnews_short k=100 attempt=3
+[2026-09-13 09:36:17] START model=sbert_msmpnet dataset=agnews_short k=100 attempt=3 progress=186/330
+[2026-09-13 09:36:27] ERROR model=sbert_msmpnet dataset=agnews_short k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa66e99-31d515496ac002211e773c8c;6c4c7d9a-f0c3-4f7f-a2d5-23d6acd4d9b4)"
+[2026-09-13 09:36:27] ERROR model=sbert_msmpnet dataset=agnews_short k=100 FINAL after 3 attempts, giving up progress=186/330
+[2026-09-13 09:36:27] START model=sbert_msmpnet dataset=search_snippets k=50 attempt=1 progress=187/330
+[2026-09-13 09:36:36] ERROR model=sbert_msmpnet dataset=search_snippets k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa66ea2-4d69ac633ac0bcc974180ea9;c1478d1e-cebd-467b-990e-1837631f1102)"
+[2026-09-13 09:36:36] RETRY model=sbert_msmpnet dataset=search_snippets k=50 attempt=2
+[2026-09-13 09:36:56] START model=sbert_msmpnet dataset=search_snippets k=50 attempt=2 progress=187/330
+[2026-09-13 09:37:05] ERROR model=sbert_msmpnet dataset=search_snippets k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa66ebf-0af2b6de5a1d3460119de77f;0132577d-17e6-4694-81c1-98e593ebdbab)"
+[2026-09-13 09:37:05] RETRY model=sbert_msmpnet dataset=search_snippets k=50 attempt=3
+[2026-09-13 09:37:25] START model=sbert_msmpnet dataset=search_snippets k=50 attempt=3 progress=187/330
+[2026-09-13 09:37:33] ERROR model=sbert_msmpnet dataset=search_snippets k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa66edb-6c6657c80116c9f21e0d94d8;ca5db9b6-e6f0-47c1-a73c-9e8c109c3a97)"
+[2026-09-13 09:37:33] ERROR model=sbert_msmpnet dataset=search_snippets k=50 FINAL after 3 attempts, giving up progress=187/330
+[2026-09-13 09:37:33] START model=sbert_msmpnet dataset=search_snippets k=100 attempt=1 progress=188/330
+[2026-09-13 09:37:41] ERROR model=sbert_msmpnet dataset=search_snippets k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa66ee3-10145d4377fc6bdb6880baa7;105fd706-45da-427e-ba93-10808e68a1db)"
+[2026-09-13 09:37:41] RETRY model=sbert_msmpnet dataset=search_snippets k=100 attempt=2
+[2026-09-13 09:38:01] START model=sbert_msmpnet dataset=search_snippets k=100 attempt=2 progress=188/330
+[2026-09-13 09:38:12] ERROR model=sbert_msmpnet dataset=search_snippets k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa66f02-48aa99cc1f00894c5dcb8fe0;25817c16-c8ab-45bf-b1b6-085ef7b1d865)"
+[2026-09-13 09:38:12] RETRY model=sbert_msmpnet dataset=search_snippets k=100 attempt=3
+[2026-09-13 09:38:32] START model=sbert_msmpnet dataset=search_snippets k=100 attempt=3 progress=188/330
+[2026-09-13 09:38:42] ERROR model=sbert_msmpnet dataset=search_snippets k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa66f21-00d5606f4d7375b336e5ce7a;96e9022e-7bbb-4ac7-aff4-64c6bf4ce1f6)"
+[2026-09-13 09:38:42] ERROR model=sbert_msmpnet dataset=search_snippets k=100 FINAL after 3 attempts, giving up progress=188/330
+[2026-09-13 09:38:42] START model=sbert_msmpnet dataset=stack_overflow k=50 attempt=1 progress=189/330
+[2026-09-13 09:38:50] ERROR model=sbert_msmpnet dataset=stack_overflow k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa66f28-7776d60d4021f016789a7107;f977e1e2-ba8d-4fe3-8975-bb10d1a43968)"
+[2026-09-13 09:38:50] RETRY model=sbert_msmpnet dataset=stack_overflow k=50 attempt=2
+[2026-09-13 09:39:10] START model=sbert_msmpnet dataset=stack_overflow k=50 attempt=2 progress=189/330
+[2026-09-13 09:39:18] ERROR model=sbert_msmpnet dataset=stack_overflow k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa66f45-0390f66b7cf2558765681b98;291907af-b3ae-4aae-b87e-25c65b265cfd)"
+[2026-09-13 09:39:18] RETRY model=sbert_msmpnet dataset=stack_overflow k=50 attempt=3
+[2026-09-13 09:39:38] START model=sbert_msmpnet dataset=stack_overflow k=50 attempt=3 progress=189/330
+[2026-09-13 09:39:48] ERROR model=sbert_msmpnet dataset=stack_overflow k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa66f62-445600eb4867f2677786349d;0008c02a-e84d-4f07-a0d8-ad9fe26ab1b9)"
+[2026-09-13 09:39:48] ERROR model=sbert_msmpnet dataset=stack_overflow k=50 FINAL after 3 attempts, giving up progress=189/330
+[2026-09-13 09:39:48] START model=sbert_msmpnet dataset=stack_overflow k=100 attempt=1 progress=190/330
+[2026-09-13 09:39:56] ERROR model=sbert_msmpnet dataset=stack_overflow k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa66f6b-6efd88f31e896cd4182fc5b9;44a8b038-8427-474d-9372-164313a26165)"
+[2026-09-13 09:39:56] RETRY model=sbert_msmpnet dataset=stack_overflow k=100 attempt=2
+[2026-09-13 09:40:16] START model=sbert_msmpnet dataset=stack_overflow k=100 attempt=2 progress=190/330
+[2026-09-13 09:40:27] ERROR model=sbert_msmpnet dataset=stack_overflow k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa66f89-36547a21117219a77b9cb938;a6afdb48-d7ee-4e24-9da0-a70835044e80)"
+[2026-09-13 09:40:27] RETRY model=sbert_msmpnet dataset=stack_overflow k=100 attempt=3
+[2026-09-13 09:40:47] START model=sbert_msmpnet dataset=stack_overflow k=100 attempt=3 progress=190/330
+[2026-09-13 09:40:56] ERROR model=sbert_msmpnet dataset=stack_overflow k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa66fa7-7cb3d5441b2820be324a29ac;d8664d89-03b7-4988-802c-02060251d381)"
+[2026-09-13 09:40:56] ERROR model=sbert_msmpnet dataset=stack_overflow k=100 FINAL after 3 attempts, giving up progress=190/330
+[2026-09-13 09:40:56] START model=sbert_msmpnet dataset=biomedical k=50 attempt=1 progress=191/330
+[2026-09-13 09:41:06] ERROR model=sbert_msmpnet dataset=biomedical k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa66fb0-6875b33c21a0cf4722525119;79546521-2fa4-4473-b349-e0b833771465)"
+[2026-09-13 09:41:06] RETRY model=sbert_msmpnet dataset=biomedical k=50 attempt=2
+[2026-09-13 09:41:26] START model=sbert_msmpnet dataset=biomedical k=50 attempt=2 progress=191/330
+[2026-09-13 09:41:35] ERROR model=sbert_msmpnet dataset=biomedical k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa66fce-5c1aca6e6d11ce93310f4067;e52040ec-f755-4bc1-921c-04b71285866d)"
+[2026-09-13 09:41:35] RETRY model=sbert_msmpnet dataset=biomedical k=50 attempt=3
+[2026-09-13 09:41:55] START model=sbert_msmpnet dataset=biomedical k=50 attempt=3 progress=191/330
+[2026-09-13 09:42:05] ERROR model=sbert_msmpnet dataset=biomedical k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa66fec-4239b91e7b03e9d802dec018;99a26b81-0246-4cf7-b3f4-d1267a1c6597)"
+[2026-09-13 09:42:05] ERROR model=sbert_msmpnet dataset=biomedical k=50 FINAL after 3 attempts, giving up progress=191/330
+[2026-09-13 09:42:05] START model=sbert_msmpnet dataset=biomedical k=100 attempt=1 progress=192/330
+[2026-09-13 09:42:14] ERROR model=sbert_msmpnet dataset=biomedical k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa66ff4-689564600e7a1a9f3a70e075;0e6d8c96-cdcb-4b2d-829b-06e7cde5f79a)"
+[2026-09-13 09:42:14] RETRY model=sbert_msmpnet dataset=biomedical k=100 attempt=2
+[2026-09-13 09:42:34] START model=sbert_msmpnet dataset=biomedical k=100 attempt=2 progress=192/330
+[2026-09-13 09:42:44] ERROR model=sbert_msmpnet dataset=biomedical k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa67012-4d317d21538397ac7ce16bee;867a43c3-4cba-493b-8cfa-08727a3fdf5b)"
+[2026-09-13 09:42:44] RETRY model=sbert_msmpnet dataset=biomedical k=100 attempt=3
+[2026-09-13 09:43:04] START model=sbert_msmpnet dataset=biomedical k=100 attempt=3 progress=192/330
+[2026-09-13 09:43:14] ERROR model=sbert_msmpnet dataset=biomedical k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa67030-2858c5cd50e64a9b71229ec9;4cda8995-e777-47e9-b516-4e60c74f3164)"
+[2026-09-13 09:43:14] ERROR model=sbert_msmpnet dataset=biomedical k=100 FINAL after 3 attempts, giving up progress=192/330
+[2026-09-13 09:43:14] START model=sbert_msmpnet dataset=google_news_ts k=50 attempt=1 progress=193/330
+[2026-09-13 09:43:22] ERROR model=sbert_msmpnet dataset=google_news_ts k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa67038-2a32778e5001940b0d86f363;db444de8-233f-4b72-ae0f-c0bebc62ed98)"
+[2026-09-13 09:43:22] RETRY model=sbert_msmpnet dataset=google_news_ts k=50 attempt=2
+[2026-09-13 09:43:42] START model=sbert_msmpnet dataset=google_news_ts k=50 attempt=2 progress=193/330
+[2026-09-13 09:43:53] ERROR model=sbert_msmpnet dataset=google_news_ts k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa67057-716f90ba41e6166a0899338b;85cc4343-c1f7-4895-8d85-b8a708cb59f0)"
+[2026-09-13 09:43:53] RETRY model=sbert_msmpnet dataset=google_news_ts k=50 attempt=3
+[2026-09-13 09:44:13] START model=sbert_msmpnet dataset=google_news_ts k=50 attempt=3 progress=193/330
+[2026-09-13 09:44:22] ERROR model=sbert_msmpnet dataset=google_news_ts k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa67075-70dbd3ad1fcb34ee6338e233;ec0e2081-50d4-4484-a35d-7fd75cc3e488)"
+[2026-09-13 09:44:22] ERROR model=sbert_msmpnet dataset=google_news_ts k=50 FINAL after 3 attempts, giving up progress=193/330
+[2026-09-13 09:44:22] START model=sbert_msmpnet dataset=google_news_ts k=100 attempt=1 progress=194/330
+[2026-09-13 09:44:30] ERROR model=sbert_msmpnet dataset=google_news_ts k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6707d-4dc50fdd678b26cb31fd616b;56d0bb82-1903-45e4-a13e-16bbff015927)"
+[2026-09-13 09:44:30] RETRY model=sbert_msmpnet dataset=google_news_ts k=100 attempt=2
+[2026-09-13 09:44:50] START model=sbert_msmpnet dataset=google_news_ts k=100 attempt=2 progress=194/330
+[2026-09-13 09:45:00] ERROR model=sbert_msmpnet dataset=google_news_ts k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6709b-708f52f362a03180486d131e;a0db563c-9bb9-43c9-b745-8b9142553c5a)"
+[2026-09-13 09:45:00] RETRY model=sbert_msmpnet dataset=google_news_ts k=100 attempt=3
+[2026-09-13 09:45:20] START model=sbert_msmpnet dataset=google_news_ts k=100 attempt=3 progress=194/330
+[2026-09-13 09:45:30] ERROR model=sbert_msmpnet dataset=google_news_ts k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa670b9-262a39714dfa114a4de0faf9;27eb12ac-2d0e-41c8-bfae-4c734b391b1d)"
+[2026-09-13 09:45:30] ERROR model=sbert_msmpnet dataset=google_news_ts k=100 FINAL after 3 attempts, giving up progress=194/330
+[2026-09-13 09:45:30] START model=sbert_msmpnet dataset=google_news_t k=50 attempt=1 progress=195/330
+[2026-09-13 09:45:39] ERROR model=sbert_msmpnet dataset=google_news_t k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa670c1-41eda5da62a2a7a865c049c9;9592d47e-a1d1-49c9-b3c0-900a9f471e94)"
+[2026-09-13 09:45:39] RETRY model=sbert_msmpnet dataset=google_news_t k=50 attempt=2
+[2026-09-13 09:45:59] START model=sbert_msmpnet dataset=google_news_t k=50 attempt=2 progress=195/330
+[2026-09-13 09:46:09] ERROR model=sbert_msmpnet dataset=google_news_t k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa670e0-09aa8a62354bd796122f8a2b;5af991b5-b824-460c-94c7-564e8df8f3bc)"
+[2026-09-13 09:46:09] RETRY model=sbert_msmpnet dataset=google_news_t k=50 attempt=3
+[2026-09-13 09:46:29] START model=sbert_msmpnet dataset=google_news_t k=50 attempt=3 progress=195/330
+[2026-09-13 09:46:40] ERROR model=sbert_msmpnet dataset=google_news_t k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa670ff-394fc33a6a329abd062cd7ae;f81d1cc0-4b98-47d0-bfb3-bc1c865a6648)"
+[2026-09-13 09:46:40] ERROR model=sbert_msmpnet dataset=google_news_t k=50 FINAL after 3 attempts, giving up progress=195/330
+[2026-09-13 09:46:40] START model=sbert_msmpnet dataset=google_news_t k=100 attempt=1 progress=196/330
+[2026-09-13 09:46:48] ERROR model=sbert_msmpnet dataset=google_news_t k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa67107-32b1563232c6dc1c39a1b9a4;641b8881-6bce-4986-8013-e7dab77d42ef)"
+[2026-09-13 09:46:48] RETRY model=sbert_msmpnet dataset=google_news_t k=100 attempt=2
+[2026-09-13 09:47:08] START model=sbert_msmpnet dataset=google_news_t k=100 attempt=2 progress=196/330
+[2026-09-13 09:47:17] ERROR model=sbert_msmpnet dataset=google_news_t k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa67123-38fb4f96405bbca63a01adbf;837adc76-e724-4490-bba5-ba0693ba50e5)"
+[2026-09-13 09:47:17] RETRY model=sbert_msmpnet dataset=google_news_t k=100 attempt=3
+[2026-09-13 09:47:37] START model=sbert_msmpnet dataset=google_news_t k=100 attempt=3 progress=196/330
+[2026-09-13 09:47:48] ERROR model=sbert_msmpnet dataset=google_news_t k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa67143-1f0e6064547629bf100437f9;ae7eae43-8593-4d4a-9a0d-4ef321c6c505)"
+[2026-09-13 09:47:48] ERROR model=sbert_msmpnet dataset=google_news_t k=100 FINAL after 3 attempts, giving up progress=196/330
+[2026-09-13 09:47:48] START model=sbert_msmpnet dataset=google_news_s k=50 attempt=1 progress=197/330
+[2026-09-13 09:47:56] ERROR model=sbert_msmpnet dataset=google_news_s k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6714b-7e23dd462c8d8e025d75c95d;cdef20fd-5e12-4657-b2eb-662ccfcde999)"
+[2026-09-13 09:47:56] RETRY model=sbert_msmpnet dataset=google_news_s k=50 attempt=2
+[2026-09-13 09:48:16] START model=sbert_msmpnet dataset=google_news_s k=50 attempt=2 progress=197/330
+[2026-09-13 09:48:28] ERROR model=sbert_msmpnet dataset=google_news_s k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6716a-2ed2e60f4b2d49505ae36882;a3fc2290-a4ce-426b-ad6a-f2963a6c3b4f)"
+[2026-09-13 09:48:28] RETRY model=sbert_msmpnet dataset=google_news_s k=50 attempt=3
+[2026-09-13 09:48:48] START model=sbert_msmpnet dataset=google_news_s k=50 attempt=3 progress=197/330
+[2026-09-13 09:48:57] ERROR model=sbert_msmpnet dataset=google_news_s k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa67188-1f25373740ec7a224699bb1b;c433af89-2ccd-4749-bc32-693d1f8cc155)"
+[2026-09-13 09:48:57] ERROR model=sbert_msmpnet dataset=google_news_s k=50 FINAL after 3 attempts, giving up progress=197/330
+[2026-09-13 09:48:57] START model=sbert_msmpnet dataset=google_news_s k=100 attempt=1 progress=198/330
+[2026-09-13 09:49:06] ERROR model=sbert_msmpnet dataset=google_news_s k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa67190-37517ccb315d43d2286e217f;adfbcd0c-d6a6-4e80-9a3d-f89dca45aabd)"
+[2026-09-13 09:49:06] RETRY model=sbert_msmpnet dataset=google_news_s k=100 attempt=2
+[2026-09-13 09:49:26] START model=sbert_msmpnet dataset=google_news_s k=100 attempt=2 progress=198/330
+[2026-09-13 09:49:36] ERROR model=sbert_msmpnet dataset=google_news_s k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa671af-471af2cb2c4eaba5717457aa;c91d1f36-93cc-4ede-95df-1e8cb768fb05)"
+[2026-09-13 09:49:36] RETRY model=sbert_msmpnet dataset=google_news_s k=100 attempt=3
+[2026-09-13 09:49:56] START model=sbert_msmpnet dataset=google_news_s k=100 attempt=3 progress=198/330
+[2026-09-13 09:50:05] ERROR model=sbert_msmpnet dataset=google_news_s k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa671cb-3e720cc260bb450c28715389;30aec2d1-6159-4b5a-9d46-ec59822ff6b0)"
+[2026-09-13 09:50:05] ERROR model=sbert_msmpnet dataset=google_news_s k=100 FINAL after 3 attempts, giving up progress=198/330
+[2026-09-13 09:50:05] START model=sbert_msmpnet dataset=tweet k=50 attempt=1 progress=199/330
+[2026-09-13 09:50:13] ERROR model=sbert_msmpnet dataset=tweet k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa671d3-26175ceb10b07dbc762c9316;750ad8b7-c200-49fa-9bf3-b932d518d7c4)"
+[2026-09-13 09:50:13] RETRY model=sbert_msmpnet dataset=tweet k=50 attempt=2
+[2026-09-13 09:50:33] START model=sbert_msmpnet dataset=tweet k=50 attempt=2 progress=199/330
+[2026-09-13 09:50:42] ERROR model=sbert_msmpnet dataset=tweet k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa671f0-195add8e1bdccfb10ae51a7f;d0e1036e-eb3c-47dc-bef5-508c7f4ed1e0)"
+[2026-09-13 09:50:42] RETRY model=sbert_msmpnet dataset=tweet k=50 attempt=3
+[2026-09-13 09:51:02] START model=sbert_msmpnet dataset=tweet k=50 attempt=3 progress=199/330
+[2026-09-13 09:51:12] ERROR model=sbert_msmpnet dataset=tweet k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6720e-09ae047944ee488623050b49;45061413-b0ed-4281-8f46-72344d23c7aa)"
+[2026-09-13 09:51:12] ERROR model=sbert_msmpnet dataset=tweet k=50 FINAL after 3 attempts, giving up progress=199/330
+[2026-09-13 09:51:12] START model=sbert_msmpnet dataset=tweet k=100 attempt=1 progress=200/330
+[2026-09-13 09:51:20] ERROR model=sbert_msmpnet dataset=tweet k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa67217-0a58c2ac6e4b5e11264cebdf;7237f48f-01a9-4d0a-95e7-d5dcbd2dd940)"
+[2026-09-13 09:51:20] RETRY model=sbert_msmpnet dataset=tweet k=100 attempt=2
+[2026-09-13 09:51:40] START model=sbert_msmpnet dataset=tweet k=100 attempt=2 progress=200/330
+[2026-09-13 09:51:50] ERROR model=sbert_msmpnet dataset=tweet k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa67235-76ca795e341de2447626df4f;c54acf14-21fb-4d6d-aa65-4ada1a9aa19d)"
+[2026-09-13 09:51:50] RETRY model=sbert_msmpnet dataset=tweet k=100 attempt=3
+[2026-09-13 09:52:10] START model=sbert_msmpnet dataset=tweet k=100 attempt=3 progress=200/330
+[2026-09-13 09:52:18] ERROR model=sbert_msmpnet dataset=tweet k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa67250-071a79fa42b7bce5772bb9b1;3187e7e0-72bb-4eee-b748-360db8c249b5)"
+[2026-09-13 09:52:18] ERROR model=sbert_msmpnet dataset=tweet k=100 FINAL after 3 attempts, giving up progress=200/330
+[2026-09-13 09:52:18] START model=sbert_msmpnet dataset=hicot_20ng k=50 attempt=1 progress=201/330
+[2026-09-13 09:52:26] ERROR model=sbert_msmpnet dataset=hicot_20ng k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa67259-1c5cd0e61316a5cb473a2248;120371d4-a945-4ed2-9c65-ee01fb8edd49)"
+[2026-09-13 09:52:26] RETRY model=sbert_msmpnet dataset=hicot_20ng k=50 attempt=2
+[2026-09-13 09:52:46] START model=sbert_msmpnet dataset=hicot_20ng k=50 attempt=2 progress=201/330
+[2026-09-13 09:52:56] ERROR model=sbert_msmpnet dataset=hicot_20ng k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa67276-6293d0b435c35a533304892b;2be6cda4-895b-47fe-a550-4115290f105d)"
+[2026-09-13 09:52:56] RETRY model=sbert_msmpnet dataset=hicot_20ng k=50 attempt=3
+[2026-09-13 09:53:16] START model=sbert_msmpnet dataset=hicot_20ng k=50 attempt=3 progress=201/330
+[2026-09-13 09:53:27] ERROR model=sbert_msmpnet dataset=hicot_20ng k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa67295-7fe2449024c3df7345e6eed5;9aa97658-5f37-474b-bf88-ac66b2ea3a60)"
+[2026-09-13 09:53:27] ERROR model=sbert_msmpnet dataset=hicot_20ng k=50 FINAL after 3 attempts, giving up progress=201/330
+[2026-09-13 09:53:27] START model=sbert_msmpnet dataset=hicot_20ng k=100 attempt=1 progress=202/330
+[2026-09-13 09:53:34] ERROR model=sbert_msmpnet dataset=hicot_20ng k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6729d-704122897814f56c5d983886;5da22e37-ebe6-4270-a922-31d5c77a0151)"
+[2026-09-13 09:53:34] RETRY model=sbert_msmpnet dataset=hicot_20ng k=100 attempt=2
+[2026-09-13 09:53:54] START model=sbert_msmpnet dataset=hicot_20ng k=100 attempt=2 progress=202/330
+[2026-09-13 09:54:05] ERROR model=sbert_msmpnet dataset=hicot_20ng k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa672bb-0426292948c7152e15f10f74;105b3050-0279-4df2-8c1e-079fddefe4ff)"
+[2026-09-13 09:54:05] RETRY model=sbert_msmpnet dataset=hicot_20ng k=100 attempt=3
+[2026-09-13 09:54:25] START model=sbert_msmpnet dataset=hicot_20ng k=100 attempt=3 progress=202/330
+[2026-09-13 09:54:34] ERROR model=sbert_msmpnet dataset=hicot_20ng k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa672d8-0ea2db0002134a0139f70b91;c6b9e738-226e-46cd-8272-73d87558368a)"
+[2026-09-13 09:54:34] ERROR model=sbert_msmpnet dataset=hicot_20ng k=100 FINAL after 3 attempts, giving up progress=202/330
+[2026-09-13 09:54:34] START model=sbert_msmpnet dataset=hicot_imdb k=50 attempt=1 progress=203/330
+[2026-09-13 09:54:42] ERROR model=sbert_msmpnet dataset=hicot_imdb k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa672e0-4c134ddd631fc45e5017d1f1;a089335c-fcb8-44b4-942a-f6681cd07c92)"
+[2026-09-13 09:54:42] RETRY model=sbert_msmpnet dataset=hicot_imdb k=50 attempt=2
+[2026-09-13 09:55:02] START model=sbert_msmpnet dataset=hicot_imdb k=50 attempt=2 progress=203/330
+[2026-09-13 09:55:10] ERROR model=sbert_msmpnet dataset=hicot_imdb k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa672fd-35a1299e36387f01766b0f78;514f59f3-e770-4813-91c6-c6fb230b39d4)"
+[2026-09-13 09:55:10] RETRY model=sbert_msmpnet dataset=hicot_imdb k=50 attempt=3
+[2026-09-13 09:55:30] START model=sbert_msmpnet dataset=hicot_imdb k=50 attempt=3 progress=203/330
+[2026-09-13 09:55:40] ERROR model=sbert_msmpnet dataset=hicot_imdb k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6731b-7933a18239eb1e6077f3557f;9eb3ff46-8bf4-47ed-9912-1900e3e0d761)"
+[2026-09-13 09:55:40] ERROR model=sbert_msmpnet dataset=hicot_imdb k=50 FINAL after 3 attempts, giving up progress=203/330
+[2026-09-13 09:55:40] START model=sbert_msmpnet dataset=hicot_imdb k=100 attempt=1 progress=204/330
+[2026-09-13 09:55:48] ERROR model=sbert_msmpnet dataset=hicot_imdb k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa67323-15ebad313e9b42f964c36699;fd610836-daec-458e-9187-060beef74912)"
+[2026-09-13 09:55:48] RETRY model=sbert_msmpnet dataset=hicot_imdb k=100 attempt=2
+[2026-09-13 09:56:08] START model=sbert_msmpnet dataset=hicot_imdb k=100 attempt=2 progress=204/330
+[2026-09-13 09:56:17] ERROR model=sbert_msmpnet dataset=hicot_imdb k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6733f-0b5deb44788bce706bda6b5c;58b5546e-91b5-4777-9541-e424c36b428d)"
+[2026-09-13 09:56:17] RETRY model=sbert_msmpnet dataset=hicot_imdb k=100 attempt=3
+[2026-09-13 09:56:37] START model=sbert_msmpnet dataset=hicot_imdb k=100 attempt=3 progress=204/330
+[2026-09-13 09:56:47] ERROR model=sbert_msmpnet dataset=hicot_imdb k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6735e-7ff4191337a7d5e143955da3;46a6e9b5-55fe-4808-9789-802c1d15a2f5)"
+[2026-09-13 09:56:47] ERROR model=sbert_msmpnet dataset=hicot_imdb k=100 FINAL after 3 attempts, giving up progress=204/330
+[2026-09-13 09:56:47] START model=sbert_msmpnet dataset=hicot_agnews k=50 attempt=1 progress=205/330
+[2026-09-13 09:56:56] ERROR model=sbert_msmpnet dataset=hicot_agnews k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa67366-0c54b6810580df977dc6de7f;fda80173-eb31-4a9a-aeca-c850f00a9094)"
+[2026-09-13 09:56:56] RETRY model=sbert_msmpnet dataset=hicot_agnews k=50 attempt=2
+[2026-09-13 09:57:16] START model=sbert_msmpnet dataset=hicot_agnews k=50 attempt=2 progress=205/330
+[2026-09-13 09:57:24] ERROR model=sbert_msmpnet dataset=hicot_agnews k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa67382-4b1be24f022e65d3539444c8;60f0d6db-a243-4a9c-961f-f8919154e6bf)"
+[2026-09-13 09:57:24] RETRY model=sbert_msmpnet dataset=hicot_agnews k=50 attempt=3
+[2026-09-13 09:57:44] START model=sbert_msmpnet dataset=hicot_agnews k=50 attempt=3 progress=205/330
+[2026-09-13 09:57:53] ERROR model=sbert_msmpnet dataset=hicot_agnews k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6739f-69937b350eabe051025b4992;21e4d0fa-1e7b-4edd-bea0-03da208510a7)"
+[2026-09-13 09:57:53] ERROR model=sbert_msmpnet dataset=hicot_agnews k=50 FINAL after 3 attempts, giving up progress=205/330
+[2026-09-13 09:57:53] START model=sbert_msmpnet dataset=hicot_agnews k=100 attempt=1 progress=206/330
+[2026-09-13 09:58:01] ERROR model=sbert_msmpnet dataset=hicot_agnews k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa673a8-01f897472a1045e30ee8fd8c;9aab07b3-8191-4cad-8e71-74ef7979e9e9)"
+[2026-09-13 09:58:01] RETRY model=sbert_msmpnet dataset=hicot_agnews k=100 attempt=2
+[2026-09-13 09:58:21] START model=sbert_msmpnet dataset=hicot_agnews k=100 attempt=2 progress=206/330
+[2026-09-13 09:58:31] ERROR model=sbert_msmpnet dataset=hicot_agnews k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa673c5-3c07015c449367fa0e2a7457;be6e7f08-1629-46d9-b786-733c72fd9831)"
+[2026-09-13 09:58:31] RETRY model=sbert_msmpnet dataset=hicot_agnews k=100 attempt=3
+[2026-09-13 09:58:51] START model=sbert_msmpnet dataset=hicot_agnews k=100 attempt=3 progress=206/330
+[2026-09-13 09:58:59] ERROR model=sbert_msmpnet dataset=hicot_agnews k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa673e1-32e7d08949406b193f236ea0;9de50375-cc4e-4a21-b604-0610151442ac)"
+[2026-09-13 09:58:59] ERROR model=sbert_msmpnet dataset=hicot_agnews k=100 FINAL after 3 attempts, giving up progress=206/330
+[2026-09-13 09:58:59] START model=sbert_msmpnet dataset=hicot_search_snippets k=50 attempt=1 progress=207/330
+[2026-09-13 09:59:07] ERROR model=sbert_msmpnet dataset=hicot_search_snippets k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa673e9-61b5846d312972152ec594be;571f3f6c-eaef-49bf-a99c-afdac4de6655)"
+[2026-09-13 09:59:07] RETRY model=sbert_msmpnet dataset=hicot_search_snippets k=50 attempt=2
+[2026-09-13 09:59:27] START model=sbert_msmpnet dataset=hicot_search_snippets k=50 attempt=2 progress=207/330
+[2026-09-13 09:59:36] ERROR model=sbert_msmpnet dataset=hicot_search_snippets k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa67407-58535ab543e3fb4335ea201e;6891a1d0-2f96-48b9-b438-f3c200d65da6)"
+[2026-09-13 09:59:36] RETRY model=sbert_msmpnet dataset=hicot_search_snippets k=50 attempt=3
+[2026-09-13 09:59:56] START model=sbert_msmpnet dataset=hicot_search_snippets k=50 attempt=3 progress=207/330
+[2026-09-13 10:00:07] ERROR model=sbert_msmpnet dataset=hicot_search_snippets k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa67426-03e7961b76775ff850e2ef07;759d8354-1235-4a16-90b3-ca34adabbec0)"
+[2026-09-13 10:00:07] ERROR model=sbert_msmpnet dataset=hicot_search_snippets k=50 FINAL after 3 attempts, giving up progress=207/330
+[2026-09-13 10:00:07] START model=sbert_msmpnet dataset=hicot_search_snippets k=100 attempt=1 progress=208/330
+[2026-09-13 10:00:15] ERROR model=sbert_msmpnet dataset=hicot_search_snippets k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6742d-0ec60937764dbdb16403c122;f4e82970-1772-4a2a-9c1c-6b00a89ab995)"
+[2026-09-13 10:00:15] RETRY model=sbert_msmpnet dataset=hicot_search_snippets k=100 attempt=2
+[2026-09-13 10:00:35] START model=sbert_msmpnet dataset=hicot_search_snippets k=100 attempt=2 progress=208/330
+[2026-09-13 10:00:44] ERROR model=sbert_msmpnet dataset=hicot_search_snippets k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6744a-1bd7879b3db2c9d645dc5589;a873769f-85f5-40ea-ae1c-7192f3537f32)"
+[2026-09-13 10:00:44] RETRY model=sbert_msmpnet dataset=hicot_search_snippets k=100 attempt=3
+[2026-09-13 10:01:04] START model=sbert_msmpnet dataset=hicot_search_snippets k=100 attempt=3 progress=208/330
+[2026-09-13 10:01:14] ERROR model=sbert_msmpnet dataset=hicot_search_snippets k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa67469-038313916044056b30dae96c;7472243f-f7fc-4da2-aff5-d357d4368270)"
+[2026-09-13 10:01:14] ERROR model=sbert_msmpnet dataset=hicot_search_snippets k=100 FINAL after 3 attempts, giving up progress=208/330
+[2026-09-13 10:01:14] START model=sbert_msmpnet dataset=hicot_google_news k=50 attempt=1 progress=209/330
+[2026-09-13 10:01:23] ERROR model=sbert_msmpnet dataset=hicot_google_news k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa67472-764553d81dab927244e03deb;dbb61c58-3532-4f64-80da-da5ed19e1b39)"
+[2026-09-13 10:01:23] RETRY model=sbert_msmpnet dataset=hicot_google_news k=50 attempt=2
+[2026-09-13 10:01:43] START model=sbert_msmpnet dataset=hicot_google_news k=50 attempt=2 progress=209/330
+[2026-09-13 10:01:52] ERROR model=sbert_msmpnet dataset=hicot_google_news k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6748f-4492f66e6e186ecb17486c01;b7c1befe-d816-418b-8cc6-37ea54bf0e90)"
+[2026-09-13 10:01:52] RETRY model=sbert_msmpnet dataset=hicot_google_news k=50 attempt=3
+[2026-09-13 10:02:12] START model=sbert_msmpnet dataset=hicot_google_news k=50 attempt=3 progress=209/330
+[2026-09-13 10:02:21] ERROR model=sbert_msmpnet dataset=hicot_google_news k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa674ab-0e89c1664cf238a92cdb9914;b49b0292-5911-4eb1-ba24-1bbad1676d33)"
+[2026-09-13 10:02:21] ERROR model=sbert_msmpnet dataset=hicot_google_news k=50 FINAL after 3 attempts, giving up progress=209/330
+[2026-09-13 10:02:21] START model=sbert_msmpnet dataset=hicot_google_news k=100 attempt=1 progress=210/330
+[2026-09-13 10:02:29] ERROR model=sbert_msmpnet dataset=hicot_google_news k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa674b3-7d5c5e355fe07d935804dbe8;eeff90a7-a90c-45bd-b979-bb5ad2c14652)"
+[2026-09-13 10:02:29] RETRY model=sbert_msmpnet dataset=hicot_google_news k=100 attempt=2
+[2026-09-13 10:02:49] START model=sbert_msmpnet dataset=hicot_google_news k=100 attempt=2 progress=210/330
+[2026-09-13 10:02:59] ERROR model=sbert_msmpnet dataset=hicot_google_news k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa674d1-553a6b2d0dea5b534d11ee38;2e262041-b1ec-4b87-80f3-a83246e9ff28)"
+[2026-09-13 10:02:59] RETRY model=sbert_msmpnet dataset=hicot_google_news k=100 attempt=3
+[2026-09-13 10:03:19] START model=sbert_msmpnet dataset=hicot_google_news k=100 attempt=3 progress=210/330
+[2026-09-13 10:03:29] ERROR model=sbert_msmpnet dataset=hicot_google_news k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa674ef-10d0d0ec71732be422f3c3d8;8e8e80f4-914a-4e22-9401-b48ca0d2544e)"
+[2026-09-13 10:03:29] ERROR model=sbert_msmpnet dataset=hicot_google_news k=100 FINAL after 3 attempts, giving up progress=210/330
+[2026-09-13 10:03:29] START model=sbert_msdistilbert dataset=20ng k=50 attempt=1 progress=211/330
+[2026-09-13 10:06:23] OK model=sbert_msdistilbert dataset=20ng k=50 runtime=174s cv_source=palmetto_wikipedia progress=211/330
+[2026-09-13 10:06:23] START model=sbert_msdistilbert dataset=20ng k=100 attempt=1 progress=212/330
+[2026-09-13 10:09:53] OK model=sbert_msdistilbert dataset=20ng k=100 runtime=210s cv_source=palmetto_wikipedia progress=212/330
+[2026-09-13 10:09:53] START model=sbert_msdistilbert dataset=imdb k=50 attempt=1 progress=213/330
+[2026-09-13 10:17:19] OK model=sbert_msdistilbert dataset=imdb k=50 runtime=446s cv_source=palmetto_wikipedia progress=213/330
+[2026-09-13 10:17:19] START model=sbert_msdistilbert dataset=imdb k=100 attempt=1 progress=214/330
+[2026-09-13 10:26:03] OK model=sbert_msdistilbert dataset=imdb k=100 runtime=524s cv_source=palmetto_wikipedia progress=214/330
+[2026-09-13 10:26:03] START model=sbert_msdistilbert dataset=agnews_short k=50 attempt=1 progress=215/330
+[2026-09-13 10:27:40] OK model=sbert_msdistilbert dataset=agnews_short k=50 runtime=97s cv_source=palmetto_wikipedia progress=215/330
+[2026-09-13 10:27:40] START model=sbert_msdistilbert dataset=agnews_short k=100 attempt=1 progress=216/330
+[2026-09-13 10:30:13] OK model=sbert_msdistilbert dataset=agnews_short k=100 runtime=152s cv_source=palmetto_wikipedia progress=216/330
+[2026-09-13 10:30:13] START model=sbert_msdistilbert dataset=search_snippets k=50 attempt=1 progress=217/330
+[2026-09-13 10:32:16] OK model=sbert_msdistilbert dataset=search_snippets k=50 runtime=123s cv_source=palmetto_wikipedia progress=217/330
+[2026-09-13 10:32:16] START model=sbert_msdistilbert dataset=search_snippets k=100 attempt=1 progress=218/330
+[2026-09-13 10:35:29] OK model=sbert_msdistilbert dataset=search_snippets k=100 runtime=194s cv_source=palmetto_wikipedia progress=218/330
+[2026-09-13 10:35:29] START model=sbert_msdistilbert dataset=stack_overflow k=50 attempt=1 progress=219/330
+[2026-09-13 10:36:51] OK model=sbert_msdistilbert dataset=stack_overflow k=50 runtime=82s cv_source=palmetto_wikipedia progress=219/330
+[2026-09-13 10:36:51] START model=sbert_msdistilbert dataset=stack_overflow k=100 attempt=1 progress=220/330
+[2026-09-13 10:39:13] OK model=sbert_msdistilbert dataset=stack_overflow k=100 runtime=142s cv_source=palmetto_wikipedia progress=220/330
+[2026-09-13 10:39:13] START model=sbert_msdistilbert dataset=biomedical k=50 attempt=1 progress=221/330
+[2026-09-13 10:40:44] OK model=sbert_msdistilbert dataset=biomedical k=50 runtime=91s cv_source=palmetto_wikipedia progress=221/330
+[2026-09-13 10:40:44] START model=sbert_msdistilbert dataset=biomedical k=100 attempt=1 progress=222/330
+[2026-09-13 10:43:05] OK model=sbert_msdistilbert dataset=biomedical k=100 runtime=141s cv_source=palmetto_wikipedia progress=222/330
+[2026-09-13 10:43:05] START model=sbert_msdistilbert dataset=google_news_ts k=50 attempt=1 progress=223/330
+[2026-09-13 10:44:48] OK model=sbert_msdistilbert dataset=google_news_ts k=50 runtime=103s cv_source=palmetto_wikipedia progress=223/330
+[2026-09-13 10:44:48] START model=sbert_msdistilbert dataset=google_news_ts k=100 attempt=1 progress=224/330
+[2026-09-13 10:47:54] OK model=sbert_msdistilbert dataset=google_news_ts k=100 runtime=186s cv_source=palmetto_wikipedia progress=224/330
+[2026-09-13 10:47:54] START model=sbert_msdistilbert dataset=google_news_t k=50 attempt=1 progress=225/330
+[2026-09-13 10:49:36] OK model=sbert_msdistilbert dataset=google_news_t k=50 runtime=102s cv_source=palmetto_wikipedia progress=225/330
+[2026-09-13 10:49:36] START model=sbert_msdistilbert dataset=google_news_t k=100 attempt=1 progress=226/330
+[2026-09-13 10:52:59] OK model=sbert_msdistilbert dataset=google_news_t k=100 runtime=203s cv_source=palmetto_wikipedia progress=226/330
+[2026-09-13 10:52:59] START model=sbert_msdistilbert dataset=google_news_s k=50 attempt=1 progress=227/330
+[2026-09-13 10:54:43] OK model=sbert_msdistilbert dataset=google_news_s k=50 runtime=103s cv_source=palmetto_wikipedia progress=227/330
+[2026-09-13 10:54:43] START model=sbert_msdistilbert dataset=google_news_s k=100 attempt=1 progress=228/330
+[2026-09-13 10:57:47] OK model=sbert_msdistilbert dataset=google_news_s k=100 runtime=185s cv_source=palmetto_wikipedia progress=228/330
+[2026-09-13 10:57:47] START model=sbert_msdistilbert dataset=tweet k=50 attempt=1 progress=229/330
+[2026-09-13 10:59:25] OK model=sbert_msdistilbert dataset=tweet k=50 runtime=98s cv_source=palmetto_wikipedia progress=229/330
+[2026-09-13 10:59:25] START model=sbert_msdistilbert dataset=tweet k=100 attempt=1 progress=230/330
+[2026-09-13 11:02:21] OK model=sbert_msdistilbert dataset=tweet k=100 runtime=176s cv_source=palmetto_wikipedia progress=230/330
+[2026-09-13 11:02:21] START model=sbert_msdistilbert dataset=hicot_20ng k=50 attempt=1 progress=231/330
+[2026-09-13 11:06:41] OK model=sbert_msdistilbert dataset=hicot_20ng k=50 runtime=260s cv_source=palmetto_wikipedia progress=231/330
+[2026-09-13 11:06:41] START model=sbert_msdistilbert dataset=hicot_20ng k=100 attempt=1 progress=232/330
+[2026-09-13 11:13:44] OK model=sbert_msdistilbert dataset=hicot_20ng k=100 runtime=423s cv_source=palmetto_wikipedia progress=232/330
+[2026-09-13 11:13:44] START model=sbert_msdistilbert dataset=hicot_imdb k=50 attempt=1 progress=233/330
+[2026-09-13 11:22:48] OK model=sbert_msdistilbert dataset=hicot_imdb k=50 runtime=544s cv_source=palmetto_wikipedia progress=233/330
+[2026-09-13 11:22:48] START model=sbert_msdistilbert dataset=hicot_imdb k=100 attempt=1 progress=234/330
+[2026-09-13 11:36:38] OK model=sbert_msdistilbert dataset=hicot_imdb k=100 runtime=830s cv_source=palmetto_wikipedia progress=234/330
+[2026-09-13 11:36:38] START model=sbert_msdistilbert dataset=hicot_agnews k=50 attempt=1 progress=235/330
+[2026-09-13 11:38:52] OK model=sbert_msdistilbert dataset=hicot_agnews k=50 runtime=134s cv_source=palmetto_wikipedia progress=235/330
+[2026-09-13 11:38:52] START model=sbert_msdistilbert dataset=hicot_agnews k=100 attempt=1 progress=236/330
+[2026-09-13 11:42:24] OK model=sbert_msdistilbert dataset=hicot_agnews k=100 runtime=212s cv_source=palmetto_wikipedia progress=236/330
+[2026-09-13 11:42:24] START model=sbert_msdistilbert dataset=hicot_search_snippets k=50 attempt=1 progress=237/330
+[2026-09-13 11:44:24] OK model=sbert_msdistilbert dataset=hicot_search_snippets k=50 runtime=119s cv_source=palmetto_wikipedia progress=237/330
+[2026-09-13 11:44:24] START model=sbert_msdistilbert dataset=hicot_search_snippets k=100 attempt=1 progress=238/330
+[2026-09-13 11:47:38] OK model=sbert_msdistilbert dataset=hicot_search_snippets k=100 runtime=194s cv_source=palmetto_wikipedia progress=238/330
+[2026-09-13 11:47:38] START model=sbert_msdistilbert dataset=hicot_google_news k=50 attempt=1 progress=239/330
+[2026-09-13 11:49:23] OK model=sbert_msdistilbert dataset=hicot_google_news k=50 runtime=104s cv_source=palmetto_wikipedia progress=239/330
+[2026-09-13 11:49:23] START model=sbert_msdistilbert dataset=hicot_google_news k=100 attempt=1 progress=240/330
+[2026-09-13 11:52:43] OK model=sbert_msdistilbert dataset=hicot_google_news k=100 runtime=200s cv_source=palmetto_wikipedia progress=240/330
+[2026-09-13 11:52:43] START model=sbert_distilroberta dataset=20ng k=50 attempt=1 progress=241/330
+[2026-09-13 11:55:20] OK model=sbert_distilroberta dataset=20ng k=50 runtime=157s cv_source=palmetto_wikipedia progress=241/330
+[2026-09-13 11:55:20] START model=sbert_distilroberta dataset=20ng k=100 attempt=1 progress=242/330
+[2026-09-13 11:58:34] OK model=sbert_distilroberta dataset=20ng k=100 runtime=194s cv_source=palmetto_wikipedia progress=242/330
+[2026-09-13 11:58:34] START model=sbert_distilroberta dataset=imdb k=50 attempt=1 progress=243/330
+[2026-09-13 12:05:33] OK model=sbert_distilroberta dataset=imdb k=50 runtime=419s cv_source=palmetto_wikipedia progress=243/330
+[2026-09-13 12:05:33] START model=sbert_distilroberta dataset=imdb k=100 attempt=1 progress=244/330
+[2026-09-13 12:13:39] OK model=sbert_distilroberta dataset=imdb k=100 runtime=486s cv_source=palmetto_wikipedia progress=244/330
+[2026-09-13 12:13:39] START model=sbert_distilroberta dataset=agnews_short k=50 attempt=1 progress=245/330
+[2026-09-13 12:15:12] OK model=sbert_distilroberta dataset=agnews_short k=50 runtime=93s cv_source=palmetto_wikipedia progress=245/330
+[2026-09-13 12:15:12] START model=sbert_distilroberta dataset=agnews_short k=100 attempt=1 progress=246/330
+[2026-09-13 12:17:35] OK model=sbert_distilroberta dataset=agnews_short k=100 runtime=144s cv_source=palmetto_wikipedia progress=246/330
+[2026-09-13 12:17:35] START model=sbert_distilroberta dataset=search_snippets k=50 attempt=1 progress=247/330
+[2026-09-13 12:19:20] OK model=sbert_distilroberta dataset=search_snippets k=50 runtime=105s cv_source=palmetto_wikipedia progress=247/330
+[2026-09-13 12:19:20] START model=sbert_distilroberta dataset=search_snippets k=100 attempt=1 progress=248/330
+[2026-09-13 12:22:20] OK model=sbert_distilroberta dataset=search_snippets k=100 runtime=180s cv_source=palmetto_wikipedia progress=248/330
+[2026-09-13 12:22:20] START model=sbert_distilroberta dataset=stack_overflow k=50 attempt=1 progress=249/330
+[2026-09-13 12:23:43] OK model=sbert_distilroberta dataset=stack_overflow k=50 runtime=84s cv_source=palmetto_wikipedia progress=249/330
+[2026-09-13 12:23:43] START model=sbert_distilroberta dataset=stack_overflow k=100 attempt=1 progress=250/330
+[2026-09-13 12:26:08] OK model=sbert_distilroberta dataset=stack_overflow k=100 runtime=144s cv_source=palmetto_wikipedia progress=250/330
+[2026-09-13 12:26:08] START model=sbert_distilroberta dataset=biomedical k=50 attempt=1 progress=251/330
+[2026-09-13 12:27:29] OK model=sbert_distilroberta dataset=biomedical k=50 runtime=81s cv_source=palmetto_wikipedia progress=251/330
+[2026-09-13 12:27:29] START model=sbert_distilroberta dataset=biomedical k=100 attempt=1 progress=252/330
+[2026-09-13 12:29:35] OK model=sbert_distilroberta dataset=biomedical k=100 runtime=126s cv_source=palmetto_wikipedia progress=252/330
+[2026-09-13 12:29:35] START model=sbert_distilroberta dataset=google_news_ts k=50 attempt=1 progress=253/330
+[2026-09-13 12:31:22] OK model=sbert_distilroberta dataset=google_news_ts k=50 runtime=107s cv_source=palmetto_wikipedia progress=253/330
+[2026-09-13 12:31:22] START model=sbert_distilroberta dataset=google_news_ts k=100 attempt=1 progress=254/330
+[2026-09-13 12:34:24] OK model=sbert_distilroberta dataset=google_news_ts k=100 runtime=182s cv_source=palmetto_wikipedia progress=254/330
+[2026-09-13 12:34:24] START model=sbert_distilroberta dataset=google_news_t k=50 attempt=1 progress=255/330
+[2026-09-13 12:36:05] OK model=sbert_distilroberta dataset=google_news_t k=50 runtime=100s cv_source=palmetto_wikipedia progress=255/330
+[2026-09-13 12:36:05] START model=sbert_distilroberta dataset=google_news_t k=100 attempt=1 progress=256/330
+[2026-09-13 12:39:22] OK model=sbert_distilroberta dataset=google_news_t k=100 runtime=197s cv_source=palmetto_wikipedia progress=256/330
+[2026-09-13 12:39:22] START model=sbert_distilroberta dataset=google_news_s k=50 attempt=1 progress=257/330
+[2026-09-13 12:41:08] OK model=sbert_distilroberta dataset=google_news_s k=50 runtime=106s cv_source=palmetto_wikipedia progress=257/330
+[2026-09-13 12:41:08] START model=sbert_distilroberta dataset=google_news_s k=100 attempt=1 progress=258/330
+[2026-09-13 12:44:13] OK model=sbert_distilroberta dataset=google_news_s k=100 runtime=185s cv_source=palmetto_wikipedia progress=258/330
+[2026-09-13 12:44:13] START model=sbert_distilroberta dataset=tweet k=50 attempt=1 progress=259/330
+[2026-09-13 12:45:50] OK model=sbert_distilroberta dataset=tweet k=50 runtime=97s cv_source=palmetto_wikipedia progress=259/330
+[2026-09-13 12:45:50] START model=sbert_distilroberta dataset=tweet k=100 attempt=1 progress=260/330
+[2026-09-13 12:48:57] OK model=sbert_distilroberta dataset=tweet k=100 runtime=187s cv_source=palmetto_wikipedia progress=260/330
+[2026-09-13 12:48:57] START model=sbert_distilroberta dataset=hicot_20ng k=50 attempt=1 progress=261/330
+[2026-09-13 12:53:06] OK model=sbert_distilroberta dataset=hicot_20ng k=50 runtime=249s cv_source=palmetto_wikipedia progress=261/330
+[2026-09-13 12:53:06] START model=sbert_distilroberta dataset=hicot_20ng k=100 attempt=1 progress=262/330
+[2026-09-13 12:59:36] OK model=sbert_distilroberta dataset=hicot_20ng k=100 runtime=390s cv_source=palmetto_wikipedia progress=262/330
+[2026-09-13 12:59:36] START model=sbert_distilroberta dataset=hicot_imdb k=50 attempt=1 progress=263/330
+[2026-09-13 13:08:46] OK model=sbert_distilroberta dataset=hicot_imdb k=50 runtime=550s cv_source=palmetto_wikipedia progress=263/330
+[2026-09-13 13:08:46] START model=sbert_distilroberta dataset=hicot_imdb k=100 attempt=1 progress=264/330
+[2026-09-13 13:22:50] OK model=sbert_distilroberta dataset=hicot_imdb k=100 runtime=844s cv_source=palmetto_wikipedia progress=264/330
+[2026-09-13 13:22:50] START model=sbert_distilroberta dataset=hicot_agnews k=50 attempt=1 progress=265/330
+[2026-09-13 13:24:54] OK model=sbert_distilroberta dataset=hicot_agnews k=50 runtime=124s cv_source=palmetto_wikipedia progress=265/330
+[2026-09-13 13:24:54] START model=sbert_distilroberta dataset=hicot_agnews k=100 attempt=1 progress=266/330
+[2026-09-13 13:28:03] OK model=sbert_distilroberta dataset=hicot_agnews k=100 runtime=189s cv_source=palmetto_wikipedia progress=266/330
+[2026-09-13 13:28:03] START model=sbert_distilroberta dataset=hicot_search_snippets k=50 attempt=1 progress=267/330
+[2026-09-13 13:29:44] OK model=sbert_distilroberta dataset=hicot_search_snippets k=50 runtime=101s cv_source=palmetto_wikipedia progress=267/330
+[2026-09-13 13:29:44] START model=sbert_distilroberta dataset=hicot_search_snippets k=100 attempt=1 progress=268/330
+[2026-09-13 13:32:42] OK model=sbert_distilroberta dataset=hicot_search_snippets k=100 runtime=178s cv_source=palmetto_wikipedia progress=268/330
+[2026-09-13 13:32:42] START model=sbert_distilroberta dataset=hicot_google_news k=50 attempt=1 progress=269/330
+[2026-09-13 13:34:23] OK model=sbert_distilroberta dataset=hicot_google_news k=50 runtime=102s cv_source=palmetto_wikipedia progress=269/330
+[2026-09-13 13:34:23] START model=sbert_distilroberta dataset=hicot_google_news k=100 attempt=1 progress=270/330
+[2026-09-13 13:37:46] OK model=sbert_distilroberta dataset=hicot_google_news k=100 runtime=202s cv_source=palmetto_wikipedia progress=270/330
+[2026-09-13 13:37:46] START model=sbert_paraphrase dataset=20ng k=50 attempt=1 progress=271/330
+[2026-09-13 13:40:46] OK model=sbert_paraphrase dataset=20ng k=50 runtime=180s cv_source=palmetto_wikipedia progress=271/330
+[2026-09-13 13:40:46] START model=sbert_paraphrase dataset=20ng k=100 attempt=1 progress=272/330
+[2026-09-13 13:43:54] OK model=sbert_paraphrase dataset=20ng k=100 runtime=188s cv_source=palmetto_wikipedia progress=272/330
+[2026-09-13 13:43:54] START model=sbert_paraphrase dataset=imdb k=50 attempt=1 progress=273/330
+[2026-09-13 13:49:55] OK model=sbert_paraphrase dataset=imdb k=50 runtime=361s cv_source=palmetto_wikipedia progress=273/330
+[2026-09-13 13:49:55] START model=sbert_paraphrase dataset=imdb k=100 attempt=1 progress=274/330
+[2026-09-13 13:56:55] OK model=sbert_paraphrase dataset=imdb k=100 runtime=420s cv_source=palmetto_wikipedia progress=274/330
+[2026-09-13 13:56:55] START model=sbert_paraphrase dataset=agnews_short k=50 attempt=1 progress=275/330
+[2026-09-13 13:58:41] OK model=sbert_paraphrase dataset=agnews_short k=50 runtime=106s cv_source=palmetto_wikipedia progress=275/330
+[2026-09-13 13:58:41] START model=sbert_paraphrase dataset=agnews_short k=100 attempt=1 progress=276/330
+[2026-09-13 14:01:20] OK model=sbert_paraphrase dataset=agnews_short k=100 runtime=159s cv_source=palmetto_wikipedia progress=276/330
+[2026-09-13 14:01:20] START model=sbert_paraphrase dataset=search_snippets k=50 attempt=1 progress=277/330
+[2026-09-13 14:03:21] OK model=sbert_paraphrase dataset=search_snippets k=50 runtime=121s cv_source=palmetto_wikipedia progress=277/330
+[2026-09-13 14:03:21] START model=sbert_paraphrase dataset=search_snippets k=100 attempt=1 progress=278/330
+[2026-09-13 14:06:35] OK model=sbert_paraphrase dataset=search_snippets k=100 runtime=194s cv_source=palmetto_wikipedia progress=278/330
+[2026-09-13 14:06:35] START model=sbert_paraphrase dataset=stack_overflow k=50 attempt=1 progress=279/330
+[2026-09-13 14:08:09] OK model=sbert_paraphrase dataset=stack_overflow k=50 runtime=94s cv_source=palmetto_wikipedia progress=279/330
+[2026-09-13 14:08:09] START model=sbert_paraphrase dataset=stack_overflow k=100 attempt=1 progress=280/330
+[2026-09-13 14:10:47] OK model=sbert_paraphrase dataset=stack_overflow k=100 runtime=158s cv_source=palmetto_wikipedia progress=280/330
+[2026-09-13 14:10:47] START model=sbert_paraphrase dataset=biomedical k=50 attempt=1 progress=281/330
+[2026-09-13 14:12:27] OK model=sbert_paraphrase dataset=biomedical k=50 runtime=99s cv_source=palmetto_wikipedia progress=281/330
+[2026-09-13 14:12:27] START model=sbert_paraphrase dataset=biomedical k=100 attempt=1 progress=282/330
+[2026-09-13 14:14:46] OK model=sbert_paraphrase dataset=biomedical k=100 runtime=140s cv_source=palmetto_wikipedia progress=282/330
+[2026-09-13 14:14:46] START model=sbert_paraphrase dataset=google_news_ts k=50 attempt=1 progress=283/330
+[2026-09-13 14:16:47] OK model=sbert_paraphrase dataset=google_news_ts k=50 runtime=121s cv_source=palmetto_wikipedia progress=283/330
+[2026-09-13 14:16:47] START model=sbert_paraphrase dataset=google_news_ts k=100 attempt=1 progress=284/330
+[2026-09-13 14:20:13] OK model=sbert_paraphrase dataset=google_news_ts k=100 runtime=206s cv_source=palmetto_wikipedia progress=284/330
+[2026-09-13 14:20:13] START model=sbert_paraphrase dataset=google_news_t k=50 attempt=1 progress=285/330
+[2026-09-13 14:22:02] OK model=sbert_paraphrase dataset=google_news_t k=50 runtime=109s cv_source=palmetto_wikipedia progress=285/330
+[2026-09-13 14:22:02] START model=sbert_paraphrase dataset=google_news_t k=100 attempt=1 progress=286/330
+[2026-09-13 14:25:20] OK model=sbert_paraphrase dataset=google_news_t k=100 runtime=198s cv_source=palmetto_wikipedia progress=286/330
+[2026-09-13 14:25:20] START model=sbert_paraphrase dataset=google_news_s k=50 attempt=1 progress=287/330
+[2026-09-13 14:27:18] OK model=sbert_paraphrase dataset=google_news_s k=50 runtime=118s cv_source=palmetto_wikipedia progress=287/330
+[2026-09-13 14:27:18] START model=sbert_paraphrase dataset=google_news_s k=100 attempt=1 progress=288/330
+[2026-09-13 14:30:40] OK model=sbert_paraphrase dataset=google_news_s k=100 runtime=202s cv_source=palmetto_wikipedia progress=288/330
+[2026-09-13 14:30:40] START model=sbert_paraphrase dataset=tweet k=50 attempt=1 progress=289/330
+[2026-09-13 14:32:21] OK model=sbert_paraphrase dataset=tweet k=50 runtime=101s cv_source=palmetto_wikipedia progress=289/330
+[2026-09-13 14:32:21] START model=sbert_paraphrase dataset=tweet k=100 attempt=1 progress=290/330
+[2026-09-13 14:35:26] OK model=sbert_paraphrase dataset=tweet k=100 runtime=185s cv_source=palmetto_wikipedia progress=290/330
+[2026-09-13 14:35:26] START model=sbert_paraphrase dataset=hicot_20ng k=50 attempt=1 progress=291/330
+[2026-09-13 14:40:07] OK model=sbert_paraphrase dataset=hicot_20ng k=50 runtime=281s cv_source=palmetto_wikipedia progress=291/330
+[2026-09-13 14:40:07] START model=sbert_paraphrase dataset=hicot_20ng k=100 attempt=1 progress=292/330
+[2026-09-13 14:46:55] OK model=sbert_paraphrase dataset=hicot_20ng k=100 runtime=408s cv_source=palmetto_wikipedia progress=292/330
+[2026-09-13 14:46:55] START model=sbert_paraphrase dataset=hicot_imdb k=50 attempt=1 progress=293/330
+[2026-09-13 14:57:16] OK model=sbert_paraphrase dataset=hicot_imdb k=50 runtime=621s cv_source=palmetto_wikipedia progress=293/330
+[2026-09-13 14:57:16] START model=sbert_paraphrase dataset=hicot_imdb k=100 attempt=1 progress=294/330
+[2026-09-13 15:12:33] OK model=sbert_paraphrase dataset=hicot_imdb k=100 runtime=917s cv_source=palmetto_wikipedia progress=294/330
+[2026-09-13 15:12:33] START model=sbert_paraphrase dataset=hicot_agnews k=50 attempt=1 progress=295/330
+[2026-09-13 15:14:49] OK model=sbert_paraphrase dataset=hicot_agnews k=50 runtime=137s cv_source=palmetto_wikipedia progress=295/330
+[2026-09-13 15:14:49] START model=sbert_paraphrase dataset=hicot_agnews k=100 attempt=1 progress=296/330
+[2026-09-13 15:18:27] OK model=sbert_paraphrase dataset=hicot_agnews k=100 runtime=218s cv_source=palmetto_wikipedia progress=296/330
+[2026-09-13 15:18:27] START model=sbert_paraphrase dataset=hicot_search_snippets k=50 attempt=1 progress=297/330
+[2026-09-13 15:20:22] OK model=sbert_paraphrase dataset=hicot_search_snippets k=50 runtime=115s cv_source=palmetto_wikipedia progress=297/330
+[2026-09-13 15:20:22] START model=sbert_paraphrase dataset=hicot_search_snippets k=100 attempt=1 progress=298/330
+[2026-09-13 15:23:31] OK model=sbert_paraphrase dataset=hicot_search_snippets k=100 runtime=188s cv_source=palmetto_wikipedia progress=298/330
+[2026-09-13 15:23:31] START model=sbert_paraphrase dataset=hicot_google_news k=50 attempt=1 progress=299/330
+[2026-09-13 15:25:16] OK model=sbert_paraphrase dataset=hicot_google_news k=50 runtime=105s cv_source=palmetto_wikipedia progress=299/330
+[2026-09-13 15:25:16] START model=sbert_paraphrase dataset=hicot_google_news k=100 attempt=1 progress=300/330
+[2026-09-13 15:28:49] OK model=sbert_paraphrase dataset=hicot_google_news k=100 runtime=213s cv_source=palmetto_wikipedia progress=300/330
+[2026-09-13 15:28:49] START model=sbert_distilbert dataset=20ng k=50 attempt=1 progress=301/330
+[2026-09-13 15:30:52] OK model=sbert_distilbert dataset=20ng k=50 runtime=124s cv_source=palmetto_wikipedia progress=301/330
+[2026-09-13 15:30:52] START model=sbert_distilbert dataset=20ng k=100 attempt=1 progress=302/330
+[2026-09-13 15:33:25] OK model=sbert_distilbert dataset=20ng k=100 runtime=153s cv_source=palmetto_wikipedia progress=302/330
+[2026-09-13 15:33:25] START model=sbert_distilbert dataset=imdb k=50 attempt=1 progress=303/330
+[2026-09-13 15:37:31] OK model=sbert_distilbert dataset=imdb k=50 runtime=246s cv_source=palmetto_wikipedia progress=303/330
+[2026-09-13 15:37:31] START model=sbert_distilbert dataset=imdb k=100 attempt=1 progress=304/330
+[2026-09-13 15:42:44] OK model=sbert_distilbert dataset=imdb k=100 runtime=313s cv_source=palmetto_wikipedia progress=304/330
+[2026-09-13 15:42:44] START model=sbert_distilbert dataset=agnews_short k=50 attempt=1 progress=305/330
+[2026-09-13 15:44:11] OK model=sbert_distilbert dataset=agnews_short k=50 runtime=87s cv_source=palmetto_wikipedia progress=305/330
+[2026-09-13 15:44:11] START model=sbert_distilbert dataset=agnews_short k=100 attempt=1 progress=306/330
+[2026-09-13 15:46:26] OK model=sbert_distilbert dataset=agnews_short k=100 runtime=135s cv_source=palmetto_wikipedia progress=306/330
+[2026-09-13 15:46:26] START model=sbert_distilbert dataset=search_snippets k=50 attempt=1 progress=307/330
+[2026-09-13 15:48:24] OK model=sbert_distilbert dataset=search_snippets k=50 runtime=118s cv_source=palmetto_wikipedia progress=307/330
+[2026-09-13 15:48:24] START model=sbert_distilbert dataset=search_snippets k=100 attempt=1 progress=308/330
+[2026-09-13 15:51:32] OK model=sbert_distilbert dataset=search_snippets k=100 runtime=188s cv_source=palmetto_wikipedia progress=308/330
+[2026-09-13 15:51:32] START model=sbert_distilbert dataset=stack_overflow k=50 attempt=1 progress=309/330
+[2026-09-13 15:52:49] OK model=sbert_distilbert dataset=stack_overflow k=50 runtime=78s cv_source=palmetto_wikipedia progress=309/330
+[2026-09-13 15:52:49] START model=sbert_distilbert dataset=stack_overflow k=100 attempt=1 progress=310/330
+[2026-09-13 15:55:10] OK model=sbert_distilbert dataset=stack_overflow k=100 runtime=141s cv_source=palmetto_wikipedia progress=310/330
+[2026-09-13 15:55:10] START model=sbert_distilbert dataset=biomedical k=50 attempt=1 progress=311/330
+[2026-09-13 15:56:39] OK model=sbert_distilbert dataset=biomedical k=50 runtime=89s cv_source=palmetto_wikipedia progress=311/330
+[2026-09-13 15:56:39] START model=sbert_distilbert dataset=biomedical k=100 attempt=1 progress=312/330
+[2026-09-13 15:59:00] OK model=sbert_distilbert dataset=biomedical k=100 runtime=141s cv_source=palmetto_wikipedia progress=312/330
+[2026-09-13 15:59:00] START model=sbert_distilbert dataset=google_news_ts k=50 attempt=1 progress=313/330
+[2026-09-13 16:00:41] OK model=sbert_distilbert dataset=google_news_ts k=50 runtime=101s cv_source=palmetto_wikipedia progress=313/330
+[2026-09-13 16:00:41] START model=sbert_distilbert dataset=google_news_ts k=100 attempt=1 progress=314/330
+[2026-09-13 16:03:48] OK model=sbert_distilbert dataset=google_news_ts k=100 runtime=187s cv_source=palmetto_wikipedia progress=314/330
+[2026-09-13 16:03:48] START model=sbert_distilbert dataset=google_news_t k=50 attempt=1 progress=315/330
+[2026-09-13 16:05:30] OK model=sbert_distilbert dataset=google_news_t k=50 runtime=102s cv_source=palmetto_wikipedia progress=315/330
+[2026-09-13 16:05:30] START model=sbert_distilbert dataset=google_news_t k=100 attempt=1 progress=316/330
+[2026-09-13 16:08:52] OK model=sbert_distilbert dataset=google_news_t k=100 runtime=202s cv_source=palmetto_wikipedia progress=316/330
+[2026-09-13 16:08:52] START model=sbert_distilbert dataset=google_news_s k=50 attempt=1 progress=317/330
+[2026-09-13 16:10:39] OK model=sbert_distilbert dataset=google_news_s k=50 runtime=107s cv_source=palmetto_wikipedia progress=317/330
+[2026-09-13 16:10:39] START model=sbert_distilbert dataset=google_news_s k=100 attempt=1 progress=318/330
+[2026-09-13 16:13:46] OK model=sbert_distilbert dataset=google_news_s k=100 runtime=186s cv_source=palmetto_wikipedia progress=318/330
+[2026-09-13 16:13:46] START model=sbert_distilbert dataset=tweet k=50 attempt=1 progress=319/330
+[2026-09-13 16:15:22] OK model=sbert_distilbert dataset=tweet k=50 runtime=96s cv_source=palmetto_wikipedia progress=319/330
+[2026-09-13 16:15:22] START model=sbert_distilbert dataset=tweet k=100 attempt=1 progress=320/330
+[2026-09-13 16:18:11] OK model=sbert_distilbert dataset=tweet k=100 runtime=169s cv_source=palmetto_wikipedia progress=320/330
+[2026-09-13 16:18:11] START model=sbert_distilbert dataset=hicot_20ng k=50 attempt=1 progress=321/330
+[2026-09-13 16:22:38] OK model=sbert_distilbert dataset=hicot_20ng k=50 runtime=267s cv_source=palmetto_wikipedia progress=321/330
+[2026-09-13 16:22:38] START model=sbert_distilbert dataset=hicot_20ng k=100 attempt=1 progress=322/330
+[2026-09-13 16:29:54] OK model=sbert_distilbert dataset=hicot_20ng k=100 runtime=436s cv_source=palmetto_wikipedia progress=322/330
+[2026-09-13 16:29:54] START model=sbert_distilbert dataset=hicot_imdb k=50 attempt=1 progress=323/330
+[2026-09-13 16:38:42] OK model=sbert_distilbert dataset=hicot_imdb k=50 runtime=528s cv_source=palmetto_wikipedia progress=323/330
+[2026-09-13 16:38:42] START model=sbert_distilbert dataset=hicot_imdb k=100 attempt=1 progress=324/330
+[2026-09-13 16:52:12] OK model=sbert_distilbert dataset=hicot_imdb k=100 runtime=809s cv_source=palmetto_wikipedia progress=324/330
+[2026-09-13 16:52:12] START model=sbert_distilbert dataset=hicot_agnews k=50 attempt=1 progress=325/330
+[2026-09-13 16:54:38] OK model=sbert_distilbert dataset=hicot_agnews k=50 runtime=146s cv_source=palmetto_wikipedia progress=325/330
+[2026-09-13 16:54:38] START model=sbert_distilbert dataset=hicot_agnews k=100 attempt=1 progress=326/330
+[2026-09-13 16:58:14] OK model=sbert_distilbert dataset=hicot_agnews k=100 runtime=216s cv_source=palmetto_wikipedia progress=326/330
+[2026-09-13 16:58:14] START model=sbert_distilbert dataset=hicot_search_snippets k=50 attempt=1 progress=327/330
+[2026-09-13 17:00:02] OK model=sbert_distilbert dataset=hicot_search_snippets k=50 runtime=109s cv_source=palmetto_wikipedia progress=327/330
+[2026-09-13 17:00:02] START model=sbert_distilbert dataset=hicot_search_snippets k=100 attempt=1 progress=328/330
+[2026-09-13 17:03:04] OK model=sbert_distilbert dataset=hicot_search_snippets k=100 runtime=182s cv_source=palmetto_wikipedia progress=328/330
+[2026-09-13 17:03:04] START model=sbert_distilbert dataset=hicot_google_news k=50 attempt=1 progress=329/330
+[2026-09-13 17:04:48] OK model=sbert_distilbert dataset=hicot_google_news k=50 runtime=104s cv_source=palmetto_wikipedia progress=329/330
+[2026-09-13 17:04:48] START model=sbert_distilbert dataset=hicot_google_news k=100 attempt=1 progress=330/330
+[2026-09-13 17:08:03] OK model=sbert_distilbert dataset=hicot_google_news k=100 runtime=195s cv_source=palmetto_wikipedia progress=330/330
+[2026-09-13 17:08:03] SWEEP_LOOP_DONE all 330 combinations attempted - building final tables
+[2026-09-13 17:08:03] WROTE final_table_k50.txt / .tex
+[2026-09-13 17:08:03] WROTE final_table_k100.txt / .tex
+[2026-09-13 17:08:03] WROTE final_results.json / final_results.csv
+[2026-09-13 17:08:03] SWEEP_COMPLETE total=330 successful=298 failed=32
+[2026-09-13 18:41:48] SWEEP_START run_dir=/raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146
+[2026-09-13 18:41:48] MONITOR tail -f /shared/dgx-raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/run.log
+[2026-09-13 18:41:48] MONITOR cat /shared/dgx-raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/current_status.txt
+[2026-09-13 18:41:48] MONITOR cat /shared/dgx-raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/progress.txt
+[2026-09-13 18:41:48] SETUP_START palmetto/wikipedia index check
+[2026-09-13 18:41:48] SETUP_OK palmetto/wikipedia index ready
+[2026-09-13 18:41:48] SKIP model=sbert_minilm dataset=20ng k=50 progress=1/330 (already completed at 2026-09-12 18:13:34)
+[2026-09-13 18:41:48] SKIP model=sbert_minilm dataset=20ng k=100 progress=2/330 (already completed at 2026-09-12 18:15:39)
+[2026-09-13 18:41:48] START model=sbert_minilm dataset=imdb k=50 attempt=1 progress=3/330
+[2026-09-13 18:44:34] OK model=sbert_minilm dataset=imdb k=50 runtime=166s cv_source=palmetto_wikipedia progress=3/330
+[2026-09-13 18:44:34] START model=sbert_minilm dataset=imdb k=100 attempt=1 progress=4/330
+[2026-09-13 18:48:08] OK model=sbert_minilm dataset=imdb k=100 runtime=213s cv_source=palmetto_wikipedia progress=4/330
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=agnews_short k=50 progress=5/330 (already completed at 2026-09-12 18:18:58)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=agnews_short k=100 progress=6/330 (already completed at 2026-09-12 18:21:15)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=search_snippets k=50 progress=7/330 (already completed at 2026-09-12 18:22:51)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=search_snippets k=100 progress=8/330 (already completed at 2026-09-12 18:25:27)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=stack_overflow k=50 progress=9/330 (already completed at 2026-09-12 18:26:41)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=stack_overflow k=100 progress=10/330 (already completed at 2026-09-12 18:28:53)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=biomedical k=50 progress=11/330 (already completed at 2026-09-12 18:30:04)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=biomedical k=100 progress=12/330 (already completed at 2026-09-12 18:31:54)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=google_news_ts k=50 progress=13/330 (already completed at 2026-09-12 18:33:26)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=google_news_ts k=100 progress=14/330 (already completed at 2026-09-12 18:36:16)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=google_news_t k=50 progress=15/330 (already completed at 2026-09-12 18:37:53)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=google_news_t k=100 progress=16/330 (already completed at 2026-09-12 18:41:01)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=google_news_s k=50 progress=17/330 (already completed at 2026-09-12 18:42:38)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=google_news_s k=100 progress=18/330 (already completed at 2026-09-12 18:45:27)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=tweet k=50 progress=19/330 (already completed at 2026-09-12 18:47:06)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=tweet k=100 progress=20/330 (already completed at 2026-09-12 18:49:56)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=hicot_20ng k=50 progress=21/330 (already completed at 2026-09-12 18:53:19)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=hicot_20ng k=100 progress=22/330 (already completed at 2026-09-12 18:58:49)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=hicot_imdb k=50 progress=23/330 (already completed at 2026-09-12 19:06:20)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=hicot_imdb k=100 progress=24/330 (already completed at 2026-09-12 19:18:13)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=hicot_agnews k=50 progress=25/330 (already completed at 2026-09-12 19:20:18)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=hicot_agnews k=100 progress=26/330 (already completed at 2026-09-12 19:23:27)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=hicot_search_snippets k=50 progress=27/330 (already completed at 2026-09-12 19:25:08)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=hicot_search_snippets k=100 progress=28/330 (already completed at 2026-09-12 19:27:51)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=hicot_google_news k=50 progress=29/330 (already completed at 2026-09-12 19:29:34)
+[2026-09-13 18:48:08] SKIP model=sbert_minilm dataset=hicot_google_news k=100 progress=30/330 (already completed at 2026-09-12 19:32:41)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=20ng k=50 progress=31/330 (already completed at 2026-09-12 19:37:01)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=20ng k=100 progress=32/330 (already completed at 2026-09-12 19:41:46)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=imdb k=50 progress=33/330 (already completed at 2026-09-12 19:53:51)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=imdb k=100 progress=34/330 (already completed at 2026-09-12 20:06:56)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=agnews_short k=50 progress=35/330 (already completed at 2026-09-12 20:08:31)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=agnews_short k=100 progress=36/330 (already completed at 2026-09-12 20:11:09)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=search_snippets k=50 progress=37/330 (already completed at 2026-09-12 20:13:07)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=search_snippets k=100 progress=38/330 (already completed at 2026-09-12 20:16:17)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=stack_overflow k=50 progress=39/330 (already completed at 2026-09-12 20:17:49)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=stack_overflow k=100 progress=40/330 (already completed at 2026-09-12 20:20:28)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=biomedical k=50 progress=41/330 (already completed at 2026-09-12 20:22:05)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=biomedical k=100 progress=42/330 (already completed at 2026-09-12 20:24:25)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=google_news_ts k=50 progress=43/330 (already completed at 2026-09-12 20:26:15)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=google_news_ts k=100 progress=44/330 (already completed at 2026-09-12 20:29:20)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=google_news_t k=50 progress=45/330 (already completed at 2026-09-12 20:31:03)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=google_news_t k=100 progress=46/330 (already completed at 2026-09-12 20:34:28)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=google_news_s k=50 progress=47/330 (already completed at 2026-09-12 20:36:14)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=google_news_s k=100 progress=48/330 (already completed at 2026-09-12 20:39:32)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=tweet k=50 progress=49/330 (already completed at 2026-09-12 20:41:17)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=tweet k=100 progress=50/330 (already completed at 2026-09-12 20:44:19)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=hicot_20ng k=50 progress=51/330 (already completed at 2026-09-12 20:49:01)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=hicot_20ng k=100 progress=52/330 (already completed at 2026-09-12 20:56:02)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=hicot_imdb k=50 progress=53/330 (already completed at 2026-09-12 21:07:01)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=hicot_imdb k=100 progress=54/330 (already completed at 2026-09-12 21:22:51)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=hicot_agnews k=50 progress=55/330 (already completed at 2026-09-12 21:24:57)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=hicot_agnews k=100 progress=56/330 (already completed at 2026-09-12 21:28:16)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=hicot_search_snippets k=50 progress=57/330 (already completed at 2026-09-12 21:30:05)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=hicot_search_snippets k=100 progress=58/330 (already completed at 2026-09-12 21:33:07)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=hicot_google_news k=50 progress=59/330 (already completed at 2026-09-12 21:34:49)
+[2026-09-13 18:48:08] SKIP model=sbert_mpnet dataset=hicot_google_news k=100 progress=60/330 (already completed at 2026-09-12 21:38:15)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=20ng k=50 progress=61/330 (already completed at 2026-09-12 21:43:27)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=20ng k=100 progress=62/330 (already completed at 2026-09-12 21:48:56)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=imdb k=50 progress=63/330 (already completed at 2026-09-12 22:04:59)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=imdb k=100 progress=64/330 (already completed at 2026-09-12 22:22:01)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=agnews_short k=50 progress=65/330 (already completed at 2026-09-12 22:23:48)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=agnews_short k=100 progress=66/330 (already completed at 2026-09-12 22:26:39)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=search_snippets k=50 progress=67/330 (already completed at 2026-09-12 22:28:52)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=search_snippets k=100 progress=68/330 (already completed at 2026-09-12 22:32:20)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=stack_overflow k=50 progress=69/330 (already completed at 2026-09-12 22:33:57)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=stack_overflow k=100 progress=70/330 (already completed at 2026-09-12 22:36:41)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=biomedical k=50 progress=71/330 (already completed at 2026-09-12 22:38:36)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=biomedical k=100 progress=72/330 (already completed at 2026-09-12 22:41:06)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=google_news_ts k=50 progress=73/330 (already completed at 2026-09-12 22:43:20)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=google_news_ts k=100 progress=74/330 (already completed at 2026-09-12 22:46:52)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=google_news_t k=50 progress=75/330 (already completed at 2026-09-12 22:48:41)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=google_news_t k=100 progress=76/330 (already completed at 2026-09-12 22:52:06)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=google_news_s k=50 progress=77/330 (already completed at 2026-09-12 22:54:16)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=google_news_s k=100 progress=78/330 (already completed at 2026-09-12 22:57:42)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=tweet k=50 progress=79/330 (already completed at 2026-09-12 22:59:22)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=tweet k=100 progress=80/330 (already completed at 2026-09-12 23:02:25)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=hicot_20ng k=50 progress=81/330 (already completed at 2026-09-12 23:08:27)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=hicot_20ng k=100 progress=82/330 (already completed at 2026-09-12 23:16:14)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=hicot_imdb k=50 progress=83/330 (already completed at 2026-09-12 23:29:58)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=hicot_imdb k=100 progress=84/330 (already completed at 2026-09-12 23:48:38)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=hicot_agnews k=50 progress=85/330 (already completed at 2026-09-12 23:51:05)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=hicot_agnews k=100 progress=86/330 (already completed at 2026-09-12 23:54:48)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=hicot_search_snippets k=50 progress=87/330 (already completed at 2026-09-12 23:56:52)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=hicot_search_snippets k=100 progress=88/330 (already completed at 2026-09-13 00:00:10)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=hicot_google_news k=50 progress=89/330 (already completed at 2026-09-13 00:01:59)
+[2026-09-13 18:48:08] SKIP model=sbert_t5 dataset=hicot_google_news k=100 progress=90/330 (already completed at 2026-09-13 00:05:21)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=20ng k=50 progress=91/330 (already completed at 2026-09-13 00:17:43)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=20ng k=100 progress=92/330 (already completed at 2026-09-13 00:30:32)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=imdb k=50 progress=93/330 (already completed at 2026-09-13 01:08:28)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=imdb k=100 progress=94/330 (already completed at 2026-09-13 01:47:46)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=agnews_short k=50 progress=95/330 (already completed at 2026-09-13 01:50:05)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=agnews_short k=100 progress=96/330 (already completed at 2026-09-13 01:53:15)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=search_snippets k=50 progress=97/330 (already completed at 2026-09-13 01:56:03)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=search_snippets k=100 progress=98/330 (already completed at 2026-09-13 02:00:08)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=stack_overflow k=50 progress=99/330 (already completed at 2026-09-13 02:02:21)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=stack_overflow k=100 progress=100/330 (already completed at 2026-09-13 02:05:45)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=biomedical k=50 progress=101/330 (already completed at 2026-09-13 02:08:26)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=biomedical k=100 progress=102/330 (already completed at 2026-09-13 02:11:58)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=google_news_ts k=50 progress=103/330 (already completed at 2026-09-13 02:14:41)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=google_news_ts k=100 progress=104/330 (already completed at 2026-09-13 02:18:50)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=google_news_t k=50 progress=105/330 (already completed at 2026-09-13 02:20:53)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=google_news_t k=100 progress=106/330 (already completed at 2026-09-13 02:24:30)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=google_news_s k=50 progress=107/330 (already completed at 2026-09-13 02:27:05)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=google_news_s k=100 progress=108/330 (already completed at 2026-09-13 02:31:06)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=tweet k=50 progress=109/330 (already completed at 2026-09-13 02:32:53)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=tweet k=100 progress=110/330 (already completed at 2026-09-13 02:35:54)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=hicot_20ng k=50 progress=111/330 (already completed at 2026-09-13 02:44:14)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=hicot_20ng k=100 progress=112/330 (already completed at 2026-09-13 02:54:42)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=hicot_imdb k=50 progress=113/330 (already completed at 2026-09-13 03:14:02)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=hicot_imdb k=100 progress=114/330 (already completed at 2026-09-13 03:38:38)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=hicot_agnews k=50 progress=115/330 (already completed at 2026-09-13 03:41:27)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=hicot_agnews k=100 progress=116/330 (already completed at 2026-09-13 03:45:42)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=hicot_search_snippets k=50 progress=117/330 (already completed at 2026-09-13 03:48:16)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=hicot_search_snippets k=100 progress=118/330 (already completed at 2026-09-13 03:52:17)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=hicot_google_news k=50 progress=119/330 (already completed at 2026-09-13 03:54:16)
+[2026-09-13 18:48:08] SKIP model=sbert_e5 dataset=hicot_google_news k=100 progress=120/330 (already completed at 2026-09-13 03:58:00)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=20ng k=50 progress=121/330 (already completed at 2026-09-13 04:10:23)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=20ng k=100 progress=122/330 (already completed at 2026-09-13 04:23:13)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=imdb k=50 progress=123/330 (already completed at 2026-09-13 05:01:13)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=imdb k=100 progress=124/330 (already completed at 2026-09-13 05:40:40)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=agnews_short k=50 progress=125/330 (already completed at 2026-09-13 05:42:49)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=agnews_short k=100 progress=126/330 (already completed at 2026-09-13 05:46:05)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=search_snippets k=50 progress=127/330 (already completed at 2026-09-13 05:48:58)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=search_snippets k=100 progress=128/330 (already completed at 2026-09-13 05:53:00)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=stack_overflow k=50 progress=129/330 (already completed at 2026-09-13 05:55:18)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=stack_overflow k=100 progress=130/330 (already completed at 2026-09-13 05:58:48)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=biomedical k=50 progress=131/330 (already completed at 2026-09-13 06:01:32)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=biomedical k=100 progress=132/330 (already completed at 2026-09-13 06:05:01)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=google_news_ts k=50 progress=133/330 (already completed at 2026-09-13 06:07:42)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=google_news_ts k=100 progress=134/330 (already completed at 2026-09-13 06:11:45)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=google_news_t k=50 progress=135/330 (already completed at 2026-09-13 06:13:45)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=google_news_t k=100 progress=136/330 (already completed at 2026-09-13 06:17:27)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=google_news_s k=50 progress=137/330 (already completed at 2026-09-13 06:19:58)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=google_news_s k=100 progress=138/330 (already completed at 2026-09-13 06:23:50)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=tweet k=50 progress=139/330 (already completed at 2026-09-13 06:25:35)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=tweet k=100 progress=140/330 (already completed at 2026-09-13 06:28:45)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=hicot_20ng k=50 progress=141/330 (already completed at 2026-09-13 06:37:09)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=hicot_20ng k=100 progress=142/330 (already completed at 2026-09-13 06:47:42)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=hicot_imdb k=50 progress=143/330 (already completed at 2026-09-13 07:07:24)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=hicot_imdb k=100 progress=144/330 (already completed at 2026-09-13 07:32:05)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=hicot_agnews k=50 progress=145/330 (already completed at 2026-09-13 07:34:55)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=hicot_agnews k=100 progress=146/330 (already completed at 2026-09-13 07:39:03)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=hicot_search_snippets k=50 progress=147/330 (already completed at 2026-09-13 07:41:35)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=hicot_search_snippets k=100 progress=148/330 (already completed at 2026-09-13 07:45:25)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=hicot_google_news k=50 progress=149/330 (already completed at 2026-09-13 07:47:23)
+[2026-09-13 18:48:08] SKIP model=sbert_bge dataset=hicot_google_news k=100 progress=150/330 (already completed at 2026-09-13 07:51:06)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=20ng k=50 progress=151/330 (already completed at 2026-09-13 07:53:30)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=20ng k=100 progress=152/330 (already completed at 2026-09-13 07:56:25)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=imdb k=50 progress=153/330 (already completed at 2026-09-13 08:02:23)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=imdb k=100 progress=154/330 (already completed at 2026-09-13 08:09:16)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=agnews_short k=50 progress=155/330 (already completed at 2026-09-13 08:10:37)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=agnews_short k=100 progress=156/330 (already completed at 2026-09-13 08:12:49)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=search_snippets k=50 progress=157/330 (already completed at 2026-09-13 08:14:31)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=search_snippets k=100 progress=158/330 (already completed at 2026-09-13 08:17:18)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=stack_overflow k=50 progress=159/330 (already completed at 2026-09-13 08:18:38)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=stack_overflow k=100 progress=160/330 (already completed at 2026-09-13 08:21:01)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=biomedical k=50 progress=161/330 (already completed at 2026-09-13 08:22:24)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=biomedical k=100 progress=162/330 (already completed at 2026-09-13 08:24:22)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=google_news_ts k=50 progress=163/330 (already completed at 2026-09-13 08:26:00)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=google_news_ts k=100 progress=164/330 (already completed at 2026-09-13 08:28:58)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=google_news_t k=50 progress=165/330 (already completed at 2026-09-13 08:30:37)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=google_news_t k=100 progress=166/330 (already completed at 2026-09-13 08:33:52)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=google_news_s k=50 progress=167/330 (already completed at 2026-09-13 08:35:26)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=google_news_s k=100 progress=168/330 (already completed at 2026-09-13 08:38:24)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=tweet k=50 progress=169/330 (already completed at 2026-09-13 08:39:58)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=tweet k=100 progress=170/330 (already completed at 2026-09-13 08:42:58)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=hicot_20ng k=50 progress=171/330 (already completed at 2026-09-13 08:46:35)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=hicot_20ng k=100 progress=172/330 (already completed at 2026-09-13 08:52:21)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=hicot_imdb k=50 progress=173/330 (already completed at 2026-09-13 09:01:03)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=hicot_imdb k=100 progress=174/330 (already completed at 2026-09-13 09:14:59)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=hicot_agnews k=50 progress=175/330 (already completed at 2026-09-13 09:16:51)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=hicot_agnews k=100 progress=176/330 (already completed at 2026-09-13 09:20:09)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=hicot_search_snippets k=50 progress=177/330 (already completed at 2026-09-13 09:21:49)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=hicot_search_snippets k=100 progress=178/330 (already completed at 2026-09-13 09:24:43)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=hicot_google_news k=50 progress=179/330 (already completed at 2026-09-13 09:26:17)
+[2026-09-13 18:48:08] SKIP model=sbert_gte dataset=hicot_google_news k=100 progress=180/330 (already completed at 2026-09-13 09:29:37)
+[2026-09-13 18:48:08] START model=sbert_msmpnet dataset=20ng k=50 attempt=1 progress=181/330
+[2026-09-13 18:48:18] ERROR model=sbert_msmpnet dataset=20ng k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6eff0-44a8bac9026a27b741cc737f;b6acc64b-f1e1-445b-bc31-da0981d53f51)"
+[2026-09-13 18:48:18] RETRY model=sbert_msmpnet dataset=20ng k=50 attempt=2
+[2026-09-13 18:48:38] START model=sbert_msmpnet dataset=20ng k=50 attempt=2 progress=181/330
+[2026-09-13 18:48:47] ERROR model=sbert_msmpnet dataset=20ng k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f00e-0d36d22f3b83418820930ac9;64f93fb8-bdfa-49a7-84dd-ae405df572e4)"
+[2026-09-13 18:48:47] RETRY model=sbert_msmpnet dataset=20ng k=50 attempt=3
+[2026-09-13 18:49:07] START model=sbert_msmpnet dataset=20ng k=50 attempt=3 progress=181/330
+[2026-09-13 18:49:18] ERROR model=sbert_msmpnet dataset=20ng k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f02c-59cf66222111059a29e2cf84;1f1114b2-4e70-4300-8fde-862b338211da)"
+[2026-09-13 18:49:18] ERROR model=sbert_msmpnet dataset=20ng k=50 FINAL after 3 attempts, giving up progress=181/330
+[2026-09-13 18:49:18] START model=sbert_msmpnet dataset=20ng k=100 attempt=1 progress=182/330
+[2026-09-13 18:49:27] ERROR model=sbert_msmpnet dataset=20ng k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f035-06dd811f77448b09411c1351;b86134ba-6358-48b6-a3e3-8f98aafd605d)"
+[2026-09-13 18:49:27] RETRY model=sbert_msmpnet dataset=20ng k=100 attempt=2
+[2026-09-13 18:49:47] START model=sbert_msmpnet dataset=20ng k=100 attempt=2 progress=182/330
+[2026-09-13 18:49:56] ERROR model=sbert_msmpnet dataset=20ng k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f052-4e09176d4ebb5b1812424655;92f57b22-2d5a-4f14-a28c-4b96139be060)"
+[2026-09-13 18:49:56] RETRY model=sbert_msmpnet dataset=20ng k=100 attempt=3
+[2026-09-13 18:50:16] START model=sbert_msmpnet dataset=20ng k=100 attempt=3 progress=182/330
+[2026-09-13 18:50:25] ERROR model=sbert_msmpnet dataset=20ng k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f070-07dd26b903877efa0cb3c4a4;df4794f4-db0a-403a-a078-76df2dcc1a89)"
+[2026-09-13 18:50:25] ERROR model=sbert_msmpnet dataset=20ng k=100 FINAL after 3 attempts, giving up progress=182/330
+[2026-09-13 18:50:25] START model=sbert_msmpnet dataset=imdb k=50 attempt=1 progress=183/330
+[2026-09-13 18:50:33] ERROR model=sbert_msmpnet dataset=imdb k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f078-5d27441c0a7c122947042adb;0f630bca-e64b-44b1-a1db-ee9828175410)"
+[2026-09-13 18:50:33] RETRY model=sbert_msmpnet dataset=imdb k=50 attempt=2
+[2026-09-13 18:50:53] START model=sbert_msmpnet dataset=imdb k=50 attempt=2 progress=183/330
+[2026-09-13 18:51:04] ERROR model=sbert_msmpnet dataset=imdb k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f096-77b4dbb30412baee74a89a13;82c0477d-bbf6-4481-adc8-ebce4ad1db02)"
+[2026-09-13 18:51:04] RETRY model=sbert_msmpnet dataset=imdb k=50 attempt=3
+[2026-09-13 18:51:24] START model=sbert_msmpnet dataset=imdb k=50 attempt=3 progress=183/330
+[2026-09-13 18:51:33] ERROR model=sbert_msmpnet dataset=imdb k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f0b4-69bfa67e1587b3f5126a77d6;1e23fd72-f723-4db8-a6f7-67fe2186f5d5)"
+[2026-09-13 18:51:33] ERROR model=sbert_msmpnet dataset=imdb k=50 FINAL after 3 attempts, giving up progress=183/330
+[2026-09-13 18:51:33] START model=sbert_msmpnet dataset=imdb k=100 attempt=1 progress=184/330
+[2026-09-13 18:51:42] ERROR model=sbert_msmpnet dataset=imdb k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f0bc-5194de5778f8d8d94a2ca27e;2538a8fc-4f71-4818-9c4e-c5ccd788a7e4)"
+[2026-09-13 18:51:42] RETRY model=sbert_msmpnet dataset=imdb k=100 attempt=2
+[2026-09-13 18:52:02] START model=sbert_msmpnet dataset=imdb k=100 attempt=2 progress=184/330
+[2026-09-13 18:52:13] ERROR model=sbert_msmpnet dataset=imdb k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f0db-43fe7a9f73840e653253ac9b;f89f1101-ead7-42f2-875a-967c001d8db7)"
+[2026-09-13 18:52:13] RETRY model=sbert_msmpnet dataset=imdb k=100 attempt=3
+[2026-09-13 18:52:33] START model=sbert_msmpnet dataset=imdb k=100 attempt=3 progress=184/330
+[2026-09-13 18:52:44] ERROR model=sbert_msmpnet dataset=imdb k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f0fb-7801d210212203913a8fa1d3;9b274307-0dd9-4f7c-b521-3bdd7bd8c174)"
+[2026-09-13 18:52:44] ERROR model=sbert_msmpnet dataset=imdb k=100 FINAL after 3 attempts, giving up progress=184/330
+[2026-09-13 18:52:44] START model=sbert_msmpnet dataset=agnews_short k=50 attempt=1 progress=185/330
+[2026-09-13 18:52:52] ERROR model=sbert_msmpnet dataset=agnews_short k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f103-3c7efcd9202a43d41a6ad9b2;247ed9fa-7d82-42e4-8c58-e36309fb0ad7)"
+[2026-09-13 18:52:52] RETRY model=sbert_msmpnet dataset=agnews_short k=50 attempt=2
+[2026-09-13 18:53:12] START model=sbert_msmpnet dataset=agnews_short k=50 attempt=2 progress=185/330
+[2026-09-13 18:53:22] ERROR model=sbert_msmpnet dataset=agnews_short k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f120-08195c782883e19953fbf060;1d4f093a-de63-4416-9272-b5f1dd96f5fc)"
+[2026-09-13 18:53:22] RETRY model=sbert_msmpnet dataset=agnews_short k=50 attempt=3
+[2026-09-13 18:53:42] START model=sbert_msmpnet dataset=agnews_short k=50 attempt=3 progress=185/330
+[2026-09-13 18:53:51] ERROR model=sbert_msmpnet dataset=agnews_short k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f13e-3dfa51593c6629090c08ed3b;65fce7e4-65ee-4c79-b1f6-56c979921be6)"
+[2026-09-13 18:53:51] ERROR model=sbert_msmpnet dataset=agnews_short k=50 FINAL after 3 attempts, giving up progress=185/330
+[2026-09-13 18:53:51] START model=sbert_msmpnet dataset=agnews_short k=100 attempt=1 progress=186/330
+[2026-09-13 18:54:00] ERROR model=sbert_msmpnet dataset=agnews_short k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f147-7f4c6cd046d8e84167e1bd7f;acb8526d-2a4b-4cdf-9346-d53944485a1e)"
+[2026-09-13 18:54:00] RETRY model=sbert_msmpnet dataset=agnews_short k=100 attempt=2
+[2026-09-13 18:54:20] START model=sbert_msmpnet dataset=agnews_short k=100 attempt=2 progress=186/330
+[2026-09-13 18:54:32] ERROR model=sbert_msmpnet dataset=agnews_short k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f166-59dca60f0038bf9f268a7ccd;1ba85928-7a64-44e6-914a-b2a796a29c8f)"
+[2026-09-13 18:54:32] RETRY model=sbert_msmpnet dataset=agnews_short k=100 attempt=3
+[2026-09-13 18:54:52] START model=sbert_msmpnet dataset=agnews_short k=100 attempt=3 progress=186/330
+[2026-09-13 18:55:00] ERROR model=sbert_msmpnet dataset=agnews_short k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f182-1ab6bcc96ed9bef5114aa843;4bc8752f-accc-433d-9161-78e9fa40a148)"
+[2026-09-13 18:55:00] ERROR model=sbert_msmpnet dataset=agnews_short k=100 FINAL after 3 attempts, giving up progress=186/330
+[2026-09-13 18:55:00] START model=sbert_msmpnet dataset=search_snippets k=50 attempt=1 progress=187/330
+[2026-09-13 18:55:08] ERROR model=sbert_msmpnet dataset=search_snippets k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f18a-543dd3c33083ffab152769a2;61aaef83-119f-4904-afcf-f90a71086519)"
+[2026-09-13 18:55:08] RETRY model=sbert_msmpnet dataset=search_snippets k=50 attempt=2
+[2026-09-13 18:55:28] START model=sbert_msmpnet dataset=search_snippets k=50 attempt=2 progress=187/330
+[2026-09-13 18:55:39] ERROR model=sbert_msmpnet dataset=search_snippets k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f1a9-1c301f8a55a4f41534d4e65f;bf035984-95c5-4ed3-a06a-ef1aef00aa8a)"
+[2026-09-13 18:55:39] RETRY model=sbert_msmpnet dataset=search_snippets k=50 attempt=3
+[2026-09-13 18:55:59] START model=sbert_msmpnet dataset=search_snippets k=50 attempt=3 progress=187/330
+[2026-09-13 18:56:09] ERROR model=sbert_msmpnet dataset=search_snippets k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f1c7-34ceb0f11457797656155c9b;8930a847-8970-4de1-ba6a-85d5153db933)"
+[2026-09-13 18:56:09] ERROR model=sbert_msmpnet dataset=search_snippets k=50 FINAL after 3 attempts, giving up progress=187/330
+[2026-09-13 18:56:09] START model=sbert_msmpnet dataset=search_snippets k=100 attempt=1 progress=188/330
+[2026-09-13 18:56:16] ERROR model=sbert_msmpnet dataset=search_snippets k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f1cf-4101cd6b47160e913ccb71c7;b775e961-26f5-4ea7-a7f5-8381b4b20b31)"
+[2026-09-13 18:56:16] RETRY model=sbert_msmpnet dataset=search_snippets k=100 attempt=2
+[2026-09-13 18:56:36] START model=sbert_msmpnet dataset=search_snippets k=100 attempt=2 progress=188/330
+[2026-09-13 18:56:47] ERROR model=sbert_msmpnet dataset=search_snippets k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f1ee-6b2157fb31c400146cd1c883;9ac2199c-744a-4600-a17d-5e1a813ccd77)"
+[2026-09-13 18:56:47] RETRY model=sbert_msmpnet dataset=search_snippets k=100 attempt=3
+[2026-09-13 18:57:07] START model=sbert_msmpnet dataset=search_snippets k=100 attempt=3 progress=188/330
+[2026-09-13 18:57:17] ERROR model=sbert_msmpnet dataset=search_snippets k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f20c-3e40d12a59b045944885e5ca;8e7d4deb-7f8d-4cc1-81ac-28fe5279f506)"
+[2026-09-13 18:57:17] ERROR model=sbert_msmpnet dataset=search_snippets k=100 FINAL after 3 attempts, giving up progress=188/330
+[2026-09-13 18:57:17] START model=sbert_msmpnet dataset=stack_overflow k=50 attempt=1 progress=189/330
+[2026-09-13 18:57:26] ERROR model=sbert_msmpnet dataset=stack_overflow k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f215-7ae671953ff219f94ced915f;f482aef5-71df-4fcd-81ab-fb8bb6c08791)"
+[2026-09-13 18:57:26] RETRY model=sbert_msmpnet dataset=stack_overflow k=50 attempt=2
+[2026-09-13 18:57:46] START model=sbert_msmpnet dataset=stack_overflow k=50 attempt=2 progress=189/330
+[2026-09-13 18:57:55] ERROR model=sbert_msmpnet dataset=stack_overflow k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f232-69a68a422f89566c584934b7;d8448805-6662-4ae0-b1f5-6bff179b9d91)"
+[2026-09-13 18:57:55] RETRY model=sbert_msmpnet dataset=stack_overflow k=50 attempt=3
+[2026-09-13 18:58:15] START model=sbert_msmpnet dataset=stack_overflow k=50 attempt=3 progress=189/330
+[2026-09-13 18:58:25] ERROR model=sbert_msmpnet dataset=stack_overflow k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f250-7a2dcab17add504544311d5c;84907ee1-e2a4-48f0-b977-736d2191adbc)"
+[2026-09-13 18:58:25] ERROR model=sbert_msmpnet dataset=stack_overflow k=50 FINAL after 3 attempts, giving up progress=189/330
+[2026-09-13 18:58:25] START model=sbert_msmpnet dataset=stack_overflow k=100 attempt=1 progress=190/330
+[2026-09-13 18:58:33] ERROR model=sbert_msmpnet dataset=stack_overflow k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f257-50a3251f632cee494fbb3ced;e07cc2c2-6d1b-4101-afa9-924605dc6ddf)"
+[2026-09-13 18:58:33] RETRY model=sbert_msmpnet dataset=stack_overflow k=100 attempt=2
+[2026-09-13 18:58:53] START model=sbert_msmpnet dataset=stack_overflow k=100 attempt=2 progress=190/330
+[2026-09-13 18:59:01] ERROR model=sbert_msmpnet dataset=stack_overflow k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f273-2dae1f18190e5a274bfe11c1;3dd07e3c-7cbb-4502-b61c-ea2e368bf2c5)"
+[2026-09-13 18:59:01] RETRY model=sbert_msmpnet dataset=stack_overflow k=100 attempt=3
+[2026-09-13 18:59:21] START model=sbert_msmpnet dataset=stack_overflow k=100 attempt=3 progress=190/330
+[2026-09-13 18:59:30] ERROR model=sbert_msmpnet dataset=stack_overflow k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f290-5cc39bc82425a4887d81c12a;edd1a28f-889a-4be7-8bc4-ac2afe34e965)"
+[2026-09-13 18:59:30] ERROR model=sbert_msmpnet dataset=stack_overflow k=100 FINAL after 3 attempts, giving up progress=190/330
+[2026-09-13 18:59:30] START model=sbert_msmpnet dataset=biomedical k=50 attempt=1 progress=191/330
+[2026-09-13 18:59:38] ERROR model=sbert_msmpnet dataset=biomedical k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f298-188979e742d570be204a6ee0;6f035f9f-30f3-4ab0-b0c4-ea1bb51fd6db)"
+[2026-09-13 18:59:38] RETRY model=sbert_msmpnet dataset=biomedical k=50 attempt=2
+[2026-09-13 18:59:58] START model=sbert_msmpnet dataset=biomedical k=50 attempt=2 progress=191/330
+[2026-09-13 19:00:08] ERROR model=sbert_msmpnet dataset=biomedical k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f2b6-4e4dd9de16ac7d813dbb7cac;ad58baea-bc47-4516-bd91-e3e069d6d14c)"
+[2026-09-13 19:00:08] RETRY model=sbert_msmpnet dataset=biomedical k=50 attempt=3
+[2026-09-13 19:00:28] START model=sbert_msmpnet dataset=biomedical k=50 attempt=3 progress=191/330
+[2026-09-13 19:00:39] ERROR model=sbert_msmpnet dataset=biomedical k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f2d5-4c59fe997beb7a351efc8973;c3df9341-b8e4-40e1-b9bb-dc080ef65ee5)"
+[2026-09-13 19:00:39] ERROR model=sbert_msmpnet dataset=biomedical k=50 FINAL after 3 attempts, giving up progress=191/330
+[2026-09-13 19:00:39] START model=sbert_msmpnet dataset=biomedical k=100 attempt=1 progress=192/330
+[2026-09-13 19:00:47] ERROR model=sbert_msmpnet dataset=biomedical k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f2dd-56c085211e81549b3e2fa645;ec47b4ac-d499-4824-a9b1-1c0e6e5db874)"
+[2026-09-13 19:00:47] RETRY model=sbert_msmpnet dataset=biomedical k=100 attempt=2
+[2026-09-13 19:01:07] START model=sbert_msmpnet dataset=biomedical k=100 attempt=2 progress=192/330
+[2026-09-13 19:01:16] ERROR model=sbert_msmpnet dataset=biomedical k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f2fb-03d831db204f5a93630187ba;754bacce-af2f-4993-938f-93b1ae55100a)"
+[2026-09-13 19:01:16] RETRY model=sbert_msmpnet dataset=biomedical k=100 attempt=3
+[2026-09-13 19:01:36] START model=sbert_msmpnet dataset=biomedical k=100 attempt=3 progress=192/330
+[2026-09-13 19:01:45] ERROR model=sbert_msmpnet dataset=biomedical k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f318-7b309d71177e31725c6ae676;d53b91ae-7b60-4942-919f-91061881633a)"
+[2026-09-13 19:01:45] ERROR model=sbert_msmpnet dataset=biomedical k=100 FINAL after 3 attempts, giving up progress=192/330
+[2026-09-13 19:01:45] START model=sbert_msmpnet dataset=google_news_ts k=50 attempt=1 progress=193/330
+[2026-09-13 19:01:53] ERROR model=sbert_msmpnet dataset=google_news_ts k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f320-296550fe39372db671028f65;eb8bf7e3-4164-46b8-8d96-a51fdb98ec21)"
+[2026-09-13 19:01:53] RETRY model=sbert_msmpnet dataset=google_news_ts k=50 attempt=2
+[2026-09-13 19:02:13] START model=sbert_msmpnet dataset=google_news_ts k=50 attempt=2 progress=193/330
+[2026-09-13 19:02:24] ERROR model=sbert_msmpnet dataset=google_news_ts k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f33e-5b13649d6badd8364d1ee019;113f8cd3-5e2a-42e9-a79a-77a614323747)"
+[2026-09-13 19:02:24] RETRY model=sbert_msmpnet dataset=google_news_ts k=50 attempt=3
+[2026-09-13 19:02:44] START model=sbert_msmpnet dataset=google_news_ts k=50 attempt=3 progress=193/330
+[2026-09-13 19:02:53] ERROR model=sbert_msmpnet dataset=google_news_ts k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f35c-28465a7258f1a4827213129a;cfa9a609-a0b6-412d-b7cc-c0f09ab75a39)"
+[2026-09-13 19:02:53] ERROR model=sbert_msmpnet dataset=google_news_ts k=50 FINAL after 3 attempts, giving up progress=193/330
+[2026-09-13 19:02:53] START model=sbert_msmpnet dataset=google_news_ts k=100 attempt=1 progress=194/330
+[2026-09-13 19:03:02] ERROR model=sbert_msmpnet dataset=google_news_ts k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f365-738ebe8b215c012d592cba9a;e3f4fdb5-53f6-4f00-a96a-012fe1c2677c)"
+[2026-09-13 19:03:02] RETRY model=sbert_msmpnet dataset=google_news_ts k=100 attempt=2
+[2026-09-13 19:03:22] START model=sbert_msmpnet dataset=google_news_ts k=100 attempt=2 progress=194/330
+[2026-09-13 19:03:32] ERROR model=sbert_msmpnet dataset=google_news_ts k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f383-66e8528d7196217b0c6968bd;3c5da997-8512-48e8-a0df-be313dd615cd)"
+[2026-09-13 19:03:32] RETRY model=sbert_msmpnet dataset=google_news_ts k=100 attempt=3
+[2026-09-13 19:03:52] START model=sbert_msmpnet dataset=google_news_ts k=100 attempt=3 progress=194/330
+[2026-09-13 19:04:04] ERROR model=sbert_msmpnet dataset=google_news_ts k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f3a3-0a4e71c81c96f32f4656376a;baf5782d-fdc1-4e89-997f-6f745de74dcc)"
+[2026-09-13 19:04:04] ERROR model=sbert_msmpnet dataset=google_news_ts k=100 FINAL after 3 attempts, giving up progress=194/330
+[2026-09-13 19:04:04] START model=sbert_msmpnet dataset=google_news_t k=50 attempt=1 progress=195/330
+[2026-09-13 19:04:13] ERROR model=sbert_msmpnet dataset=google_news_t k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f3ab-06d735266ad3a9a22b1944da;fec35e87-d556-4a22-a459-6256bca46225)"
+[2026-09-13 19:04:13] RETRY model=sbert_msmpnet dataset=google_news_t k=50 attempt=2
+[2026-09-13 19:04:33] START model=sbert_msmpnet dataset=google_news_t k=50 attempt=2 progress=195/330
+[2026-09-13 19:04:41] ERROR model=sbert_msmpnet dataset=google_news_t k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f3c8-532435bd75320b3c3b087818;e2ce83f3-d641-4b6c-b8eb-43547b8024fa)"
+[2026-09-13 19:04:41] RETRY model=sbert_msmpnet dataset=google_news_t k=50 attempt=3
+[2026-09-13 19:05:01] START model=sbert_msmpnet dataset=google_news_t k=50 attempt=3 progress=195/330
+[2026-09-13 19:05:10] ERROR model=sbert_msmpnet dataset=google_news_t k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f3e4-63ae2d615a8afaf3725650ff;00e65f0a-2564-43cd-81ff-24fce79bfaa6)"
+[2026-09-13 19:05:10] ERROR model=sbert_msmpnet dataset=google_news_t k=50 FINAL after 3 attempts, giving up progress=195/330
+[2026-09-13 19:05:10] START model=sbert_msmpnet dataset=google_news_t k=100 attempt=1 progress=196/330
+[2026-09-13 19:05:19] ERROR model=sbert_msmpnet dataset=google_news_t k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f3ed-6a4a1c7b20338cae255bfe2b;4718e6c6-e1e4-44d5-9dd2-db770b046ec9)"
+[2026-09-13 19:05:19] RETRY model=sbert_msmpnet dataset=google_news_t k=100 attempt=2
+[2026-09-13 19:05:39] START model=sbert_msmpnet dataset=google_news_t k=100 attempt=2 progress=196/330
+[2026-09-13 19:05:50] ERROR model=sbert_msmpnet dataset=google_news_t k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f40d-755d7af4437558d61bfb18ff;aeffbecd-48c0-45f2-bcc5-c37af697933c)"
+[2026-09-13 19:05:50] RETRY model=sbert_msmpnet dataset=google_news_t k=100 attempt=3
+[2026-09-13 19:06:10] START model=sbert_msmpnet dataset=google_news_t k=100 attempt=3 progress=196/330
+[2026-09-13 19:06:20] ERROR model=sbert_msmpnet dataset=google_news_t k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f42a-51eb56fb05a304ad73e5de68;7f08d78d-ddcd-4aa6-bfe5-7e125ff11438)"
+[2026-09-13 19:06:20] ERROR model=sbert_msmpnet dataset=google_news_t k=100 FINAL after 3 attempts, giving up progress=196/330
+[2026-09-13 19:06:20] START model=sbert_msmpnet dataset=google_news_s k=50 attempt=1 progress=197/330
+[2026-09-13 19:06:28] ERROR model=sbert_msmpnet dataset=google_news_s k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f432-4f07781f5d801ebc3d6b61b4;2be4f997-5c49-4344-bc48-ac32deaac299)"
+[2026-09-13 19:06:28] RETRY model=sbert_msmpnet dataset=google_news_s k=50 attempt=2
+[2026-09-13 19:06:48] START model=sbert_msmpnet dataset=google_news_s k=50 attempt=2 progress=197/330
+[2026-09-13 19:06:58] ERROR model=sbert_msmpnet dataset=google_news_s k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f450-1c57799b5ca8bf0d04785f55;9b756faa-c7c8-4f0b-81da-d5445d12ca04)"
+[2026-09-13 19:06:58] RETRY model=sbert_msmpnet dataset=google_news_s k=50 attempt=3
+[2026-09-13 19:07:18] START model=sbert_msmpnet dataset=google_news_s k=50 attempt=3 progress=197/330
+[2026-09-13 19:07:26] ERROR model=sbert_msmpnet dataset=google_news_s k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f46d-6b8a3a9374789244018bdce8;b7585ad1-5e17-47fd-81a2-64c5fb952c19)"
+[2026-09-13 19:07:26] ERROR model=sbert_msmpnet dataset=google_news_s k=50 FINAL after 3 attempts, giving up progress=197/330
+[2026-09-13 19:07:26] START model=sbert_msmpnet dataset=google_news_s k=100 attempt=1 progress=198/330
+[2026-09-13 19:07:34] ERROR model=sbert_msmpnet dataset=google_news_s k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f475-442074966212912614e6709f;2a27ec14-6fbc-4ac9-87a7-9fe541d563ae)"
+[2026-09-13 19:07:34] RETRY model=sbert_msmpnet dataset=google_news_s k=100 attempt=2
+[2026-09-13 19:07:54] START model=sbert_msmpnet dataset=google_news_s k=100 attempt=2 progress=198/330
+[2026-09-13 19:08:04] ERROR model=sbert_msmpnet dataset=google_news_s k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f492-431cfbdb73dd3f041c394111;8a77e3b7-4bbc-4ec1-b4a2-9066f69100ed)"
+[2026-09-13 19:08:04] RETRY model=sbert_msmpnet dataset=google_news_s k=100 attempt=3
+[2026-09-13 19:08:24] START model=sbert_msmpnet dataset=google_news_s k=100 attempt=3 progress=198/330
+[2026-09-13 19:08:33] ERROR model=sbert_msmpnet dataset=google_news_s k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f4af-53e348bb26d8e61c62dade1c;ab637088-37d4-4fa7-9ea6-79289533461b)"
+[2026-09-13 19:08:33] ERROR model=sbert_msmpnet dataset=google_news_s k=100 FINAL after 3 attempts, giving up progress=198/330
+[2026-09-13 19:08:33] START model=sbert_msmpnet dataset=tweet k=50 attempt=1 progress=199/330
+[2026-09-13 19:08:42] ERROR model=sbert_msmpnet dataset=tweet k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f4b8-36116fec27ba2f894ea5f08e;920dbe13-f50f-4c18-95f8-a55134e4b38d)"
+[2026-09-13 19:08:42] RETRY model=sbert_msmpnet dataset=tweet k=50 attempt=2
+[2026-09-13 19:09:02] START model=sbert_msmpnet dataset=tweet k=50 attempt=2 progress=199/330
+[2026-09-13 19:09:11] ERROR model=sbert_msmpnet dataset=tweet k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f4d6-1eea1f774cbf8a891313edb9;9499af3c-ee83-4b19-bbe6-272c504e5338)"
+[2026-09-13 19:09:11] RETRY model=sbert_msmpnet dataset=tweet k=50 attempt=3
+[2026-09-13 19:09:31] START model=sbert_msmpnet dataset=tweet k=50 attempt=3 progress=199/330
+[2026-09-13 19:09:40] ERROR model=sbert_msmpnet dataset=tweet k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f4f2-0fe4f87006b88d4960b78ddb;e4d7847c-d395-496c-92c8-3a7333376c98)"
+[2026-09-13 19:09:40] ERROR model=sbert_msmpnet dataset=tweet k=50 FINAL after 3 attempts, giving up progress=199/330
+[2026-09-13 19:09:40] START model=sbert_msmpnet dataset=tweet k=100 attempt=1 progress=200/330
+[2026-09-13 19:09:49] ERROR model=sbert_msmpnet dataset=tweet k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f4fb-704252c853efbc0762965c2f;aa64ebc4-91cf-45be-bc1f-34cdf9e62e27)"
+[2026-09-13 19:09:49] RETRY model=sbert_msmpnet dataset=tweet k=100 attempt=2
+[2026-09-13 19:10:09] START model=sbert_msmpnet dataset=tweet k=100 attempt=2 progress=200/330
+[2026-09-13 19:10:20] ERROR model=sbert_msmpnet dataset=tweet k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f51a-65bce9c433b922256eb5bfce;69c1fcbf-6b0f-493c-bda5-325910b5b24f)"
+[2026-09-13 19:10:20] RETRY model=sbert_msmpnet dataset=tweet k=100 attempt=3
+[2026-09-13 19:10:40] START model=sbert_msmpnet dataset=tweet k=100 attempt=3 progress=200/330
+[2026-09-13 19:10:50] ERROR model=sbert_msmpnet dataset=tweet k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f538-562a1f0f1e8618b30e1952bb;e221ed57-d692-4a80-a766-9e322b72d0a8)"
+[2026-09-13 19:10:50] ERROR model=sbert_msmpnet dataset=tweet k=100 FINAL after 3 attempts, giving up progress=200/330
+[2026-09-13 19:10:50] START model=sbert_msmpnet dataset=hicot_20ng k=50 attempt=1 progress=201/330
+[2026-09-13 19:10:58] ERROR model=sbert_msmpnet dataset=hicot_20ng k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f540-1fd535cf4dabcd4e6385950c;8e045a53-6fdd-4224-a884-bebb97bb80cd)"
+[2026-09-13 19:10:58] RETRY model=sbert_msmpnet dataset=hicot_20ng k=50 attempt=2
+[2026-09-13 19:11:18] START model=sbert_msmpnet dataset=hicot_20ng k=50 attempt=2 progress=201/330
+[2026-09-13 19:11:27] ERROR model=sbert_msmpnet dataset=hicot_20ng k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f55e-16d221150f5fafb540b0ad51;5742462b-f977-4f64-867d-c39befec5878)"
+[2026-09-13 19:11:27] RETRY model=sbert_msmpnet dataset=hicot_20ng k=50 attempt=3
+[2026-09-13 19:11:47] START model=sbert_msmpnet dataset=hicot_20ng k=50 attempt=3 progress=201/330
+[2026-09-13 19:11:56] ERROR model=sbert_msmpnet dataset=hicot_20ng k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f57b-6609e5f64f8ea32d2f850720;f5093802-ef4d-4c80-b501-c632b5d3cf36)"
+[2026-09-13 19:11:56] ERROR model=sbert_msmpnet dataset=hicot_20ng k=50 FINAL after 3 attempts, giving up progress=201/330
+[2026-09-13 19:11:56] START model=sbert_msmpnet dataset=hicot_20ng k=100 attempt=1 progress=202/330
+[2026-09-13 19:12:05] ERROR model=sbert_msmpnet dataset=hicot_20ng k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f583-5c0c249e30aa616236b7c473;77bda8a3-5082-45f6-af07-51230d535e1c)"
+[2026-09-13 19:12:05] RETRY model=sbert_msmpnet dataset=hicot_20ng k=100 attempt=2
+[2026-09-13 19:12:25] START model=sbert_msmpnet dataset=hicot_20ng k=100 attempt=2 progress=202/330
+[2026-09-13 19:12:35] ERROR model=sbert_msmpnet dataset=hicot_20ng k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f5a1-387ac40f07ffa5aa5fd5fd9b;82e06bae-fe58-4dba-bc1d-d75668e31f87)"
+[2026-09-13 19:12:35] RETRY model=sbert_msmpnet dataset=hicot_20ng k=100 attempt=3
+[2026-09-13 19:12:55] START model=sbert_msmpnet dataset=hicot_20ng k=100 attempt=3 progress=202/330
+[2026-09-13 19:13:04] ERROR model=sbert_msmpnet dataset=hicot_20ng k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f5be-096b0bac30b93ea80e129c4b;5b2917a7-4f82-41ea-8697-f5f9d6bda78d)"
+[2026-09-13 19:13:04] ERROR model=sbert_msmpnet dataset=hicot_20ng k=100 FINAL after 3 attempts, giving up progress=202/330
+[2026-09-13 19:13:04] START model=sbert_msmpnet dataset=hicot_imdb k=50 attempt=1 progress=203/330
+[2026-09-13 19:13:12] ERROR model=sbert_msmpnet dataset=hicot_imdb k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f5c6-1ef77e926eb747040f80f7a4;476825fd-9a51-4382-8bea-a55c5be993e4)"
+[2026-09-13 19:13:12] RETRY model=sbert_msmpnet dataset=hicot_imdb k=50 attempt=2
+[2026-09-13 19:13:32] START model=sbert_msmpnet dataset=hicot_imdb k=50 attempt=2 progress=203/330
+[2026-09-13 19:13:40] ERROR model=sbert_msmpnet dataset=hicot_imdb k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f5e2-76fc3b4648ed2f7104e186e7;e7a9b1d0-9de1-43f1-a0ac-b5d4550b92b9)"
+[2026-09-13 19:13:40] RETRY model=sbert_msmpnet dataset=hicot_imdb k=50 attempt=3
+[2026-09-13 19:14:00] START model=sbert_msmpnet dataset=hicot_imdb k=50 attempt=3 progress=203/330
+[2026-09-13 19:14:11] ERROR model=sbert_msmpnet dataset=hicot_imdb k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f601-2a5d9f6f6af639ea17e97f17;9e0d9217-7dcf-4663-b934-151bd52c8fe7)"
+[2026-09-13 19:14:11] ERROR model=sbert_msmpnet dataset=hicot_imdb k=50 FINAL after 3 attempts, giving up progress=203/330
+[2026-09-13 19:14:11] START model=sbert_msmpnet dataset=hicot_imdb k=100 attempt=1 progress=204/330
+[2026-09-13 19:14:19] ERROR model=sbert_msmpnet dataset=hicot_imdb k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f60a-5fc6524d55c9228c602290cc;a6338dbf-3313-46f9-9281-a61bdb722107)"
+[2026-09-13 19:14:19] RETRY model=sbert_msmpnet dataset=hicot_imdb k=100 attempt=2
+[2026-09-13 19:14:39] START model=sbert_msmpnet dataset=hicot_imdb k=100 attempt=2 progress=204/330
+[2026-09-13 19:14:47] ERROR model=sbert_msmpnet dataset=hicot_imdb k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f626-32496e2d725202a1707442df;2aa5dfd6-7786-4c1c-946f-517ad5dcaa62)"
+[2026-09-13 19:14:47] RETRY model=sbert_msmpnet dataset=hicot_imdb k=100 attempt=3
+[2026-09-13 19:15:07] START model=sbert_msmpnet dataset=hicot_imdb k=100 attempt=3 progress=204/330
+[2026-09-13 19:15:18] ERROR model=sbert_msmpnet dataset=hicot_imdb k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f645-54059aa428d845910fa9a97e;753c8d24-bf8d-4a63-bd68-fd9380eb585f)"
+[2026-09-13 19:15:18] ERROR model=sbert_msmpnet dataset=hicot_imdb k=100 FINAL after 3 attempts, giving up progress=204/330
+[2026-09-13 19:15:18] START model=sbert_msmpnet dataset=hicot_agnews k=50 attempt=1 progress=205/330
+[2026-09-13 19:15:27] ERROR model=sbert_msmpnet dataset=hicot_agnews k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f64d-0d5865d80741c0b33978eecd;7544090b-5e9a-4341-bb05-6fc6c77e36bd)"
+[2026-09-13 19:15:27] RETRY model=sbert_msmpnet dataset=hicot_agnews k=50 attempt=2
+[2026-09-13 19:15:47] START model=sbert_msmpnet dataset=hicot_agnews k=50 attempt=2 progress=205/330
+[2026-09-13 19:15:58] ERROR model=sbert_msmpnet dataset=hicot_agnews k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f66c-2d354c722ccfcd1d35b966a3;78c47fda-9b81-487b-9848-04167dae212e)"
+[2026-09-13 19:15:58] RETRY model=sbert_msmpnet dataset=hicot_agnews k=50 attempt=3
+[2026-09-13 19:16:18] START model=sbert_msmpnet dataset=hicot_agnews k=50 attempt=3 progress=205/330
+[2026-09-13 19:16:26] ERROR model=sbert_msmpnet dataset=hicot_agnews k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f689-29fb4adf461db33b31230128;a70abfbd-3399-46f7-9139-d4953a6a08ea)"
+[2026-09-13 19:16:26] ERROR model=sbert_msmpnet dataset=hicot_agnews k=50 FINAL after 3 attempts, giving up progress=205/330
+[2026-09-13 19:16:26] START model=sbert_msmpnet dataset=hicot_agnews k=100 attempt=1 progress=206/330
+[2026-09-13 19:16:34] ERROR model=sbert_msmpnet dataset=hicot_agnews k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f691-4612a40d5568f9216b3a7a84;a21d9e7c-f1ac-4074-8534-c46c8b193725)"
+[2026-09-13 19:16:34] RETRY model=sbert_msmpnet dataset=hicot_agnews k=100 attempt=2
+[2026-09-13 19:16:54] START model=sbert_msmpnet dataset=hicot_agnews k=100 attempt=2 progress=206/330
+[2026-09-13 19:17:02] ERROR model=sbert_msmpnet dataset=hicot_agnews k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f6ad-5cf7ad172d39e6a124051b77;736bd179-8346-439e-94e9-f70b021bc784)"
+[2026-09-13 19:17:02] RETRY model=sbert_msmpnet dataset=hicot_agnews k=100 attempt=3
+[2026-09-13 19:17:22] START model=sbert_msmpnet dataset=hicot_agnews k=100 attempt=3 progress=206/330
+[2026-09-13 19:17:31] ERROR model=sbert_msmpnet dataset=hicot_agnews k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f6ca-1f9db00b6a9da2e10b3838e6;c0db346b-f6d9-4877-a7dd-831aa4d69bdd)"
+[2026-09-13 19:17:31] ERROR model=sbert_msmpnet dataset=hicot_agnews k=100 FINAL after 3 attempts, giving up progress=206/330
+[2026-09-13 19:17:31] START model=sbert_msmpnet dataset=hicot_search_snippets k=50 attempt=1 progress=207/330
+[2026-09-13 19:17:39] ERROR model=sbert_msmpnet dataset=hicot_search_snippets k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f6d2-7eb11a49762bccce327ecb43;6f7181c0-7eab-461b-b7ca-f6c604823e29)"
+[2026-09-13 19:17:39] RETRY model=sbert_msmpnet dataset=hicot_search_snippets k=50 attempt=2
+[2026-09-13 19:17:59] START model=sbert_msmpnet dataset=hicot_search_snippets k=50 attempt=2 progress=207/330
+[2026-09-13 19:18:10] ERROR model=sbert_msmpnet dataset=hicot_search_snippets k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f6f1-44bdad476b03601e4d99f85c;58be0929-af20-40fd-b851-9d8ecd4c272b)"
+[2026-09-13 19:18:10] RETRY model=sbert_msmpnet dataset=hicot_search_snippets k=50 attempt=3
+[2026-09-13 19:18:30] START model=sbert_msmpnet dataset=hicot_search_snippets k=50 attempt=3 progress=207/330
+[2026-09-13 19:18:40] ERROR model=sbert_msmpnet dataset=hicot_search_snippets k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f70e-2fae993f477e4a440bad1971;e0b6f2e5-80ec-402e-bcdc-7cc28b5f5398)"
+[2026-09-13 19:18:40] ERROR model=sbert_msmpnet dataset=hicot_search_snippets k=50 FINAL after 3 attempts, giving up progress=207/330
+[2026-09-13 19:18:40] START model=sbert_msmpnet dataset=hicot_search_snippets k=100 attempt=1 progress=208/330
+[2026-09-13 19:18:49] ERROR model=sbert_msmpnet dataset=hicot_search_snippets k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f717-59ac50a649e5ca183628cecd;e23f932e-6cc0-4f50-979f-5b785612b4e1)"
+[2026-09-13 19:18:49] RETRY model=sbert_msmpnet dataset=hicot_search_snippets k=100 attempt=2
+[2026-09-13 19:19:09] START model=sbert_msmpnet dataset=hicot_search_snippets k=100 attempt=2 progress=208/330
+[2026-09-13 19:19:20] ERROR model=sbert_msmpnet dataset=hicot_search_snippets k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f736-293b971e7e46a429156d27ad;9a4793d1-dfd8-4b99-99bc-5ba76cb3b71a)"
+[2026-09-13 19:19:20] RETRY model=sbert_msmpnet dataset=hicot_search_snippets k=100 attempt=3
+[2026-09-13 19:19:40] START model=sbert_msmpnet dataset=hicot_search_snippets k=100 attempt=3 progress=208/330
+[2026-09-13 19:19:49] ERROR model=sbert_msmpnet dataset=hicot_search_snippets k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f754-6122ddc13bb7f17c3920d39f;e849b624-8e10-4880-a529-e63e3aff003f)"
+[2026-09-13 19:19:49] ERROR model=sbert_msmpnet dataset=hicot_search_snippets k=100 FINAL after 3 attempts, giving up progress=208/330
+[2026-09-13 19:19:49] START model=sbert_msmpnet dataset=hicot_google_news k=50 attempt=1 progress=209/330
+[2026-09-13 19:19:57] ERROR model=sbert_msmpnet dataset=hicot_google_news k=50 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f75b-028ec42124b1633b4c2a61c5;e7e7ad71-e766-48f4-a15d-0768c8a628a8)"
+[2026-09-13 19:19:57] RETRY model=sbert_msmpnet dataset=hicot_google_news k=50 attempt=2
+[2026-09-13 19:20:17] START model=sbert_msmpnet dataset=hicot_google_news k=50 attempt=2 progress=209/330
+[2026-09-13 19:20:25] ERROR model=sbert_msmpnet dataset=hicot_google_news k=50 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f778-602e606f098e2aea5d6ba885;1adaccab-683f-4cd8-9897-f114fd444e4f)"
+[2026-09-13 19:20:25] RETRY model=sbert_msmpnet dataset=hicot_google_news k=50 attempt=3
+[2026-09-13 19:20:45] START model=sbert_msmpnet dataset=hicot_google_news k=50 attempt=3 progress=209/330
+[2026-09-13 19:20:57] ERROR model=sbert_msmpnet dataset=hicot_google_news k=50 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f797-7215066e40fd72c25aff4efb;9f06e873-82f1-410e-8ee2-86198546e174)"
+[2026-09-13 19:20:57] ERROR model=sbert_msmpnet dataset=hicot_google_news k=50 FINAL after 3 attempts, giving up progress=209/330
+[2026-09-13 19:20:57] START model=sbert_msmpnet dataset=hicot_google_news k=100 attempt=1 progress=210/330
+[2026-09-13 19:21:04] ERROR model=sbert_msmpnet dataset=hicot_google_news k=100 attempt=1 error="401 Client Error. (Request ID: Root=1-6aa6f79f-1c0845c274cf9cf8647d152f;1e3fb2ca-adb8-4bb0-8a60-65189ad52c50)"
+[2026-09-13 19:21:04] RETRY model=sbert_msmpnet dataset=hicot_google_news k=100 attempt=2
+[2026-09-13 19:21:24] START model=sbert_msmpnet dataset=hicot_google_news k=100 attempt=2 progress=210/330
+[2026-09-13 19:21:34] ERROR model=sbert_msmpnet dataset=hicot_google_news k=100 attempt=2 error="401 Client Error. (Request ID: Root=1-6aa6f7bc-12799d926760a92c72913efc;c23f4ec4-9551-4e29-a835-d789d263f2e6)"
+[2026-09-13 19:21:34] RETRY model=sbert_msmpnet dataset=hicot_google_news k=100 attempt=3
+[2026-09-13 19:21:54] START model=sbert_msmpnet dataset=hicot_google_news k=100 attempt=3 progress=210/330
+[2026-09-13 19:22:04] ERROR model=sbert_msmpnet dataset=hicot_google_news k=100 attempt=3 error="401 Client Error. (Request ID: Root=1-6aa6f7db-4d7cf1f4345207bd2eb3c057;70232c55-1fb3-4553-80af-a568746c4da6)"
+[2026-09-13 19:22:04] ERROR model=sbert_msmpnet dataset=hicot_google_news k=100 FINAL after 3 attempts, giving up progress=210/330
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=20ng k=50 progress=211/330 (already completed at 2026-09-13 10:06:23)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=20ng k=100 progress=212/330 (already completed at 2026-09-13 10:09:53)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=imdb k=50 progress=213/330 (already completed at 2026-09-13 10:17:19)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=imdb k=100 progress=214/330 (already completed at 2026-09-13 10:26:03)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=agnews_short k=50 progress=215/330 (already completed at 2026-09-13 10:27:40)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=agnews_short k=100 progress=216/330 (already completed at 2026-09-13 10:30:13)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=search_snippets k=50 progress=217/330 (already completed at 2026-09-13 10:32:16)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=search_snippets k=100 progress=218/330 (already completed at 2026-09-13 10:35:29)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=stack_overflow k=50 progress=219/330 (already completed at 2026-09-13 10:36:51)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=stack_overflow k=100 progress=220/330 (already completed at 2026-09-13 10:39:13)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=biomedical k=50 progress=221/330 (already completed at 2026-09-13 10:40:44)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=biomedical k=100 progress=222/330 (already completed at 2026-09-13 10:43:05)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=google_news_ts k=50 progress=223/330 (already completed at 2026-09-13 10:44:48)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=google_news_ts k=100 progress=224/330 (already completed at 2026-09-13 10:47:54)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=google_news_t k=50 progress=225/330 (already completed at 2026-09-13 10:49:36)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=google_news_t k=100 progress=226/330 (already completed at 2026-09-13 10:52:59)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=google_news_s k=50 progress=227/330 (already completed at 2026-09-13 10:54:43)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=google_news_s k=100 progress=228/330 (already completed at 2026-09-13 10:57:47)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=tweet k=50 progress=229/330 (already completed at 2026-09-13 10:59:25)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=tweet k=100 progress=230/330 (already completed at 2026-09-13 11:02:21)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=hicot_20ng k=50 progress=231/330 (already completed at 2026-09-13 11:06:41)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=hicot_20ng k=100 progress=232/330 (already completed at 2026-09-13 11:13:44)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=hicot_imdb k=50 progress=233/330 (already completed at 2026-09-13 11:22:48)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=hicot_imdb k=100 progress=234/330 (already completed at 2026-09-13 11:36:38)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=hicot_agnews k=50 progress=235/330 (already completed at 2026-09-13 11:38:52)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=hicot_agnews k=100 progress=236/330 (already completed at 2026-09-13 11:42:24)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=hicot_search_snippets k=50 progress=237/330 (already completed at 2026-09-13 11:44:24)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=hicot_search_snippets k=100 progress=238/330 (already completed at 2026-09-13 11:47:38)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=hicot_google_news k=50 progress=239/330 (already completed at 2026-09-13 11:49:23)
+[2026-09-13 19:22:04] SKIP model=sbert_msdistilbert dataset=hicot_google_news k=100 progress=240/330 (already completed at 2026-09-13 11:52:43)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=20ng k=50 progress=241/330 (already completed at 2026-09-13 11:55:20)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=20ng k=100 progress=242/330 (already completed at 2026-09-13 11:58:34)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=imdb k=50 progress=243/330 (already completed at 2026-09-13 12:05:33)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=imdb k=100 progress=244/330 (already completed at 2026-09-13 12:13:39)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=agnews_short k=50 progress=245/330 (already completed at 2026-09-13 12:15:12)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=agnews_short k=100 progress=246/330 (already completed at 2026-09-13 12:17:35)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=search_snippets k=50 progress=247/330 (already completed at 2026-09-13 12:19:20)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=search_snippets k=100 progress=248/330 (already completed at 2026-09-13 12:22:20)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=stack_overflow k=50 progress=249/330 (already completed at 2026-09-13 12:23:43)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=stack_overflow k=100 progress=250/330 (already completed at 2026-09-13 12:26:08)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=biomedical k=50 progress=251/330 (already completed at 2026-09-13 12:27:29)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=biomedical k=100 progress=252/330 (already completed at 2026-09-13 12:29:35)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=google_news_ts k=50 progress=253/330 (already completed at 2026-09-13 12:31:22)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=google_news_ts k=100 progress=254/330 (already completed at 2026-09-13 12:34:24)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=google_news_t k=50 progress=255/330 (already completed at 2026-09-13 12:36:05)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=google_news_t k=100 progress=256/330 (already completed at 2026-09-13 12:39:22)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=google_news_s k=50 progress=257/330 (already completed at 2026-09-13 12:41:08)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=google_news_s k=100 progress=258/330 (already completed at 2026-09-13 12:44:13)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=tweet k=50 progress=259/330 (already completed at 2026-09-13 12:45:50)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=tweet k=100 progress=260/330 (already completed at 2026-09-13 12:48:57)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=hicot_20ng k=50 progress=261/330 (already completed at 2026-09-13 12:53:06)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=hicot_20ng k=100 progress=262/330 (already completed at 2026-09-13 12:59:36)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=hicot_imdb k=50 progress=263/330 (already completed at 2026-09-13 13:08:46)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=hicot_imdb k=100 progress=264/330 (already completed at 2026-09-13 13:22:50)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=hicot_agnews k=50 progress=265/330 (already completed at 2026-09-13 13:24:54)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=hicot_agnews k=100 progress=266/330 (already completed at 2026-09-13 13:28:03)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=hicot_search_snippets k=50 progress=267/330 (already completed at 2026-09-13 13:29:44)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=hicot_search_snippets k=100 progress=268/330 (already completed at 2026-09-13 13:32:42)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=hicot_google_news k=50 progress=269/330 (already completed at 2026-09-13 13:34:23)
+[2026-09-13 19:22:04] SKIP model=sbert_distilroberta dataset=hicot_google_news k=100 progress=270/330 (already completed at 2026-09-13 13:37:46)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=20ng k=50 progress=271/330 (already completed at 2026-09-13 13:40:46)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=20ng k=100 progress=272/330 (already completed at 2026-09-13 13:43:54)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=imdb k=50 progress=273/330 (already completed at 2026-09-13 13:49:55)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=imdb k=100 progress=274/330 (already completed at 2026-09-13 13:56:55)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=agnews_short k=50 progress=275/330 (already completed at 2026-09-13 13:58:41)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=agnews_short k=100 progress=276/330 (already completed at 2026-09-13 14:01:20)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=search_snippets k=50 progress=277/330 (already completed at 2026-09-13 14:03:21)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=search_snippets k=100 progress=278/330 (already completed at 2026-09-13 14:06:35)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=stack_overflow k=50 progress=279/330 (already completed at 2026-09-13 14:08:09)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=stack_overflow k=100 progress=280/330 (already completed at 2026-09-13 14:10:47)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=biomedical k=50 progress=281/330 (already completed at 2026-09-13 14:12:27)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=biomedical k=100 progress=282/330 (already completed at 2026-09-13 14:14:46)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=google_news_ts k=50 progress=283/330 (already completed at 2026-09-13 14:16:47)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=google_news_ts k=100 progress=284/330 (already completed at 2026-09-13 14:20:13)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=google_news_t k=50 progress=285/330 (already completed at 2026-09-13 14:22:02)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=google_news_t k=100 progress=286/330 (already completed at 2026-09-13 14:25:20)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=google_news_s k=50 progress=287/330 (already completed at 2026-09-13 14:27:18)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=google_news_s k=100 progress=288/330 (already completed at 2026-09-13 14:30:40)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=tweet k=50 progress=289/330 (already completed at 2026-09-13 14:32:21)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=tweet k=100 progress=290/330 (already completed at 2026-09-13 14:35:26)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=hicot_20ng k=50 progress=291/330 (already completed at 2026-09-13 14:40:07)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=hicot_20ng k=100 progress=292/330 (already completed at 2026-09-13 14:46:55)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=hicot_imdb k=50 progress=293/330 (already completed at 2026-09-13 14:57:16)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=hicot_imdb k=100 progress=294/330 (already completed at 2026-09-13 15:12:33)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=hicot_agnews k=50 progress=295/330 (already completed at 2026-09-13 15:14:49)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=hicot_agnews k=100 progress=296/330 (already completed at 2026-09-13 15:18:27)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=hicot_search_snippets k=50 progress=297/330 (already completed at 2026-09-13 15:20:22)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=hicot_search_snippets k=100 progress=298/330 (already completed at 2026-09-13 15:23:31)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=hicot_google_news k=50 progress=299/330 (already completed at 2026-09-13 15:25:16)
+[2026-09-13 19:22:04] SKIP model=sbert_paraphrase dataset=hicot_google_news k=100 progress=300/330 (already completed at 2026-09-13 15:28:49)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=20ng k=50 progress=301/330 (already completed at 2026-09-13 15:30:52)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=20ng k=100 progress=302/330 (already completed at 2026-09-13 15:33:25)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=imdb k=50 progress=303/330 (already completed at 2026-09-13 15:37:31)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=imdb k=100 progress=304/330 (already completed at 2026-09-13 15:42:44)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=agnews_short k=50 progress=305/330 (already completed at 2026-09-13 15:44:11)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=agnews_short k=100 progress=306/330 (already completed at 2026-09-13 15:46:26)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=search_snippets k=50 progress=307/330 (already completed at 2026-09-13 15:48:24)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=search_snippets k=100 progress=308/330 (already completed at 2026-09-13 15:51:32)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=stack_overflow k=50 progress=309/330 (already completed at 2026-09-13 15:52:49)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=stack_overflow k=100 progress=310/330 (already completed at 2026-09-13 15:55:10)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=biomedical k=50 progress=311/330 (already completed at 2026-09-13 15:56:39)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=biomedical k=100 progress=312/330 (already completed at 2026-09-13 15:59:00)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=google_news_ts k=50 progress=313/330 (already completed at 2026-09-13 16:00:41)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=google_news_ts k=100 progress=314/330 (already completed at 2026-09-13 16:03:48)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=google_news_t k=50 progress=315/330 (already completed at 2026-09-13 16:05:30)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=google_news_t k=100 progress=316/330 (already completed at 2026-09-13 16:08:52)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=google_news_s k=50 progress=317/330 (already completed at 2026-09-13 16:10:39)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=google_news_s k=100 progress=318/330 (already completed at 2026-09-13 16:13:46)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=tweet k=50 progress=319/330 (already completed at 2026-09-13 16:15:22)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=tweet k=100 progress=320/330 (already completed at 2026-09-13 16:18:11)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=hicot_20ng k=50 progress=321/330 (already completed at 2026-09-13 16:22:38)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=hicot_20ng k=100 progress=322/330 (already completed at 2026-09-13 16:29:54)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=hicot_imdb k=50 progress=323/330 (already completed at 2026-09-13 16:38:42)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=hicot_imdb k=100 progress=324/330 (already completed at 2026-09-13 16:52:12)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=hicot_agnews k=50 progress=325/330 (already completed at 2026-09-13 16:54:38)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=hicot_agnews k=100 progress=326/330 (already completed at 2026-09-13 16:58:14)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=hicot_search_snippets k=50 progress=327/330 (already completed at 2026-09-13 17:00:02)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=hicot_search_snippets k=100 progress=328/330 (already completed at 2026-09-13 17:03:04)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=hicot_google_news k=50 progress=329/330 (already completed at 2026-09-13 17:04:48)
+[2026-09-13 19:22:04] SKIP model=sbert_distilbert dataset=hicot_google_news k=100 progress=330/330 (already completed at 2026-09-13 17:08:03)
+[2026-09-13 19:22:04] SWEEP_LOOP_DONE all 330 combinations attempted - building final tables
+[2026-09-13 19:22:05] WROTE final_table_k50.txt / .tex
+[2026-09-13 19:22:05] WROTE final_table_k100.txt / .tex
+[2026-09-13 19:22:05] WROTE final_results.json / final_results.csv
+[2026-09-13 19:22:05] SWEEP_COMPLETE total=330 successful=300 failed=30

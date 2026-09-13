@@ -1,0 +1,29 @@
+
+=== attempt 1 (exit=0, 212.0s) ===
+[setup_palmetto] Palmetto already installed and verified at tools/palmetto/palmetto.jar/tools/palmetto/wiki_data/wikipedia_bd - skipping setup.
+Running [topic]: models=['sbert_e5'] datasets=['biomedical'] k=[100] seed=42 protocol=ecrtm_hicot cv_method=palmetto
+
+[1/1] model=sbert_e5 dataset=biomedical k=100: ok (cv=0.545579 purity=0.6047 nmi=0.44279143499615564 td=0.43533333333333335)
+
+K = 100 Topics
+
+                     Biomedical
+Model       C_V    Purity   NMI      TD
+------------------------------------------
+SBERT-E5   0.546   0.605   0.443   0.435
+
+Results appended to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment_results.csv
+Results merged into: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment_results.json
+Topics written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/experiment/topics/
+Table written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/table_k100.txt
+Table written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/sbert11_ecrtm_hicot_20260912_181146/table_k100.tex
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789265307.705440 3080071 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1789265307.746684 3080071 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX512_FP16 AVX_VNNI AMX_TILE AMX_INT8 AMX_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789265308.689201 3080071 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]
+Loading weights: 100%|██████████| 391/391 [00:00<00:00, 9864.97it/s]

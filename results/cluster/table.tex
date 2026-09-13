@@ -1,10 +1,9 @@
-\begin{tabular}{lcc}
+\begin{tabular}{lccccccccccc}
 \toprule
-Model & \multicolumn{2}{c}{SearchSnippets (K=8)} \\
- & ACC & NMI \\
+Model & \multicolumn{11}{c}{AGNews (HiCOT) (K=4)} \\
+ & ACC & NMI & ARI & AMI & Homog. & Complet. & V-meas. & Purity & Silh. & DB & CH \\
 \midrule
-VAE-BM & 64.0 & 44.0 \\
-BERTopic & \textbf{79.9} & \textbf{66.5} \\
+SBERT+KMeans & 76.9 & 53.7 & 53.8 & 53.7 & 52.8 & 54.7 & 53.7 & 76.9 & 3.4 & 456.9 & 34638.6 \\
 \bottomrule
 \end{tabular}
 % Results from a single run (seed=42).

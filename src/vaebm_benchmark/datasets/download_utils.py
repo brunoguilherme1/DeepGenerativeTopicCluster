@@ -38,6 +38,17 @@ def parse_label_tab_text(path: Path) -> tuple[list[str], list[str]]:
     return texts, raw_labels
 
 
+def parse_two_file(corpus_path: Path, labels_path: Path) -> tuple[list[str], list[str]]:
+    """Parses the corpus.txt + labels.txt two-file layout (one document/
+    label per line, same line number = same document) used by the
+    AdhyaSuman/S2WTM preprocessed_datasets mirror."""
+    texts = [t.strip() for t in corpus_path.read_text(encoding="utf-8").splitlines()]
+    raw_labels = [l.strip() for l in labels_path.read_text(encoding="utf-8").splitlines()]
+    if len(texts) != len(raw_labels):
+        raise ValueError(f"{corpus_path.name}: {len(texts)} documents but {len(raw_labels)} labels")
+    return texts, raw_labels
+
+
 def encode_labels(raw_labels: list[str]) -> tuple[list[int], dict[int, str]]:
     unique = sorted(set(raw_labels))
     label_to_id = {label: idx for idx, label in enumerate(unique)}

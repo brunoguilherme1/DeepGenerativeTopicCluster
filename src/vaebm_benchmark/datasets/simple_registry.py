@@ -48,6 +48,26 @@ def _hicot_loader(dataset_id: str):
     return _load
 
 
+def _hf_benchmark_loader(dataset_id: str):
+    def _load():
+        from vaebm_benchmark.datasets.definitions.hf_benchmarks import DATASETS
+
+        loaded = DATASETS[dataset_id]().load()
+        return loaded.documents, loaded.labels, len(loaded.label_names)
+
+    return _load
+
+
+def _s2wtm_loader(dataset_id: str):
+    def _load():
+        from vaebm_benchmark.datasets.definitions.s2wtm_benchmarks import DATASETS
+
+        loaded = DATASETS[dataset_id]().load()
+        return loaded.documents, loaded.labels, len(loaded.label_names)
+
+    return _load
+
+
 # Short-text-clustering family (STC2 + GoogleNews + Tweet), all from the
 # same brunoguilherme1/TopicClusterDocument mirror via LabelTabTextDataset
 # - see datasets/definitions/short_text_benchmarks.py.
@@ -76,10 +96,24 @@ HICOT_DATASET_IDS = [
     "hicot_google_news",
 ]
 
+# Datasets ported from document-topic-evaluatio-arena (DTEA)'s own
+# registry - independently implemented against the SAME public sources/
+# provenance DTEA uses (see datasets/definitions/hf_benchmarks.py's own
+# HFDatasetSource and s2wtm_benchmarks.py's own S2WTMTwoFileDataset),
+# never by importing DTEA's code (see models/base.py's own docstring on
+# why the two projects stay independent).
+HF_BENCHMARK_DATASET_IDS = [
+    "agnews_full", "dbpedia_14", "yahoo_answers_topics",
+    "banking77", "tweet_eval_sentiment", "tweet_eval_emotion",
+]
+S2WTM_DATASET_IDS = ["bbc_news", "dblp", "m10", "pascal_flickr", "20ng_s2wtm"]
+
 LOADERS = {dataset_id: _short_text_loader(dataset_id) for dataset_id in SHORT_TEXT_DATASET_IDS}
 LOADERS["20ng"] = _twenty_newsgroups
 LOADERS["imdb"] = _imdb
 LOADERS.update({dataset_id: _hicot_loader(dataset_id) for dataset_id in HICOT_DATASET_IDS})
+LOADERS.update({dataset_id: _hf_benchmark_loader(dataset_id) for dataset_id in HF_BENCHMARK_DATASET_IDS})
+LOADERS.update({dataset_id: _s2wtm_loader(dataset_id) for dataset_id in S2WTM_DATASET_IDS})
 
 # Aliases: alternate spellings that map onto an already-registered id,
 # rather than duplicating a dataset definition under two names.

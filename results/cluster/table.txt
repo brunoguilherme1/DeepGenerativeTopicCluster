@@ -1,7 +1,6 @@
-          SearchSnippets (K=8)
-Model        ACC      NMI
-----------------------------
-VAE-BM       64.0     44.0
-BERTopic    *79.9*   *66.5*
+                                                      AGNews (HiCOT) (K=4)
+Model            ACC      NMI      ARI      AMI     Homog.  Complet. V-meas.   Purity   Silh.      DB       CH
+-----------------------------------------------------------------------------------------------------------------
+SBERT+KMeans     76.9     53.7     53.8     53.7     52.8     54.7     53.7     76.9     3.4     456.9   34638.6
 
 Results from a single run (seed=42).

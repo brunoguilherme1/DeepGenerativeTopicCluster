@@ -132,6 +132,15 @@ def build_model(model_name: str, k: int, seed: int, voc_size: int, dataset_id: s
 # (VAE-BM's latent Gaussian mean, NOT a topic distribution - see
 # docs/methodological_notes.md #1) vs. "embeddings" (a plain SBERT
 # embedding space, for a KMeans-over-embeddings model with neither) - the
+# Every "sbert_kmeans"-family name - bare "sbert_kmeans" (all-MiniLM-L6-v2)
+# plus the named embedder variants experiment/cluster_runner.py registers
+# (sbert_gte, sbert_bge, sbert_mpnet, sbert_minilm) - all SBERTKMeansAdapter
+# under the hood, differing only in which embedder they wrap. Centralized
+# here so the three lookups below (and any future caller) never have to
+# repeat this set.
+SBERT_KMEANS_VARIANT_NAMES = ("sbert_kmeans", "sbert_gte", "sbert_bge", "sbert_mpnet", "sbert_minilm")
+
+
 # feature space classification/cluster use as each model's document
 # representation. Covers "bertopic"/"glocom" too (experiment/
 # cluster_runner.py's own pre-existing models, not in MODEL_NAMES above)
@@ -142,7 +151,7 @@ def representation_source_for_model(model_name: str) -> str:
         return "mu"
     if model_name in ("fastopic", "lda", "hicot", "glocom"):
         return "theta"
-    if model_name in ("bertopic", "sbert_kmeans"):
+    if model_name == "bertopic" or model_name in SBERT_KMEANS_VARIANT_NAMES:
         return "embeddings"
     return "unknown"
 
@@ -156,7 +165,7 @@ def assignment_source_for_model(model_name: str) -> str:
         return "kmeans_on_latent_mu"
     if model_name in ("fastopic", "lda", "hicot", "glocom"):
         return "argmax_theta"
-    if model_name in ("bertopic", "sbert_kmeans"):
+    if model_name == "bertopic" or model_name in SBERT_KMEANS_VARIANT_NAMES:
         return "kmeans_on_embeddings"
     return "unknown"
 
@@ -164,12 +173,13 @@ def assignment_source_for_model(model_name: str) -> str:
 # Every model covered here produces topic words natively (VAE-BM's own
 # decoder energy/freq view, FASTopic's/GloCOM's own extraction, LDA's own
 # components_, HiCOT's own beta, BERTopic's own c-TF-IDF) EXCEPT
-# sbert_kmeans, whose words are computed here, after the fact, from
-# cluster membership via class-based TF-IDF (models/
-# sbert_kmeans_adapter.py's own module docstring) - never a native
-# output of that model family, matching how experiment/runner.py's own
-# _topic_source_for_model() already treats it for the topic experiment.
+# sbert_kmeans (and its named embedder variants), whose words are
+# computed here, after the fact, from cluster membership via class-based
+# TF-IDF (models/sbert_kmeans_adapter.py's own module docstring) - never
+# a native output of that model family, matching how experiment/
+# runner.py's own _topic_source_for_model() already treats it for the
+# topic experiment.
 def topic_source_for_model(model_name: str) -> str:
-    if model_name == "sbert_kmeans":
+    if model_name in SBERT_KMEANS_VARIANT_NAMES:
         return "cluster-derived"
     return "native"

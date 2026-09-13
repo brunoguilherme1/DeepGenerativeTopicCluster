@@ -1,0 +1,21 @@
+[
+  {
+    "model": "sbert_kmeans",
+    "dataset": "hicot_20ng",
+    "k": 50,
+    "cv": 0.6456470305603941,
+    "purity": 0.6093070147511408,
+    "nmi": 0.5197334742157516,
+    "td": 0.43333333333333335,
+    "seed": 42,
+    "runtime_seconds": 66.075,
+    "status": "ok",
+    "error": "",
+    "evaluation_protocol": "ecrtm_hicot",
+    "top_n": 15,
+    "cv_source": "cv_local_corpus",
+    "td_definition": "dieng_unique_words_top15",
+    "assignment_source": "kmeans_on_embeddings",
+    "topic_source": "cluster-derived"
+  }
+]

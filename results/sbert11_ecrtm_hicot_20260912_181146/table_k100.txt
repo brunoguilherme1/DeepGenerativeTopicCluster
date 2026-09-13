@@ -1,0 +1,6 @@
+K = 100 Topics
+
+                       GoogleNews (HiCOT)
+Model             C_V    Purity   NMI      TD
+------------------------------------------------
+SBERT-MS-MPNet   ERROR   ERROR   ERROR   ERROR
