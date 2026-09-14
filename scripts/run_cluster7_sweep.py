@@ -32,11 +32,11 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-# sbert_bge and bertopic dropped at the user's own explicit request
-# (2026-09-14) - not a silent scope reduction, see docs/
-# methodological_notes.md #14's own note on this sweep's authorized
-# deviations from its original 7-model spec.
-MODELS = ["sbert_gte", "sbert_mpnet", "sbert_minilm", "fastopic", "hicot"]
+# sbert_bge, bertopic, and sbert_mpnet dropped at the user's own
+# explicit request (2026-09-14) - not a silent scope reduction, see
+# docs/methodological_notes.md #14's own note on this sweep's
+# authorized deviations from its original 7-model spec.
+MODELS = ["sbert_gte", "sbert_minilm", "fastopic", "hicot"]
 
 # "agnews" is deliberately OMITTED here - it's a pre-existing alias for
 # "agnews_short" (identical underlying TopicClusterDocument-mirror data,
