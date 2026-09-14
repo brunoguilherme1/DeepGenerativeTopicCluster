@@ -77,7 +77,7 @@ def build_lda(k: int, seed: int, voc_size: int, dataset_id: str = None):
     return LDAAdapter(n_clusters=k, voc_size=voc_size, random_state=seed)
 
 
-def build_hicot(k: int, seed: int, voc_size: int, dataset_id: str = None):
+def build_hicot(k: int, seed: int, voc_size: int, dataset_id: str = None, max_fit_seconds: float = None):
     from vaebm_benchmark.models.hicot_adapter import HiCOTAdapter
 
     kwargs = dict(
@@ -95,6 +95,7 @@ def build_hicot(k: int, seed: int, voc_size: int, dataset_id: str = None):
         # default 5000) at the user's own explicit request.
         epochs=7,
         sinkhorn_max_iter=100,
+        max_fit_seconds=max_fit_seconds,
     )
     if dataset_id is not None and dataset_id.startswith("hicot_"):
         # Use HiCOT's own official vocab + 200-dim GloVe embeddings for

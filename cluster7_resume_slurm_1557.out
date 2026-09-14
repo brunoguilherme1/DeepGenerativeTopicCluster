@@ -1,0 +1,11 @@
+Already on 'slurm-gpu-experiments'
+Your branch is ahead of 'origin/slurm-gpu-experiments' by 11 commits.
+  (use "git push" to publish your local commits)
+SLURM job 1557 resuming cluster7 sweep on dgx001 at Mon Sep 14 05:48:25 PM UTC 2026
+[2026-09-14 17:48:25] SWEEP_START run_dir=/raid/brunoguilherme/DeepGenerativeTopicCluster/results/cluster7_all_datasets_20260914_121424
+[2026-09-14 17:48:25] MONITOR tail -f /shared/dgx-raid/brunoguilherme/DeepGenerativeTopicCluster/results/cluster7_all_datasets_20260914_121424/run.log
+[2026-09-14 17:48:25] MONITOR cat /shared/dgx-raid/brunoguilherme/DeepGenerativeTopicCluster/results/cluster7_all_datasets_20260914_121424/current_status.txt
+[2026-09-14 17:48:25] MONITOR cat /shared/dgx-raid/brunoguilherme/DeepGenerativeTopicCluster/results/cluster7_all_datasets_20260914_121424/progress.txt
+[2026-09-14 17:48:25] START model=hicot dataset=20ng attempt=1 progress=1/104
+[2026-09-14 17:58:39] OK model=hicot dataset=20ng runtime=614s acc=0.1325480208001698 nmi=0.11705937601709268 progress=1/104
+[2026-09-14 17:58:39] START model=hicot dataset=imdb attempt=1 progress=2/104

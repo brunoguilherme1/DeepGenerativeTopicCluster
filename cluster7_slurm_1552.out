@@ -1,0 +1,54 @@
+Already on 'slurm-gpu-experiments'
+Your branch is ahead of 'origin/slurm-gpu-experiments' by 4 commits.
+  (use "git push" to publish your local commits)
+SLURM job 1552 starting cluster7 sweep on dgx001 at Mon Sep 14 12:14:24 PM UTC 2026
+[2026-09-14 12:14:24] SWEEP_START run_dir=/raid/brunoguilherme/DeepGenerativeTopicCluster/results/cluster7_all_datasets_20260914_121424
+[2026-09-14 12:14:24] MONITOR tail -f /shared/dgx-raid/brunoguilherme/DeepGenerativeTopicCluster/results/cluster7_all_datasets_20260914_121424/run.log
+[2026-09-14 12:14:24] MONITOR cat /shared/dgx-raid/brunoguilherme/DeepGenerativeTopicCluster/results/cluster7_all_datasets_20260914_121424/current_status.txt
+[2026-09-14 12:14:24] MONITOR cat /shared/dgx-raid/brunoguilherme/DeepGenerativeTopicCluster/results/cluster7_all_datasets_20260914_121424/progress.txt
+[2026-09-14 12:14:24] START model=sbert_gte dataset=20ng attempt=1 progress=1/182
+[2026-09-14 12:16:14] OK model=sbert_gte dataset=20ng runtime=110s acc=0.5625066327072058 nmi=0.5766576347520947 progress=1/182
+[2026-09-14 12:16:14] START model=sbert_gte dataset=imdb attempt=1 progress=2/182
+[2026-09-14 12:21:11] OK model=sbert_gte dataset=imdb runtime=296s acc=0.92914 nmi=0.6346224844625981 progress=2/182
+[2026-09-14 12:21:11] START model=sbert_gte dataset=agnews_short attempt=1 progress=3/182
+[2026-09-14 12:21:31] OK model=sbert_gte dataset=agnews_short runtime=21s acc=0.882125 nmi=0.6760719771899755 progress=3/182
+[2026-09-14 12:21:31] START model=sbert_gte dataset=search_snippets attempt=1 progress=4/182
+[2026-09-14 12:22:00] OK model=sbert_gte dataset=search_snippets runtime=28s acc=0.7760129659643435 nmi=0.6453889444309644 progress=4/182
+[2026-09-14 12:22:00] START model=sbert_gte dataset=stack_overflow attempt=1 progress=5/182
+[2026-09-14 12:22:38] OK model=sbert_gte dataset=stack_overflow runtime=39s acc=0.8457 nmi=0.8240545285292654 progress=5/182
+[2026-09-14 12:22:38] START model=sbert_gte dataset=biomedical attempt=1 progress=6/182
+[2026-09-14 12:23:22] OK model=sbert_gte dataset=biomedical runtime=44s acc=0.50815 nmi=0.45977539756720914 progress=6/182
+[2026-09-14 12:23:22] START model=sbert_gte dataset=google_news_ts attempt=1 progress=7/182
+[2026-09-14 12:23:58] OK model=sbert_gte dataset=google_news_ts runtime=37s acc=0.7453416149068323 nmi=0.9264068760302554 progress=7/182
+[2026-09-14 12:23:58] START model=sbert_gte dataset=google_news_t attempt=1 progress=8/182
+[2026-09-14 12:24:34] OK model=sbert_gte dataset=google_news_t runtime=36s acc=0.7138998919697516 nmi=0.8840669557585321 progress=8/182
+[2026-09-14 12:24:34] START model=sbert_gte dataset=google_news_s attempt=1 progress=9/182
+[2026-09-14 12:25:10] OK model=sbert_gte dataset=google_news_s runtime=36s acc=0.6983255311487216 nmi=0.8937167479988576 progress=9/182
+[2026-09-14 12:25:10] START model=sbert_gte dataset=tweet attempt=1 progress=10/182
+[2026-09-14 12:25:26] OK model=sbert_gte dataset=tweet runtime=17s acc=0.6395631067961165 nmi=0.8805792757751667 progress=10/182
+[2026-09-14 12:25:26] START model=sbert_gte dataset=hicot_20ng attempt=1 progress=11/182
+[2026-09-14 12:26:32] OK model=sbert_gte dataset=hicot_20ng runtime=66s acc=0.6075559800488167 nmi=0.6208468380743198 progress=11/182
+[2026-09-14 12:26:32] START model=sbert_gte dataset=hicot_imdb attempt=1 progress=12/182
+[2026-09-14 12:29:04] OK model=sbert_gte dataset=hicot_imdb runtime=152s acc=0.83236 nmi=0.35522657860156526 progress=12/182
+[2026-09-14 12:29:04] START model=sbert_gte dataset=hicot_agnews attempt=1 progress=13/182
+[2026-09-14 12:29:31] OK model=sbert_gte dataset=hicot_agnews runtime=26s acc=0.86 nmi=0.6325714250177191 progress=13/182
+[2026-09-14 12:29:31] START model=sbert_gte dataset=hicot_search_snippets attempt=1 progress=14/182
+[2026-09-14 12:29:57] OK model=sbert_gte dataset=hicot_search_snippets runtime=26s acc=0.77867252318204 nmi=0.6436482007765226 progress=14/182
+[2026-09-14 12:29:57] START model=sbert_gte dataset=hicot_google_news attempt=1 progress=15/182
+[2026-09-14 12:30:31] OK model=sbert_gte dataset=hicot_google_news runtime=35s acc=0.7059624285325347 nmi=0.8842310230302832 progress=15/182
+[2026-09-14 12:30:31] START model=sbert_gte dataset=agnews_full attempt=1 progress=16/182
+[2026-09-14 12:39:25] OK model=sbert_gte dataset=agnews_full runtime=534s acc=0.8805407523510972 nmi=0.6747577103310406 progress=16/182
+[2026-09-14 12:39:25] START model=sbert_gte dataset=banking77 attempt=1 progress=17/182
+[2026-09-14 12:40:07] OK model=sbert_gte dataset=banking77 runtime=42s acc=0.666615655367664 nmi=0.8131230009551556 progress=17/182
+[2026-09-14 12:40:07] START model=sbert_gte dataset=bbc_news attempt=1 progress=18/182
+[2026-09-14 12:40:27] OK model=sbert_gte dataset=bbc_news runtime=20s acc=0.9608988764044943 nmi=0.8758521329274334 progress=18/182
+[2026-09-14 12:40:27] START model=sbert_gte dataset=dblp attempt=1 progress=19/182
+[2026-09-14 12:42:18] OK model=sbert_gte dataset=dblp runtime=111s acc=0.606502426962176 nmi=0.3189463600304593 progress=19/182
+[2026-09-14 12:42:18] START model=sbert_gte dataset=dbpedia_14 attempt=1 progress=20/182
+[2026-09-14 14:42:18] ERROR model=sbert_gte dataset=dbpedia_14 attempt=1 error="timeout after 7200s"
+[2026-09-14 14:42:18] RETRY model=sbert_gte dataset=dbpedia_14 attempt=2
+[2026-09-14 14:42:38] START model=sbert_gte dataset=dbpedia_14 attempt=2 progress=20/182
+[2026-09-14 16:42:39] ERROR model=sbert_gte dataset=dbpedia_14 attempt=2 error="timeout after 7200s"
+[2026-09-14 16:42:39] RETRY model=sbert_gte dataset=dbpedia_14 attempt=3
+[2026-09-14 16:42:59] START model=sbert_gte dataset=dbpedia_14 attempt=3 progress=20/182
+[2026-09-14T16:49:27.362] error: *** JOB 1552 ON dgx001 CANCELLED AT 2026-09-14T16:49:27 DUE to SIGNAL Terminated ***

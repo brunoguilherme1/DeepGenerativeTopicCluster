@@ -1,0 +1,29 @@
+Already on 'slurm-gpu-experiments'
+Your branch is ahead of 'origin/slurm-gpu-experiments' by 5 commits.
+  (use "git push" to publish your local commits)
+SLURM job 1553 resuming cluster7 sweep on dgx001 at Mon Sep 14 04:49:47 PM UTC 2026
+[2026-09-14 16:49:47] SWEEP_START run_dir=/raid/brunoguilherme/DeepGenerativeTopicCluster/results/cluster7_all_datasets_20260914_121424
+[2026-09-14 16:49:47] MONITOR tail -f /shared/dgx-raid/brunoguilherme/DeepGenerativeTopicCluster/results/cluster7_all_datasets_20260914_121424/run.log
+[2026-09-14 16:49:47] MONITOR cat /shared/dgx-raid/brunoguilherme/DeepGenerativeTopicCluster/results/cluster7_all_datasets_20260914_121424/current_status.txt
+[2026-09-14 16:49:47] MONITOR cat /shared/dgx-raid/brunoguilherme/DeepGenerativeTopicCluster/results/cluster7_all_datasets_20260914_121424/progress.txt
+[2026-09-14 16:49:47] SKIP model=sbert_gte dataset=20ng progress=1/182 (already completed at 2026-09-14 12:16:14)
+[2026-09-14 16:49:47] SKIP model=sbert_gte dataset=imdb progress=2/182 (already completed at 2026-09-14 12:21:11)
+[2026-09-14 16:49:47] SKIP model=sbert_gte dataset=agnews_short progress=3/182 (already completed at 2026-09-14 12:21:31)
+[2026-09-14 16:49:47] SKIP model=sbert_gte dataset=search_snippets progress=4/182 (already completed at 2026-09-14 12:22:00)
+[2026-09-14 16:49:47] SKIP model=sbert_gte dataset=stack_overflow progress=5/182 (already completed at 2026-09-14 12:22:38)
+[2026-09-14 16:49:47] SKIP model=sbert_gte dataset=biomedical progress=6/182 (already completed at 2026-09-14 12:23:22)
+[2026-09-14 16:49:47] SKIP model=sbert_gte dataset=google_news_ts progress=7/182 (already completed at 2026-09-14 12:23:58)
+[2026-09-14 16:49:47] SKIP model=sbert_gte dataset=google_news_t progress=8/182 (already completed at 2026-09-14 12:24:34)
+[2026-09-14 16:49:47] SKIP model=sbert_gte dataset=google_news_s progress=9/182 (already completed at 2026-09-14 12:25:10)
+[2026-09-14 16:49:47] SKIP model=sbert_gte dataset=tweet progress=10/182 (already completed at 2026-09-14 12:25:26)
+[2026-09-14 16:49:47] SKIP model=sbert_gte dataset=hicot_20ng progress=11/182 (already completed at 2026-09-14 12:26:32)
+[2026-09-14 16:49:47] SKIP model=sbert_gte dataset=hicot_imdb progress=12/182 (already completed at 2026-09-14 12:29:04)
+[2026-09-14 16:49:47] SKIP model=sbert_gte dataset=hicot_agnews progress=13/182 (already completed at 2026-09-14 12:29:31)
+[2026-09-14 16:49:47] SKIP model=sbert_gte dataset=hicot_search_snippets progress=14/182 (already completed at 2026-09-14 12:29:57)
+[2026-09-14 16:49:47] SKIP model=sbert_gte dataset=hicot_google_news progress=15/182 (already completed at 2026-09-14 12:30:31)
+[2026-09-14 16:49:47] SKIP model=sbert_gte dataset=agnews_full progress=16/182 (already completed at 2026-09-14 12:39:25)
+[2026-09-14 16:49:47] SKIP model=sbert_gte dataset=banking77 progress=17/182 (already completed at 2026-09-14 12:40:07)
+[2026-09-14 16:49:47] SKIP model=sbert_gte dataset=bbc_news progress=18/182 (already completed at 2026-09-14 12:40:27)
+[2026-09-14 16:49:47] SKIP model=sbert_gte dataset=dblp progress=19/182 (already completed at 2026-09-14 12:42:18)
+[2026-09-14 16:49:47] START model=sbert_gte dataset=dbpedia_14 attempt=1 progress=20/182
+[2026-09-14T17:00:57.971] error: *** JOB 1553 ON dgx001 CANCELLED AT 2026-09-14T17:00:57 DUE to SIGNAL Terminated ***

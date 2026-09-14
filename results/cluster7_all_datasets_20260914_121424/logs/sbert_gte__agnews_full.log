@@ -1,0 +1,34 @@
+
+=== attempt 1 (exit=0, 533.8s) ===
+Running [cluster]: models=['sbert_gte'] datasets=['agnews_full'] seed=42
+
+[1/1] model=sbert_gte dataset=agnews_full seed=42: ok acc=0.8805407523510972 nmi=0.6747577103310406
+
+                                                    AGNews-Full (K=4)
+Model         ACC      NMI      ARI      AMI     Homog.  Complet. V-meas.   Purity   Silh.      DB       CH
+--------------------------------------------------------------------------------------------------------------
+SBERT-GTE     88.1     67.5     71.6     67.5     67.5     67.5     67.5     88.1     4.1     460.7   380599.0
+
+Results from a single run (seed=42).
+
+Results appended to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/cluster7_all_datasets_20260914_121424/cluster/cluster_results.csv
+Results merged into: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/cluster7_all_datasets_20260914_121424/cluster/cluster_results.json
+Table written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/cluster7_all_datasets_20260914_121424/cluster/table.txt
+Table written to: /raid/brunoguilherme/DeepGenerativeTopicCluster/results/cluster7_all_datasets_20260914_121424/cluster/table.tex
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789389033.391185 2960193 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+I0000 00:00:1789389033.431685 2960193 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 AVX512_FP16 AVX_VNNI AMX_TILE AMX_INT8 AMX_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1789389034.385086 2960193 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+
+Generating train split:   0%|          | 0/120000 [00:00<?, ? examples/s]
+Generating train split: 100%|██████████| 120000/120000 [00:00<00:00, 1194779.70 examples/s]
+Generating train split: 100%|██████████| 120000/120000 [00:00<00:00, 1192201.51 examples/s]
+
+Generating test split:   0%|          | 0/7600 [00:00<?, ? examples/s]
+Generating test split: 100%|██████████| 7600/7600 [00:00<00:00, 1176479.44 examples/s]
+
+Loading weights:   0%|          | 0/391 [00:00<?, ?it/s]
+Loading weights: 100%|██████████| 391/391 [00:00<00:00, 9781.13it/s]

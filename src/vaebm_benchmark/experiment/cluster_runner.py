@@ -172,10 +172,17 @@ def _build_hicot(k: int, seed: int, voc_size: int):
     above. experiment/classification_runner.py uses HiCOT's own official
     vocab/word-embeddings for hicot_* datasets instead - see
     scientific_models.py::build_hicot's `dataset_id` parameter, left
-    unset (None) here."""
+    unset (None) here.
+
+    max_fit_seconds=1200 (20min) - user-authorized (2026-09-14) wall-
+    clock early-stop for the cluster7_all_datasets sweep, leaving a
+    10-minute margin under the sweep driver's own 30-minute external
+    subprocess timeout for embedding/vectorization + eval overhead
+    around the training loop itself. See models/hicot_adapter.py's own
+    docstring and docs/methodological_notes.md #14."""
     from vaebm_benchmark.experiment.scientific_models import build_hicot
 
-    return build_hicot(k, seed, voc_size)
+    return build_hicot(k, seed, voc_size, max_fit_seconds=1200)
 
 
 def _build_sbert_kmeans(k: int, seed: int, voc_size: int):

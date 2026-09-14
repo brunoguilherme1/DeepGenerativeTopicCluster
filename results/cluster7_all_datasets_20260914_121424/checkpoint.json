@@ -1,0 +1,182 @@
+{
+  "sbert_gte|20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 108.23,
+    "acc": 0.5625066327072058,
+    "nmi": 0.5766576347520947,
+    "purity": 0.5808129045951396,
+    "timestamp": "2026-09-14 12:16:14"
+  },
+  "sbert_gte|imdb": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 294.574,
+    "acc": 0.92914,
+    "nmi": 0.6346224844625981,
+    "purity": 0.92914,
+    "timestamp": "2026-09-14 12:21:11"
+  },
+  "sbert_gte|agnews_short": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 18.866,
+    "acc": 0.882125,
+    "nmi": 0.6760719771899755,
+    "purity": 0.882125,
+    "timestamp": "2026-09-14 12:21:31"
+  },
+  "sbert_gte|search_snippets": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 26.399,
+    "acc": 0.7760129659643435,
+    "nmi": 0.6453889444309644,
+    "purity": 0.836061588330632,
+    "timestamp": "2026-09-14 12:22:00"
+  },
+  "sbert_gte|stack_overflow": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 36.554,
+    "acc": 0.8457,
+    "nmi": 0.8240545285292654,
+    "purity": 0.8457,
+    "timestamp": "2026-09-14 12:22:38"
+  },
+  "sbert_gte|biomedical": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 41.631,
+    "acc": 0.50815,
+    "nmi": 0.45977539756720914,
+    "purity": 0.5168,
+    "timestamp": "2026-09-14 12:23:22"
+  },
+  "sbert_gte|google_news_ts": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 34.554,
+    "acc": 0.7453416149068323,
+    "nmi": 0.9264068760302554,
+    "purity": 0.9205148978305878,
+    "timestamp": "2026-09-14 12:23:58"
+  },
+  "sbert_gte|google_news_t": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 33.676,
+    "acc": 0.7138998919697516,
+    "nmi": 0.8840669557585321,
+    "purity": 0.8729744328411956,
+    "timestamp": "2026-09-14 12:24:34"
+  },
+  "sbert_gte|google_news_s": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 33.785,
+    "acc": 0.6983255311487216,
+    "nmi": 0.8937167479988576,
+    "purity": 0.8836874324810947,
+    "timestamp": "2026-09-14 12:25:10"
+  },
+  "sbert_gte|tweet": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 14.728,
+    "acc": 0.6395631067961165,
+    "nmi": 0.8805792757751667,
+    "purity": 0.9219255663430421,
+    "timestamp": "2026-09-14 12:25:26"
+  },
+  "sbert_gte|hicot_20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 64.154,
+    "acc": 0.6075559800488167,
+    "nmi": 0.6208468380743198,
+    "purity": 0.6243765255226573,
+    "timestamp": "2026-09-14 12:26:32"
+  },
+  "sbert_gte|hicot_imdb": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 150.268,
+    "acc": 0.83236,
+    "nmi": 0.35522657860156526,
+    "purity": 0.83236,
+    "timestamp": "2026-09-14 12:29:04"
+  },
+  "sbert_gte|hicot_agnews": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 24.22,
+    "acc": 0.86,
+    "nmi": 0.6325714250177191,
+    "purity": 0.86,
+    "timestamp": "2026-09-14 12:29:31"
+  },
+  "sbert_gte|hicot_search_snippets": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 24.05,
+    "acc": 0.77867252318204,
+    "nmi": 0.6436482007765226,
+    "purity": 0.8375630388807548,
+    "timestamp": "2026-09-14 12:29:57"
+  },
+  "sbert_gte|hicot_google_news": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 32.572,
+    "acc": 0.7059624285325347,
+    "nmi": 0.8842310230302832,
+    "purity": 0.8703149106089482,
+    "timestamp": "2026-09-14 12:30:31"
+  },
+  "sbert_gte|agnews_full": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 531.965,
+    "acc": 0.8805407523510972,
+    "nmi": 0.6747577103310406,
+    "purity": 0.8805407523510972,
+    "timestamp": "2026-09-14 12:39:25"
+  },
+  "sbert_gte|banking77": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 39.886,
+    "acc": 0.666615655367664,
+    "nmi": 0.8131230009551556,
+    "purity": 0.7045680618256944,
+    "timestamp": "2026-09-14 12:40:07"
+  },
+  "sbert_gte|bbc_news": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 18.005,
+    "acc": 0.9608988764044943,
+    "nmi": 0.8758521329274334,
+    "purity": 0.9608988764044943,
+    "timestamp": "2026-09-14 12:40:27"
+  },
+  "sbert_gte|dblp": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 109.58,
+    "acc": 0.606502426962176,
+    "nmi": 0.3189463600304593,
+    "purity": 0.7179961534939097,
+    "timestamp": "2026-09-14 12:42:18"
+  },
+  "hicot|20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 611.806,
+    "acc": 0.1325480208001698,
+    "nmi": 0.11705937601709268,
+    "purity": 0.13620927517775655,
+    "timestamp": "2026-09-14 17:58:39"
+  }
+}
