@@ -1,9 +1,0 @@
-Current model: hicot
-Dataset: imdb
-Attempt: 1
-Completed: 20/104
-Successful: 20
-Failed: 0
-Remaining: 84
-Started at: 2026-09-14 17:48:25
-Last update: 2026-09-14 17:58:39
