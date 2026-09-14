@@ -22,3 +22,13 @@ vaebm_training.csv
 # download, never meant to be committed. metrics/palmetto.py's own
 # DEFAULT_JAR/DEFAULT_WIKI_INDEX point here.
 tools/palmetto/
+
+# Ad-hoc SLURM job scripts/stdout generated directly on the cluster while
+# driving a sweep (scripts/run_sbert11_sweep.py / run_cluster7_sweep.py
+# are the real, committed drivers - these are just their SLURM wrapper
+# scripts + stdout captures, regenerated per-run, never meant to be
+# committed).
+run_sweep.sbatch
+resume_sweep.sbatch
+sweep_slurm_*.out
+resume_slurm_*.out
