@@ -85,15 +85,17 @@ def build_hicot(k: int, seed: int, voc_size: int, dataset_id: str = None, max_fi
         voc_size=voc_size,
         random_state=seed,
         # Explicitly authorized (not a silent change) for the
-        # cluster7_all_datasets sweep - see docs/methodological_notes.md.
-        # epochs=50 (already reduced from upstream's own 500) was still
-        # too slow at 26-dataset x 7-model scale (HiCOT's own optimal-
-        # transport loss terms + Sinkhorn solver + periodic HAC grouping
-        # step, not epoch count, dominate its per-epoch cost - see the
-        # HiCOTAdapter/_hicot_source.py docstrings). Reduced further to
-        # epochs=7, sinkhorn_max_iter=100 (from the adapter's own
-        # default 5000) at the user's own explicit request.
-        epochs=7,
+        # cluster7_all_datasets sweep - see docs/methodological_notes.md
+        # #14. epochs restored to 50 (still 10x below upstream's own
+        # 500) now that models/hicot_adapter.py's own max_fit_seconds
+        # early-stop makes a hard epoch cap unnecessary for bounding
+        # runtime - fast datasets get the full 50 epochs' worth of
+        # convergence, slow ones still stop gracefully at whatever
+        # epoch max_fit_seconds allows, never both losing convergence
+        # quality AND still being slow. sinkhorn_max_iter stays reduced
+        # (5000 -> 100) - a genuine per-iteration cost, not something
+        # the early-stop mechanism substitutes for.
+        epochs=50,
         sinkhorn_max_iter=100,
         max_fit_seconds=max_fit_seconds,
     )
