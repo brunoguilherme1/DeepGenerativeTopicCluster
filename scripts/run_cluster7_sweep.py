@@ -170,10 +170,12 @@ class Sweep:
 
         combo_timeout = timeout_for_model(model)
         last_error = ""
+        final_attempt = MAX_ATTEMPTS
         for attempt in range(1, MAX_ATTEMPTS + 1):
             self.write_status(model, dataset, attempt)
             self.log(f"START model={model} dataset={dataset} attempt={attempt} progress={progress_idx}/{self.total}")
             start = time.perf_counter()
+            timed_out = False
             try:
                 proc = subprocess.run(
                     cmd, cwd=str(REPO_ROOT), env=env,
@@ -205,6 +207,7 @@ class Sweep:
                     else:
                         last_error = (outcome.get("error") or "")[:500]
             except subprocess.TimeoutExpired:
+                timed_out = True
                 last_error = f"timeout after {combo_timeout}s"
                 with open(log_file, "a", encoding="utf-8") as lf:
                     lf.write(f"\n=== attempt {attempt} TIMEOUT after {combo_timeout}s ===\n")
@@ -214,14 +217,25 @@ class Sweep:
             is_oom = "out of memory" in last_error.lower()
             tag = '"CUDA out of memory"' if is_oom else f'"{last_error[:200].splitlines()[0] if last_error else last_error}"'
             self.log(f"ERROR model={model} dataset={dataset} attempt={attempt} error={tag}")
+
+            # A timeout is NOT a transient failure - retrying the exact
+            # same computation with the exact same budget won't finish
+            # any faster the second time (user-authorized policy,
+            # 2026-09-14: skip straight to FINAL on a timeout, only
+            # retry genuinely transient failures like a subprocess
+            # crash or a flaky download).
+            if timed_out:
+                final_attempt = attempt
+                break
             if attempt < MAX_ATTEMPTS:
                 self.log(f"RETRY model={model} dataset={dataset} attempt={attempt + 1}")
                 time.sleep(RETRY_BACKOFF_SECONDS)
+                final_attempt = attempt + 1
 
-        self.checkpoint[key] = {"status": "error", "attempts": MAX_ATTEMPTS, "error": last_error[:2000], "timestamp": now_iso()}
+        self.checkpoint[key] = {"status": "error", "attempts": final_attempt, "error": last_error[:2000], "timestamp": now_iso()}
         self.save_checkpoint()
         self.write_progress()
-        self.log(f"ERROR model={model} dataset={dataset} FINAL after {MAX_ATTEMPTS} attempts, giving up "
+        self.log(f"ERROR model={model} dataset={dataset} FINAL after {final_attempt} attempt(s), giving up "
                  f"progress={progress_idx}/{self.total}")
 
     def _read_result(self, model: str, dataset: str) -> dict | None:
