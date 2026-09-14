@@ -181,15 +181,23 @@ def _build_hicot(k: int, seed: int, voc_size: int):
     scientific_models.py::build_hicot's `dataset_id` parameter, left
     unset (None) here.
 
-    max_fit_seconds=1200 (20min) - user-authorized (2026-09-14) wall-
-    clock early-stop for the cluster7_all_datasets sweep, leaving a
-    10-minute margin under the sweep driver's own 30-minute external
-    subprocess timeout for embedding/vectorization + eval overhead
-    around the training loop itself. See models/hicot_adapter.py's own
-    docstring and docs/methodological_notes.md #14."""
+    max_fit_seconds is environment-configurable
+    (VAEBM_HICOT_MAX_FIT_SECONDS, default 1200s/20min - unchanged
+    FutureLab behavior, leaving a 10-minute margin under that sweep
+    driver's own 30-minute external subprocess timeout). Set the env
+    var to "0" or "none" to disable the early-stop entirely (this
+    project's own second compute environment, 2026-09-14, has no
+    wall-clock budget at all - its own launch script sets this
+    explicitly rather than silently differing). See
+    models/hicot_adapter.py's own docstring and docs/
+    methodological_notes.md #14."""
+    import os
+
     from vaebm_benchmark.experiment.scientific_models import build_hicot
 
-    return build_hicot(k, seed, voc_size, max_fit_seconds=1200)
+    raw = os.environ.get("VAEBM_HICOT_MAX_FIT_SECONDS", "1200").strip().lower()
+    max_fit_seconds = None if raw in ("0", "none", "") else float(raw)
+    return build_hicot(k, seed, voc_size, max_fit_seconds=max_fit_seconds)
 
 
 def _build_sbert_kmeans(k: int, seed: int, voc_size: int):
