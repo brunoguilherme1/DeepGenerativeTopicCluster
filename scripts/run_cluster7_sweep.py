@@ -36,7 +36,13 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 # explicit request (2026-09-14) - not a silent scope reduction, see
 # docs/methodological_notes.md #14's own note on this sweep's
 # authorized deviations from its original 7-model spec.
-MODELS = ["sbert_gte", "sbert_minilm", "fastopic", "hicot"]
+# hicot runs FIRST (user-authorized reorder, 2026-09-14) - its own
+# per-combo runtime under the just-reduced epochs=7/sinkhorn_max_iter=100
+# is still unmeasured, so getting that data early (rather than last)
+# matters more than the model-registration order. Safe to reorder:
+# this loop is model-major, so already-"ok" combos for any model are
+# still skipped wherever they fall in the new order - no data lost.
+MODELS = ["hicot", "sbert_gte", "sbert_minilm", "fastopic"]
 
 # "agnews" is deliberately OMITTED here - it's a pre-existing alias for
 # "agnews_short" (identical underlying TopicClusterDocument-mirror data,
