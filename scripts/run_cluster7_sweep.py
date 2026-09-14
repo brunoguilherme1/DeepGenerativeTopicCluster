@@ -53,16 +53,24 @@ SEED = 42
 
 MAX_ATTEMPTS = 3
 RETRY_BACKOFF_SECONDS = 20
-# Generous: dbpedia_14/yahoo_answers_topics are large (100k+ docs). This
-# was originally 7200s (2h), but SBERTKMeansAdapter's exact sklearn
-# KMeans(n_init=10) on dbpedia_14 (~630k docs, 1024-dim GTE embeddings)
-# was observed to consistently need MORE than 2h of genuine CPU-bound
-# computation (confirmed via nvidia-smi showing 0% GPU + ~100%+ CPU the
-# entire time, not a hang) - raised here, an operational timeout on THIS
-# orchestration script, never a change to the model/algorithm itself
-# (no n_init reduction, no MiniBatchKMeans swap - that would be exactly
-# the kind of silent methodological change this sweep must not make).
-PER_COMBO_TIMEOUT_SECONDS = 21600
+# User-authorized cap: 30 minutes for every model EXCEPT hicot. A combo
+# that exceeds this is treated as a fault-tolerance ERROR (recorded, not
+# silently dropped - see final_cluster_results.csv's own "error" column,
+# e.g. "timeout after 1800s") rather than left to run indefinitely -
+# this was found necessary after sbert_gte on dbpedia_14 (~630k docs)
+# needed MORE than 2h of genuine CPU-bound sklearn KMeans(n_init=10)
+# computation (confirmed via nvidia-smi: 0% GPU + ~100%+ CPU throughout,
+# not a hang). hicot keeps its own separate, much larger budget below -
+# its own optimal-transport training loop is expected to run long even
+# after epochs=7/sinkhorn_max_iter=100 (see
+# experiment/scientific_models.py::build_hicot(), docs/
+# methodological_notes.md #14) and must not be cut short by this cap.
+PER_COMBO_TIMEOUT_SECONDS = 1800
+HICOT_TIMEOUT_SECONDS = 21600
+
+
+def timeout_for_model(model_name: str) -> int:
+    return HICOT_TIMEOUT_SECONDS if model_name == "hicot" else PER_COMBO_TIMEOUT_SECONDS
 
 CACHE_ROOT = Path(os.environ.get("VAEBM_CACHE_ROOT", REPO_ROOT.parent / ".cache"))
 
@@ -156,6 +164,7 @@ class Sweep:
             "--experiment", "cluster", "--models", model, "--datasets", dataset, "--seed", str(SEED),
         ]
 
+        combo_timeout = timeout_for_model(model)
         last_error = ""
         for attempt in range(1, MAX_ATTEMPTS + 1):
             self.write_status(model, dataset, attempt)
@@ -164,7 +173,7 @@ class Sweep:
             try:
                 proc = subprocess.run(
                     cmd, cwd=str(REPO_ROOT), env=env,
-                    capture_output=True, text=True, timeout=PER_COMBO_TIMEOUT_SECONDS,
+                    capture_output=True, text=True, timeout=combo_timeout,
                 )
                 runtime = time.perf_counter() - start
                 with open(log_file, "a", encoding="utf-8") as lf:
@@ -192,9 +201,9 @@ class Sweep:
                     else:
                         last_error = (outcome.get("error") or "")[:500]
             except subprocess.TimeoutExpired:
-                last_error = f"timeout after {PER_COMBO_TIMEOUT_SECONDS}s"
+                last_error = f"timeout after {combo_timeout}s"
                 with open(log_file, "a", encoding="utf-8") as lf:
-                    lf.write(f"\n=== attempt {attempt} TIMEOUT after {PER_COMBO_TIMEOUT_SECONDS}s ===\n")
+                    lf.write(f"\n=== attempt {attempt} TIMEOUT after {combo_timeout}s ===\n")
             except Exception as exc:  # noqa: BLE001 - the driver itself must never die on one combo
                 last_error = f"driver exception: {exc!r}\n{traceback.format_exc(limit=3)}"
 
