@@ -38,3 +38,5 @@ resume_slurm_*.out
 results/
 cluster7_slurm_*.out
 cluster7_resume_slurm_*.out
+run_cluster7_sweep.sbatch
+resume_cluster7_sweep.sbatch
