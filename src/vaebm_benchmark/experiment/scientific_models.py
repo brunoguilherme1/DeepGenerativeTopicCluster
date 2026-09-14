@@ -84,7 +84,17 @@ def build_hicot(k: int, seed: int, voc_size: int, dataset_id: str = None):
         n_clusters=k,
         voc_size=voc_size,
         random_state=seed,
-        epochs=50,  # reduced from upstream's own 500, see module docstring
+        # Explicitly authorized (not a silent change) for the
+        # cluster7_all_datasets sweep - see docs/methodological_notes.md.
+        # epochs=50 (already reduced from upstream's own 500) was still
+        # too slow at 26-dataset x 7-model scale (HiCOT's own optimal-
+        # transport loss terms + Sinkhorn solver + periodic HAC grouping
+        # step, not epoch count, dominate its per-epoch cost - see the
+        # HiCOTAdapter/_hicot_source.py docstrings). Reduced further to
+        # epochs=7, sinkhorn_max_iter=100 (from the adapter's own
+        # default 5000) at the user's own explicit request.
+        epochs=7,
+        sinkhorn_max_iter=100,
     )
     if dataset_id is not None and dataset_id.startswith("hicot_"):
         # Use HiCOT's own official vocab + 200-dim GloVe embeddings for

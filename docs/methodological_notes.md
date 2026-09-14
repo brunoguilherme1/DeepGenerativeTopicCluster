@@ -581,3 +581,30 @@ top of `models/vaebm.py`). A user who has a genuine CUDA toolkit with
 `libdevice.10.bc` available can still opt back into auto-JIT by setting
 `TF_XLA_FLAGS` themselves before this module is imported -
 `setdefault()` never overrides an explicit value.
+
+## 14. HiCOT's `epochs`/`sinkhorn_max_iter` reduced further for the cluster7_all_datasets sweep
+
+`experiment/scientific_models.py::build_hicot()` had already reduced
+`epochs` from upstream's own 500 to 50 (a smoke-run default, see
+`scientific_models.py`'s own module docstring). At the scale of the
+`cluster7_all_datasets_<timestamp>` sweep (`hicot` x 26 datasets,
+`scripts/run_cluster7_sweep.py`), even 50 epochs was still too slow to
+be practical - `hicot` x `search_snippets`/`hicot_agnews` each took
+48-70 minutes in this sweep's own pre-launch smoke tests. Profiling why
+(via the same GPU/CPU utilization check used to diagnose the
+`dbpedia_14` timeout in #13's sibling investigation) pointed at HiCOT's
+own **per-epoch** cost, not epoch count: its optimal-transport loss
+terms (ECR/TP/DT/CLC/CLT) each solve a Sinkhorn transport problem
+(`sinkhorn_max_iter=5000` by default), and its periodic HAC-based
+group-topic step (`create_group_topic()`, see #12's own note on its
+pre-existing scipy quirk) adds further cost independent of epoch count.
+
+Reduced further to `epochs=7`, `sinkhorn_max_iter=100` - **explicitly
+authorized by the user for this sweep**, not a silent change: HiCOT's
+own results in `cluster7_all_datasets_<timestamp>/final_cluster_results.csv`
+are NOT directly comparable to any HiCOT result computed under the
+older `epochs=50`/`sinkhorn_max_iter=5000` defaults (e.g. this sweep's
+own pre-launch smoke tests, or any earlier one-off `hicot` run in this
+project) - a real reduction in training budget, expected to affect
+convergence, not merely a faster path to the same answer. `preprocessing_source`/`representation_source`/etc. metadata are
+unaffected; only HiCOT's own training hyperparameters changed.
