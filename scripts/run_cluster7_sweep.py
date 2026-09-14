@@ -53,9 +53,16 @@ SEED = 42
 
 MAX_ATTEMPTS = 3
 RETRY_BACKOFF_SECONDS = 20
-# Generous: dbpedia_14/yahoo_answers_topics are large (100k+ docs) and
-# FASTopic/HiCOT's own neural training loop is the slowest path here.
-PER_COMBO_TIMEOUT_SECONDS = 7200
+# Generous: dbpedia_14/yahoo_answers_topics are large (100k+ docs). This
+# was originally 7200s (2h), but SBERTKMeansAdapter's exact sklearn
+# KMeans(n_init=10) on dbpedia_14 (~630k docs, 1024-dim GTE embeddings)
+# was observed to consistently need MORE than 2h of genuine CPU-bound
+# computation (confirmed via nvidia-smi showing 0% GPU + ~100%+ CPU the
+# entire time, not a hang) - raised here, an operational timeout on THIS
+# orchestration script, never a change to the model/algorithm itself
+# (no n_init reduction, no MiniBatchKMeans swap - that would be exactly
+# the kind of silent methodological change this sweep must not make).
+PER_COMBO_TIMEOUT_SECONDS = 21600
 
 CACHE_ROOT = Path(os.environ.get("VAEBM_CACHE_ROOT", REPO_ROOT.parent / ".cache"))
 
