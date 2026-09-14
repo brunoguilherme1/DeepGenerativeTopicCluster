@@ -96,6 +96,13 @@ class ClusterResult:
     # utils/text_preprocessing.py's own module docstring for why), or
     # "none" (every other model, every dataset - unchanged text).
     preprocessing_source: str = "none"
+    # HiCOT only (None for every other model) - how many of its
+    # requested epochs actually completed before either finishing
+    # naturally or hitting models/hicot_adapter.py's own max_fit_seconds
+    # early-stop. Reported so a low-epochs-completed HiCOT result on a
+    # large/slow dataset is never mistaken for a fully-converged one.
+    training_epochs_completed: Optional[int] = None
+    training_epochs_requested: Optional[int] = None
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -275,6 +282,10 @@ def run_single(model_name: str, dataset_id: str, seed: int = 42, voc_size: int =
 
         model = CLUSTER_MODEL_BUILDERS[model_name](requested_k, seed, voc_size)
         model.fit(fit_documents)  # labels never passed here
+        # hicot only - every other model has neither attribute, so both
+        # stay None (see ClusterResult's own field docstring above).
+        training_epochs_completed = getattr(model, "epochs_completed", None)
+        training_epochs_requested = getattr(model, "epochs", None) if model_name == "hicot" else None
 
         representation_source = representation_source_for_model(model_name)
         assignment_source = assignment_source_for_model(model_name)
@@ -312,6 +323,7 @@ def run_single(model_name: str, dataset_id: str, seed: int = 42, voc_size: int =
             requested_k=requested_k, actual_k=actual_k, num_classes=num_classes,
             representation_source=representation_source, assignment_source=assignment_source,
             num_documents=len(documents), preprocessing_source=preprocessing_source,
+            training_epochs_completed=training_epochs_completed, training_epochs_requested=training_epochs_requested,
             runtime_seconds=runtime, status="ok",
             **label_metrics, **geometry_metrics,
         )
