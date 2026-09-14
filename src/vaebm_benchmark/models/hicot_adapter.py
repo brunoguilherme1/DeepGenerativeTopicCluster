@@ -78,9 +78,20 @@ class HiCOTAdapter(ProtocolModelAdapter):
         pretrained_word_embeddings: Optional[np.ndarray] = None,  # [voc_size, embed_size], e.g. load_hicot_word_embeddings()
         random_state: int = 42,
         device: Optional[str] = None,
+        max_fit_seconds: Optional[float] = None,
     ) -> None:
         self.n_clusters = n_clusters
         self.voc_size = voc_size
+        # Wall-clock early-stop: after each COMPLETED epoch, fit() checks
+        # elapsed time and stops training early if it's already over
+        # budget - the model keeps whatever it learned through its last
+        # full epoch (PyTorch mutates weights in place; no
+        # snapshot/restore needed) rather than being killed mid-epoch by
+        # an external process timeout with nothing usable to show for
+        # it. None (default) -> unchanged behavior, always runs the
+        # full `epochs`. See docs/methodological_notes.md #14.
+        self.max_fit_seconds = max_fit_seconds
+        self.epochs_completed = 0
         self.doc_embed_model = doc_embed_model
         self.epochs = epochs
         self.batch_size = batch_size
@@ -115,6 +126,8 @@ class HiCOTAdapter(ProtocolModelAdapter):
         self._vocab: list[str] = []
 
     def fit(self, documents: list[str]) -> "HiCOTAdapter":
+        import time as _time
+
         import torch
         from sentence_transformers import SentenceTransformer
         from sklearn.feature_extraction.text import CountVectorizer
@@ -180,6 +193,7 @@ class HiCOTAdapter(ProtocolModelAdapter):
         train_dataloader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
 
         self._model.train()
+        fit_start = _time.perf_counter()
         for epoch in range(1, self.epochs + 1):  # 1-based, matching upstream basic_trainer.py::train()
             for batch_bow, batch_indices, batch_doc_embeddings in train_dataloader:
                 rst_dict = self._model(batch_indices, [batch_bow], epoch_id=epoch, doc_embeddings=batch_doc_embeddings)
@@ -187,6 +201,11 @@ class HiCOTAdapter(ProtocolModelAdapter):
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
+            self.epochs_completed = epoch
+            if self.max_fit_seconds is not None and _time.perf_counter() - fit_start > self.max_fit_seconds:
+                print(f"[hicot_adapter] max_fit_seconds={self.max_fit_seconds}s reached after epoch "
+                      f"{epoch}/{self.epochs} - stopping early, keeping this epoch's weights.", flush=True)
+                break
 
         self._model.eval()
         return self

@@ -61,26 +61,31 @@ DATASETS = [
 ]
 SEED = 42
 
-MAX_ATTEMPTS = 3
+# User-authorized (2026-09-14): one attempt only, for every model - no
+# retries at all, even for transient failures. A combo that fails or
+# times out within its 30-minute budget is recorded and skipped
+# immediately; the sweep never spends more than ~30 min per combination.
+MAX_ATTEMPTS = 1
 RETRY_BACKOFF_SECONDS = 20
-# User-authorized cap: 30 minutes for every model EXCEPT hicot. A combo
-# that exceeds this is treated as a fault-tolerance ERROR (recorded, not
-# silently dropped - see final_cluster_results.csv's own "error" column,
-# e.g. "timeout after 1800s") rather than left to run indefinitely -
-# this was found necessary after sbert_gte on dbpedia_14 (~630k docs)
-# needed MORE than 2h of genuine CPU-bound sklearn KMeans(n_init=10)
-# computation (confirmed via nvidia-smi: 0% GPU + ~100%+ CPU throughout,
-# not a hang). hicot keeps its own separate, much larger budget below -
-# its own optimal-transport training loop is expected to run long even
-# after epochs=7/sinkhorn_max_iter=100 (see
-# experiment/scientific_models.py::build_hicot(), docs/
-# methodological_notes.md #14) and must not be cut short by this cap.
+# User-authorized cap: 30 minutes, uniform across EVERY model including
+# hicot (2026-09-14) - a combo that exceeds this is treated as a fault-
+# tolerance ERROR (recorded, not silently dropped - see
+# final_cluster_results.csv's own "error" column, e.g. "timeout after
+# 1800s") rather than left to run indefinitely. hicot itself now has an
+# internal wall-clock early-stop (models/hicot_adapter.py's own
+# max_fit_seconds, wired to 1200s/20min by experiment/
+# cluster_runner.py::_build_hicot()) so it gracefully keeps whatever it
+# trained through its last completed epoch instead of being killed by
+# this external timeout mid-epoch with nothing usable to show for it -
+# this subprocess-level timeout is now a pure safety net for hicot (the
+# pre-training embedding/vectorization step, or one single epoch that's
+# itself unexpectedly slow), not its primary stopping mechanism. See
+# docs/methodological_notes.md #14.
 PER_COMBO_TIMEOUT_SECONDS = 1800
-HICOT_TIMEOUT_SECONDS = 21600
 
 
 def timeout_for_model(model_name: str) -> int:
-    return HICOT_TIMEOUT_SECONDS if model_name == "hicot" else PER_COMBO_TIMEOUT_SECONDS
+    return PER_COMBO_TIMEOUT_SECONDS
 
 CACHE_ROOT = Path(os.environ.get("VAEBM_CACHE_ROOT", REPO_ROOT.parent / ".cache"))
 
