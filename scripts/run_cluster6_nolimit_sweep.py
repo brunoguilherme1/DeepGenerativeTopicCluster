@@ -4,21 +4,30 @@ experiment sweep on this project's SECOND compute environment (SMART
 SENSE lab / viper08, 2026-09-14) - unlike scripts/run_cluster7_sweep.py
 (FutureLab, 30-min-per-combo cap), this environment has NO wall-clock
 budget: every combination runs to natural completion, however long that
-takes. HiCOT itself is also configured for full convergence here (see
-launch script's own VAEBM_HICOT_SINKHORN_MAX_ITER/
-VAEBM_HICOT_MAX_FIT_SECONDS env vars), not the FutureLab-tuned speed
+takes.
+
+Runs up to NUM_GPUS combinations CONCURRENTLY, one per physical GPU
+(each subprocess gets CUDA_VISIBLE_DEVICES pinned to exactly one GPU
+index) - this is parallelism ACROSS independent (model, dataset)
+combinations only, never within a single model's own training (no
+adapter here does multi-GPU data-parallel training; each subprocess is
+exactly the same single-GPU run it would be sequentially, just several
+running at once on separate hardware). HiCOT itself is configured for
+full convergence here (see VAEBM_HICOT_SINKHORN_MAX_ITER/
+VAEBM_HICOT_MAX_FIT_SECONDS below), not FutureLab's speed-tuned
 defaults.
 
 Mirrors run_cluster7_sweep.py's checkpoint/resume/live-log architecture
-(isolated subprocess per (model, dataset), JSON checkpoint, run.log/
-current_status.txt/progress.txt) since this environment isn't actively
-monitored the way FutureLab was - the checkpoint is what makes it safe
-to check back on later (or resume after any interruption) without
+(JSON checkpoint, run.log/current_status.txt/progress.txt) since this
+environment isn't actively monitored the way FutureLab was - the
+checkpoint (protected by a lock across worker threads) is what makes it
+safe to check back on later, or resume after any interruption, without
 losing or recomputing anything.
 
 Usage:
     python scripts/run_cluster6_nolimit_sweep.py                      # start a new run
     python scripts/run_cluster6_nolimit_sweep.py --run-dir results/cluster6_all_datasets_20260914_190000  # resume
+    python scripts/run_cluster6_nolimit_sweep.py --num-gpus 2          # override (default: all visible GPUs)
 """
 
 from __future__ import annotations
@@ -26,8 +35,10 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import queue
 import subprocess
 import sys
+import threading
 import time
 import traceback
 from datetime import datetime, timezone
@@ -36,7 +47,6 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-# All 4 named SBERT variants (no bertopic - never requested for this run).
 MODELS = ["sbert_gte", "sbert_bge", "sbert_mpnet", "sbert_minilm", "fastopic", "hicot"]
 
 DATASETS = [
@@ -63,9 +73,18 @@ def combo_key(model: str, dataset: str) -> str:
     return f"{model}|{dataset}"
 
 
+def detect_num_gpus() -> int:
+    try:
+        out = subprocess.run(["nvidia-smi", "-L"], capture_output=True, text=True, timeout=15)
+        return max(1, len([line for line in out.stdout.splitlines() if line.startswith("GPU ")]))
+    except Exception:  # noqa: BLE001 - fall back to a safe single-GPU default
+        return 1
+
+
 class Sweep:
-    def __init__(self, run_dir: Path):
+    def __init__(self, run_dir: Path, num_gpus: int):
         self.run_dir = run_dir
+        self.num_gpus = num_gpus
         self.logs_dir = run_dir / "logs"
         self.tables_dir = run_dir / "tables"
         self.logs_dir.mkdir(parents=True, exist_ok=True)
@@ -83,16 +102,21 @@ class Sweep:
         self.total = len(MODELS) * len(DATASETS)
         self.started_at = now_iso()
 
+        self._lock = threading.Lock()  # guards checkpoint/log/status file writes across worker threads
+        self._active: dict[int, str] = {}  # gpu_index -> "model|dataset (attempt N)"
+
     def log(self, msg: str) -> None:
         line = f"[{now_iso()}] {msg}"
-        with open(self.run_log_path, "a", encoding="utf-8") as f:
-            f.write(line + "\n")
+        with self._lock:
+            with open(self.run_log_path, "a", encoding="utf-8") as f:
+                f.write(line + "\n")
         print(line, flush=True)
 
     def save_checkpoint(self) -> None:
-        tmp = self.checkpoint_path.with_suffix(".json.tmp")
-        tmp.write_text(json.dumps(self.checkpoint, indent=2), encoding="utf-8")
-        os.replace(tmp, self.checkpoint_path)
+        with self._lock:
+            tmp = self.checkpoint_path.with_suffix(".json.tmp")
+            tmp.write_text(json.dumps(self.checkpoint, indent=2), encoding="utf-8")
+            os.replace(tmp, self.checkpoint_path)
 
     def counts(self):
         successful = sum(1 for v in self.checkpoint.values() if v.get("status") == "ok")
@@ -106,20 +130,28 @@ class Sweep:
             f"Failed: {failed}", f"Remaining: {self.total - completed}",
             f"Started at: {self.started_at}", f"Last update: {now_iso()}",
         ]
-        self.progress_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        with self._lock:
+            self.progress_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    def write_status(self, model: str, dataset: str, attempt: int) -> None:
-        completed, successful, failed = self.counts()
-        text = (
-            f"Current model: {model}\nDataset: {dataset}\nAttempt: {attempt}\n"
-            f"Completed: {completed}/{self.total}\nSuccessful: {successful}\nFailed: {failed}\n"
-            f"Remaining: {self.total - completed}\nStarted at: {self.started_at}\nLast update: {now_iso()}\n"
-        )
-        self.status_path.write_text(text, encoding="utf-8")
+    def write_status(self, gpu_index: int, model: str | None, dataset: str | None, attempt: int | None) -> None:
+        with self._lock:
+            if model is None:
+                self._active.pop(gpu_index, None)
+            else:
+                self._active[gpu_index] = f"model={model} dataset={dataset} attempt={attempt}"
+            completed, successful, failed = self.counts()
+            lines = [f"GPU {g}: {self._active[g]}" for g in sorted(self._active)]
+            text = (
+                "\n".join(lines) + ("\n\n" if lines else "") +
+                f"Completed: {completed}/{self.total}\nSuccessful: {successful}\nFailed: {failed}\n"
+                f"Remaining: {self.total - completed}\nStarted at: {self.started_at}\nLast update: {now_iso()}\n"
+            )
+            self.status_path.write_text(text, encoding="utf-8")
 
-    def run_one(self, model: str, dataset: str, progress_idx: int) -> None:
+    def run_one(self, model: str, dataset: str, progress_idx: int, gpu_index: int) -> None:
         key = combo_key(model, dataset)
-        existing = self.checkpoint.get(key)
+        with self._lock:
+            existing = self.checkpoint.get(key)
         if existing and existing.get("status") == "ok":
             self.log(f"SKIP model={model} dataset={dataset} progress={progress_idx}/{self.total} "
                      f"(already completed at {existing.get('timestamp')})")
@@ -129,14 +161,13 @@ class Sweep:
         env = dict(os.environ)
         env["PYTHONUNBUFFERED"] = "1"
         env["VAEBM_RESULTS_DIR"] = str(self.run_dir)
+        env["CUDA_VISIBLE_DEVICES"] = str(gpu_index)
         env["HF_HOME"] = str(CACHE_ROOT / "huggingface")
         env["TRANSFORMERS_CACHE"] = str(CACHE_ROOT / "huggingface" / "transformers")
         env["SENTENCE_TRANSFORMERS_HOME"] = str(CACHE_ROOT / "sentence_transformers")
         env["TORCH_HOME"] = str(CACHE_ROOT / "torch")
         for p in (env["HF_HOME"], env["SENTENCE_TRANSFORMERS_HOME"], env["TORCH_HOME"]):
             Path(p).mkdir(parents=True, exist_ok=True)
-        # HiCOT full-convergence config for this environment - see this
-        # module's own docstring. Harmless for every other model (unread).
         env.setdefault("VAEBM_HICOT_SINKHORN_MAX_ITER", "500")
         env.setdefault("VAEBM_HICOT_MAX_FIT_SECONDS", "0")  # "0" -> early-stop disabled entirely
 
@@ -147,8 +178,8 @@ class Sweep:
 
         last_error = ""
         for attempt in range(1, MAX_ATTEMPTS + 1):
-            self.write_status(model, dataset, attempt)
-            self.log(f"START model={model} dataset={dataset} attempt={attempt} progress={progress_idx}/{self.total}")
+            self.write_status(gpu_index, model, dataset, attempt)
+            self.log(f"START model={model} dataset={dataset} attempt={attempt} gpu={gpu_index} progress={progress_idx}/{self.total}")
             start = time.perf_counter()
             try:
                 proc = subprocess.run(
@@ -156,10 +187,11 @@ class Sweep:
                     capture_output=True, text=True, timeout=None,  # no wall-clock limit in this environment
                 )
                 runtime = time.perf_counter() - start
-                with open(log_file, "a", encoding="utf-8") as lf:
-                    lf.write(f"\n=== attempt {attempt} (exit={proc.returncode}, {runtime:.1f}s) ===\n")
-                    lf.write(proc.stdout or "")
-                    lf.write(proc.stderr or "")
+                with self._lock:
+                    with open(log_file, "a", encoding="utf-8") as lf:
+                        lf.write(f"\n=== attempt {attempt} (exit={proc.returncode}, {runtime:.1f}s) ===\n")
+                        lf.write(proc.stdout or "")
+                        lf.write(proc.stderr or "")
 
                 if proc.returncode != 0:
                     last_error = f"subprocess exited {proc.returncode}: {(proc.stderr or '')[-500:]}"
@@ -168,15 +200,17 @@ class Sweep:
                     if outcome is None:
                         last_error = "subprocess exited 0 but no matching result row found in cluster_results.json"
                     elif outcome["status"] == "ok":
-                        self.checkpoint[key] = {
-                            "status": "ok", "attempts": attempt, "runtime": outcome["runtime_seconds"],
-                            "acc": outcome["acc"], "nmi": outcome["nmi"], "purity": outcome["purity"],
-                            "timestamp": now_iso(),
-                        }
+                        with self._lock:
+                            self.checkpoint[key] = {
+                                "status": "ok", "attempts": attempt, "runtime": outcome["runtime_seconds"],
+                                "acc": outcome["acc"], "nmi": outcome["nmi"], "purity": outcome["purity"],
+                                "timestamp": now_iso(),
+                            }
                         self.save_checkpoint()
                         self.write_progress()
-                        self.log(f"OK model={model} dataset={dataset} runtime={runtime:.0f}s "
+                        self.log(f"OK model={model} dataset={dataset} runtime={runtime:.0f}s gpu={gpu_index} "
                                  f"acc={outcome['acc']} nmi={outcome['nmi']} progress={progress_idx}/{self.total}")
+                        self.write_status(gpu_index, None, None, None)
                         return
                     else:
                         last_error = (outcome.get("error") or "")[:500]
@@ -185,18 +219,23 @@ class Sweep:
 
             is_oom = "out of memory" in last_error.lower()
             tag = '"CUDA out of memory"' if is_oom else f'"{last_error[:200].splitlines()[0] if last_error else last_error}"'
-            self.log(f"ERROR model={model} dataset={dataset} attempt={attempt} error={tag}")
+            self.log(f"ERROR model={model} dataset={dataset} attempt={attempt} gpu={gpu_index} error={tag}")
             if attempt < MAX_ATTEMPTS:
                 self.log(f"RETRY model={model} dataset={dataset} attempt={attempt + 1}")
                 time.sleep(RETRY_BACKOFF_SECONDS)
 
-        self.checkpoint[key] = {"status": "error", "attempts": MAX_ATTEMPTS, "error": last_error[:2000], "timestamp": now_iso()}
+        with self._lock:
+            self.checkpoint[key] = {"status": "error", "attempts": MAX_ATTEMPTS, "error": last_error[:2000], "timestamp": now_iso()}
         self.save_checkpoint()
         self.write_progress()
         self.log(f"ERROR model={model} dataset={dataset} FINAL after {MAX_ATTEMPTS} attempts, giving up "
                  f"progress={progress_idx}/{self.total}")
+        self.write_status(gpu_index, None, None, None)
 
     def _read_result(self, model: str, dataset: str) -> dict | None:
+        # Safe to read concurrently without the lock - run_experiment.py's
+        # own _append_csv/_merge_json is the only writer, and each worker
+        # only ever looks for ITS OWN just-finished (model, dataset) row.
         if not self.results_json_path.exists():
             return None
         rows = json.loads(self.results_json_path.read_text(encoding="utf-8"))
@@ -206,16 +245,37 @@ class Sweep:
         return None
 
     def run(self) -> None:
-        self.log(f"SWEEP_START run_dir={self.run_dir}")
+        self.log(f"SWEEP_START run_dir={self.run_dir} num_gpus={self.num_gpus}")
         self.log(f"MONITOR tail -f {self.run_dir}/run.log")
         self.log(f"MONITOR cat {self.run_dir}/current_status.txt")
         self.log(f"MONITOR cat {self.run_dir}/progress.txt")
 
+        work_q: queue.Queue = queue.Queue()
         idx = 0
         for model in MODELS:
             for dataset in DATASETS:
                 idx += 1
-                self.run_one(model, dataset, idx)
+                key = combo_key(model, dataset)
+                if self.checkpoint.get(key, {}).get("status") == "ok":
+                    self.log(f"SKIP model={model} dataset={dataset} progress={idx}/{self.total} "
+                             f"(already completed at {self.checkpoint[key].get('timestamp')})")
+                    continue
+                work_q.put((model, dataset, idx))
+
+        def worker(gpu_index: int) -> None:
+            while True:
+                try:
+                    model, dataset, progress_idx = work_q.get_nowait()
+                except queue.Empty:
+                    return
+                self.run_one(model, dataset, progress_idx, gpu_index)
+                work_q.task_done()
+
+        threads = [threading.Thread(target=worker, args=(g,), name=f"gpu{g}") for g in range(self.num_gpus)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
 
         self.write_progress()
         self.log("SWEEP_LOOP_DONE all combinations attempted - building final tables")
@@ -280,7 +340,10 @@ class Sweep:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--run-dir", default=None)
+    parser.add_argument("--num-gpus", type=int, default=None, help="Default: auto-detect via nvidia-smi -L")
     args = parser.parse_args()
+
+    num_gpus = args.num_gpus if args.num_gpus is not None else detect_num_gpus()
 
     if args.run_dir:
         run_dir = Path(args.run_dir)
@@ -293,7 +356,7 @@ def main() -> None:
         run_dir = REPO_ROOT / "results" / f"cluster6_all_datasets_{timestamp}"
         run_dir.mkdir(parents=True, exist_ok=False)
 
-    Sweep(run_dir).run()
+    Sweep(run_dir, num_gpus).run()
 
 
 if __name__ == "__main__":
