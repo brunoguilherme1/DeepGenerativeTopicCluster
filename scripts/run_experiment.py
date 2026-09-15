@@ -75,7 +75,9 @@ registered for the experiment being run.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import csv
+import fcntl
 import json
 import sys
 
@@ -91,19 +93,40 @@ def _parse_ks(raw_values: list[str]) -> list[int]:
     return ks
 
 
+@contextlib.contextmanager
+def _file_lock(path):
+    """Exclusive cross-process lock via a sidecar `.lock` file, so
+    concurrent `run_experiment.py` subprocesses merging into the same
+    shared results file (e.g. a GPU-oversubscribed sweep launching
+    several workers per results dir) never race on the read-modify-write
+    below - unguarded, this reproducibly corrupted cluster_results.json
+    (JSONDecodeError: Extra data) the first time two workers finished at
+    once."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = path.parent / f".{path.name}.lock"
+    with open(lock_path, "w") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+
+
 def _append_csv(csv_path, rows: list[dict]) -> None:
-    exists = csv_path.exists()
-    with open(csv_path, "a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
-        if not exists:
-            writer.writeheader()
-        writer.writerows(rows)
+    with _file_lock(csv_path):
+        exists = csv_path.exists()
+        with open(csv_path, "a", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+            if not exists:
+                writer.writeheader()
+            writer.writerows(rows)
 
 
 def _merge_json(json_path, rows: list[dict]) -> None:
-    existing = json.loads(json_path.read_text(encoding="utf-8")) if json_path.exists() else []
-    existing.extend(rows)
-    json_path.write_text(json.dumps(existing, indent=2), encoding="utf-8")
+    with _file_lock(json_path):
+        existing = json.loads(json_path.read_text(encoding="utf-8")) if json_path.exists() else []
+        existing.extend(rows)
+        json_path.write_text(json.dumps(existing, indent=2), encoding="utf-8")
 
 
 def _load_named_configs(raw: str, flag_name: str) -> dict:
@@ -289,23 +312,39 @@ def _run_classification(args) -> None:
     if unknown_models:
         raise SystemExit(f"Unknown model(s) for --experiment classification: {unknown_models}. Available: {MODEL_NAMES}")
 
-    if not args.datasets or args.datasets in (["all"], ["all-short"]):
-        raise SystemExit(
-            "--experiment classification requires explicit --datasets - hicot_* ids with a genuine train/test "
-            "split (hicot_search_snippets/hicot_google_news have none, see "
-            "datasets/definitions/hicot_datasets.py::load_hicot_split's own docstring)."
-        )
-    datasets = args.datasets
+    if args.split == "official":
+        if not args.datasets or args.datasets in (["all"], ["all-short"]):
+            raise SystemExit(
+                "--experiment classification (--split official) requires explicit --datasets - hicot_* ids with a "
+                "genuine train/test split (hicot_search_snippets/hicot_google_news have none, see "
+                "datasets/definitions/hicot_datasets.py::load_hicot_split's own docstring)."
+            )
+        if not args.k:
+            raise SystemExit("--experiment classification (--split official) requires --k (e.g. --k 50 or --k 50 100)")
+        datasets = args.datasets
+        ks = _parse_ks(args.k)
+    else:  # --split random
+        from vaebm_benchmark.datasets.simple_registry import list_short_text_datasets
 
-    if not args.k:
-        raise SystemExit("--experiment classification requires --k (e.g. --k 50 or --k 50 100)")
-    ks = _parse_ks(args.k)
+        if not args.datasets or args.datasets == ["all-short"]:
+            datasets = list_short_text_datasets()
+        elif args.datasets == ["all"]:
+            raise SystemExit("--split random has no 'all' dataset expansion - use 'all-short' or explicit --datasets ids.")
+        else:
+            datasets = args.datasets
+        # None -> auto-derive K per dataset from its own num_classes (see
+        # run_single_random_split's own docstring) - --k still overrides
+        # with one shared topic count if explicitly given.
+        ks = _parse_ks(args.k) if args.k else [None]
 
     seeds = args.seeds if args.seeds else [args.seed]
-    print(f"Running [classification]: models={models} datasets={datasets} k={ks} seeds={seeds}\n")
+    print(f"Running [classification] (split={args.split}): models={models} datasets={datasets} k={ks} seeds={seeds}\n")
     # run_sweep() itself now prints a one-line status per combination as
     # it finishes - no need to re-print after the fact.
-    results = run_sweep(models, datasets, ks, seeds, voc_size=args.voc_size, svm_kernel=args.svm_kernel, svm_C=args.svm_c)
+    results = run_sweep(
+        models, datasets, ks, seeds, voc_size=args.voc_size, svm_kernel=args.svm_kernel, svm_C=args.svm_c,
+        split_mode=args.split, test_size=args.test_size,
+    )
 
     classification_dir = RESULTS_DIR / "classification"
     classification_dir.mkdir(parents=True, exist_ok=True)
@@ -495,6 +534,20 @@ def main() -> None:
         "--svm-c", type=float, default=1.0,
         help="Classification experiment only: sklearn SVC's C (regularization strength) - see --svm-kernel's own "
              "help text on why this is a documented default, not a paper reproduction.",
+    )
+    parser.add_argument(
+        "--split", default="official", choices=["official", "random"],
+        help="Classification experiment only: 'official' (default, unchanged) requires hicot_* --datasets ids and "
+             "uses HiCOT's own provided train/test split (ECRTM/HiCOT Sec 4.4 reproduction). 'random' instead runs "
+             "over ANY dataset id from the `cluster` experiment's own registry (datasets/simple_registry.py), "
+             "drawing a stratified random split itself (see --test-size) - a distinct protocol, not a replacement "
+             "for 'official'. Under 'random', omitting --k auto-derives K from each dataset's own num_classes "
+             "(cluster's own convention) instead of requiring one shared topic count.",
+    )
+    parser.add_argument(
+        "--test-size", type=float, default=0.2,
+        help="Classification experiment, --split random only: held-out test fraction for the stratified random "
+             "split (default 0.2, i.e. an 80/20 train/test split).",
     )
     parser.add_argument(
         "--vaebm-embedder", default=None,

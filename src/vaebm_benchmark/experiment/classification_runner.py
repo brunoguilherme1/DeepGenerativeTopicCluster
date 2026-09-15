@@ -140,6 +140,88 @@ def run_single(
         release_accelerator_memory()
 
 
+def run_single_random_split(
+    model_name: str,
+    dataset_id: str,
+    k: Optional[int],
+    seed: int = 42,
+    voc_size: int = 5000,
+    test_size: float = 0.2,
+    svm_kernel: str = "linear",
+    svm_C: float = 1.0,
+) -> ClassificationRunResult:
+    """Same document -> representation -> SVM protocol as run_single()
+    above, but for datasets/simple_registry.py's own FULL dataset list -
+    the same ids experiment/cluster_runner.py's own `cluster` experiment
+    sweeps over - rather than only hicot_* ids with an official split.
+    The held-out test set is a stratified random 80/20 split we draw
+    ourselves (reseeded per `seed`, like the topic model refit below),
+    not a paper-provided one - so this is a distinct protocol from
+    run_single()'s ECRTM/HiCOT Sec 4.4 reproduction, not a replacement
+    for it (see run_experiment.py's own --split flag).
+
+    k=None auto-derives K from the dataset's own num_classes (cluster's
+    own convention, sensible here since this path runs over cluster's
+    own broad, varied-class-count dataset list rather than the fixed
+    50/100 topic counts run_single()'s ECRTM-reproduction protocol
+    uses) - pass an explicit k to instead fix one topic count for every
+    dataset."""
+    from sklearn.metrics import accuracy_score, f1_score
+    from sklearn.model_selection import train_test_split
+    from sklearn.svm import SVC
+
+    from vaebm_benchmark.datasets.simple_registry import load_dataset, resolve_dataset_id
+    from vaebm_benchmark.experiment.scientific_models import build_model, representation_source_for_model
+    from vaebm_benchmark.utils.seeding import set_all_seeds
+
+    representation_source = representation_source_for_model(model_name)
+    start = time.perf_counter()
+    model = None
+    try:
+        set_all_seeds(seed)
+        resolved_id = resolve_dataset_id(dataset_id)
+        documents, labels, num_classes = load_dataset(resolved_id)
+        effective_k = k if k is not None else num_classes
+
+        train_docs, test_docs, train_labels, test_labels = train_test_split(
+            documents, labels, test_size=test_size, random_state=seed, stratify=labels,
+        )
+
+        model = build_model(model_name, effective_k, seed, voc_size, dataset_id=resolved_id)
+        model.fit(train_docs)  # labels never passed to fit()
+
+        train_repr = _representation(model, train_docs, representation_source)
+        test_repr = _representation(model, test_docs, representation_source)
+
+        clf = SVC(kernel=svm_kernel, C=svm_C, random_state=seed)
+        clf.fit(train_repr, train_labels)
+        preds = clf.predict(test_repr)
+
+        accuracy = float(accuracy_score(test_labels, preds))
+        f1 = float(f1_score(test_labels, preds, average="macro"))
+
+        runtime = time.perf_counter() - start
+        return ClassificationRunResult(
+            experiment="classification", model=model_name, dataset=dataset_id, k=effective_k, seed=seed,
+            accuracy=accuracy, f1=f1, representation_source=representation_source,
+            num_train_docs=len(train_docs), num_test_docs=len(test_docs),
+            runtime_seconds=runtime, status="ok",
+        )
+    except Exception as exc:  # noqa: BLE001 - one failed combination must not abort the whole sweep
+        runtime = time.perf_counter() - start
+        return ClassificationRunResult(
+            experiment="classification", model=model_name, dataset=dataset_id, k=k or 0, seed=seed,
+            accuracy=None, f1=None, representation_source=representation_source,
+            num_train_docs=0, num_test_docs=0,
+            runtime_seconds=runtime, status="error", error=f"{exc}\n{traceback.format_exc(limit=3)}",
+        )
+    finally:
+        from vaebm_benchmark.utils.gpu_memory import release_accelerator_memory
+
+        del model
+        release_accelerator_memory()
+
+
 def run_sweep(
     models: list[str],
     datasets: list[str],
@@ -148,6 +230,8 @@ def run_sweep(
     voc_size: int = 5000,
     svm_kernel: str = "linear",
     svm_C: float = 1.0,
+    split_mode: str = "official",
+    test_size: float = 0.2,
 ) -> list[ClassificationRunResult]:
     """Flat, per-(model, dataset, k, seed) result list - one run per
     combination. Aggregation (mean/std/CI across seeds) is a reporting
@@ -155,9 +239,20 @@ def run_sweep(
     which consumes exactly this flat list. Every individual seed's result
     is still in the returned list and gets persisted.
 
+    split_mode="official" (default, unchanged) uses run_single()'s
+    hicot_*-only official train/test split. split_mode="random" uses
+    run_single_random_split() instead - any dataset id, a stratified
+    80/20 split drawn per seed. `ks` may contain `None` in random mode
+    (meaning "auto-derive K from the dataset's own num_classes") -
+    official mode requires real ints, since ECRTM-style K is never
+    dataset-derived.
+
     Prints a one-line status per combination AS IT FINISHES, so progress
     is visible during a long run and partial results survive even if a
     later combination is interrupted."""
+    if split_mode not in ("official", "random"):
+        raise ValueError(f"Unknown split_mode '{split_mode}'. Expected 'official' or 'random'.")
+
     results = []
     total = len(ks) * len(datasets) * len(models) * len(seeds)
     count = 0
@@ -166,12 +261,19 @@ def run_sweep(
             for model_name in models:
                 for seed in seeds:
                     count += 1
-                    result = run_single(model_name, dataset_id, k, seed=seed, voc_size=voc_size, svm_kernel=svm_kernel, svm_C=svm_C)
+                    if split_mode == "official":
+                        result = run_single(model_name, dataset_id, k, seed=seed, voc_size=voc_size, svm_kernel=svm_kernel, svm_C=svm_C)
+                    else:
+                        result = run_single_random_split(
+                            model_name, dataset_id, k, seed=seed, voc_size=voc_size,
+                            test_size=test_size, svm_kernel=svm_kernel, svm_C=svm_C,
+                        )
                     results.append(result)
+                    k_label = k if k is not None else "auto"
                     if result.status == "ok":
-                        print(f"[{count}/{total}] model={model_name} dataset={dataset_id} k={k} seed={seed}: ok "
+                        print(f"[{count}/{total}] model={model_name} dataset={dataset_id} k={k_label} seed={seed}: ok "
                               f"accuracy={result.accuracy} f1={result.f1}", flush=True)
                     else:
-                        print(f"[{count}/{total}] model={model_name} dataset={dataset_id} k={k} seed={seed}: ERROR "
+                        print(f"[{count}/{total}] model={model_name} dataset={dataset_id} k={k_label} seed={seed}: ERROR "
                               f"{result.error.splitlines()[0]}", flush=True)
     return results

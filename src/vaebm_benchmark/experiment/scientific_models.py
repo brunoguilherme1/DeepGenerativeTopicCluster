@@ -35,6 +35,8 @@ protocol) - same reasoning, extended to this model set.
 
 from __future__ import annotations
 
+import os
+
 MODEL_NAMES = ["vaebm", "fastopic", "lda", "hicot", "sbert_kmeans"]
 
 
@@ -92,11 +94,19 @@ def build_hicot(k: int, seed: int, voc_size: int, dataset_id: str = None, max_fi
         # runtime - fast datasets get the full 50 epochs' worth of
         # convergence, slow ones still stop gracefully at whatever
         # epoch max_fit_seconds allows, never both losing convergence
-        # quality AND still being slow. sinkhorn_max_iter stays reduced
-        # (5000 -> 100) - a genuine per-iteration cost, not something
-        # the early-stop mechanism substitutes for.
+        # quality AND still being slow.
+        #
+        # sinkhorn_max_iter is environment-configurable
+        # (VAEBM_HICOT_SINKHORN_MAX_ITER, default 100 - unchanged
+        # FutureLab behavior) since a second compute environment with no
+        # wall-clock budget (2026-09-14, this project's own second
+        # cluster) can afford a higher value (still 10x below upstream's
+        # own 5000) for better per-step OT-solution quality without
+        # trading away epoch count the way FutureLab's tighter budget
+        # required. Each environment's own launch script sets this
+        # explicitly - never silently different between runs.
         epochs=50,
-        sinkhorn_max_iter=100,
+        sinkhorn_max_iter=int(os.environ.get("VAEBM_HICOT_SINKHORN_MAX_ITER", "100")),
         max_fit_seconds=max_fit_seconds,
     )
     if dataset_id is not None and dataset_id.startswith("hicot_"):
