@@ -1,11 +1,12 @@
 """Shared model registry for the `classification` and `cluster`
 experiments (scripts/run_experiment.py --experiment classification /
 --experiment cluster) - model set {vaebm, fastopic, lda, hicot,
-sbert_kmeans}, each exposing a genuine representation (`theta` for
-fastopic/lda/hicot, `mu` for VAE-BM - see docs/methodological_notes.md
-#1 on why `mu` is not `theta` - `embeddings` for sbert_kmeans, which has
-neither) that both experiments consume identically, so a model added
-here is available to both without duplicating builder logic.
+sbert_kmeans, bertopic, sbert_gte, sbert_minilm}, each exposing a
+genuine representation (`theta` for fastopic/lda/hicot, `mu` for VAE-BM
+- see docs/methodological_notes.md #1 on why `mu` is not `theta` -
+`embeddings` for sbert_kmeans/bertopic/sbert_gte/sbert_minilm, which
+have neither) that both experiments consume identically, so a model
+added here is available to both without duplicating builder logic.
 
 `sbert_kmeans` (plain SBERT embeddings + scikit-learn KMeans, no
 learned/trained topic model of its own - the same baseline
@@ -37,7 +38,7 @@ from __future__ import annotations
 
 import os
 
-MODEL_NAMES = ["vaebm", "fastopic", "lda", "hicot", "sbert_kmeans"]
+MODEL_NAMES = ["vaebm", "fastopic", "lda", "hicot", "sbert_kmeans", "bertopic", "sbert_gte", "sbert_minilm"]
 
 
 def build_vaebm(k: int, seed: int, voc_size: int, dataset_id: str = None):
@@ -136,12 +137,37 @@ def build_sbert_kmeans(k: int, seed: int, voc_size: int, dataset_id: str = None)
     return SBERTKMeansAdapter(n_clusters=k, embedder="all-MiniLM-L6-v2", random_state=seed)
 
 
+def build_bertopic(k: int, seed: int, voc_size: int, dataset_id: str = None):
+    from vaebm_benchmark.models.bertopic_adapter import BERTopicAdapter
+
+    return BERTopicAdapter(n_clusters=k, embedding_model="all-MiniLM-L6-v2", random_state=seed)
+
+
+def _build_sbert_variant(embedder: str):
+    """Same named-SBERT-embedder-variant factory as experiment/
+    cluster_runner.py's own _build_sbert_variant() (duplicated, not
+    imported - MODEL_BUILDERS here and CLUSTER_MODEL_BUILDERS there are
+    deliberately separate registries, same as every other model already
+    present in both; importing across would invert this module's
+    existing one-way dependency direction, cluster_runner.py -> here)."""
+
+    def _builder(k: int, seed: int, voc_size: int, dataset_id: str = None):
+        from vaebm_benchmark.models.sbert_kmeans_adapter import SBERTKMeansAdapter
+
+        return SBERTKMeansAdapter(n_clusters=k, embedder=embedder, random_state=seed)
+
+    return _builder
+
+
 MODEL_BUILDERS = {
     "vaebm": build_vaebm,
     "fastopic": build_fastopic,
     "lda": build_lda,
     "hicot": build_hicot,
     "sbert_kmeans": build_sbert_kmeans,
+    "bertopic": build_bertopic,
+    "sbert_gte": _build_sbert_variant("thenlper/gte-large"),
+    "sbert_minilm": _build_sbert_variant("sentence-transformers/all-MiniLM-L6-v2"),
 }
 
 

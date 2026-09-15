@@ -77,6 +77,33 @@ def _representation(model, documents: list[str], representation_source: str):
     raise ValueError(f"Unknown representation_source '{representation_source}'")
 
 
+def _build_model_for_classification(model_name: str, k: int, seed: int, voc_size: int, dataset_id: str):
+    """build_model() dispatch, EXCEPT for hicot: wires the same
+    VAEBM_HICOT_MAX_FIT_SECONDS-configurable wall-clock early-stop
+    experiment/cluster_runner.py's own _build_hicot() wrapper already
+    gives the `cluster` experiment (see its own docstring/
+    docs/methodological_notes.md #14) - build_model()'s own generic
+    dispatch never passes max_fit_seconds at all (hicot's classification
+    fit() would otherwise have no internal early-stop, and risk being
+    hard-killed by run_single_random_split's own external subprocess
+    timeout mid-epoch with nothing usable to show for it, unlike the
+    `cluster` experiment's graceful stop). Not applied to run_single()'s
+    official-split path - unasked-for scope, and that path already ran
+    hicot without this before with no reported issue there."""
+    from vaebm_benchmark.experiment.scientific_models import build_model
+
+    if model_name != "hicot":
+        return build_model(model_name, k, seed, voc_size, dataset_id=dataset_id)
+
+    import os
+
+    from vaebm_benchmark.experiment.scientific_models import build_hicot
+
+    raw = os.environ.get("VAEBM_HICOT_MAX_FIT_SECONDS", "1200").strip().lower()
+    max_fit_seconds = None if raw in ("0", "none", "") else float(raw)
+    return build_hicot(k, seed, voc_size, dataset_id=dataset_id, max_fit_seconds=max_fit_seconds)
+
+
 def run_single(
     model_name: str,
     dataset_id: str,
@@ -171,7 +198,7 @@ def run_single_random_split(
     from sklearn.svm import SVC
 
     from vaebm_benchmark.datasets.simple_registry import load_dataset, resolve_dataset_id
-    from vaebm_benchmark.experiment.scientific_models import build_model, representation_source_for_model
+    from vaebm_benchmark.experiment.scientific_models import representation_source_for_model
     from vaebm_benchmark.utils.seeding import set_all_seeds
 
     representation_source = representation_source_for_model(model_name)
@@ -187,7 +214,7 @@ def run_single_random_split(
             documents, labels, test_size=test_size, random_state=seed, stratify=labels,
         )
 
-        model = build_model(model_name, effective_k, seed, voc_size, dataset_id=resolved_id)
+        model = _build_model_for_classification(model_name, effective_k, seed, voc_size, resolved_id)
         model.fit(train_docs)  # labels never passed to fit()
 
         train_repr = _representation(model, train_docs, representation_source)
