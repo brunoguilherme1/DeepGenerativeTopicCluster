@@ -75,7 +75,9 @@ registered for the experiment being run.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import csv
+import fcntl
 import json
 import sys
 
@@ -91,19 +93,40 @@ def _parse_ks(raw_values: list[str]) -> list[int]:
     return ks
 
 
+@contextlib.contextmanager
+def _file_lock(path):
+    """Exclusive cross-process lock via a sidecar `.lock` file, so
+    concurrent `run_experiment.py` subprocesses merging into the same
+    shared results file (e.g. a GPU-oversubscribed sweep launching
+    several workers per results dir) never race on the read-modify-write
+    below - unguarded, this reproducibly corrupted cluster_results.json
+    (JSONDecodeError: Extra data) the first time two workers finished at
+    once."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = path.parent / f".{path.name}.lock"
+    with open(lock_path, "w") as lock_file:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
+
+
 def _append_csv(csv_path, rows: list[dict]) -> None:
-    exists = csv_path.exists()
-    with open(csv_path, "a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
-        if not exists:
-            writer.writeheader()
-        writer.writerows(rows)
+    with _file_lock(csv_path):
+        exists = csv_path.exists()
+        with open(csv_path, "a", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+            if not exists:
+                writer.writeheader()
+            writer.writerows(rows)
 
 
 def _merge_json(json_path, rows: list[dict]) -> None:
-    existing = json.loads(json_path.read_text(encoding="utf-8")) if json_path.exists() else []
-    existing.extend(rows)
-    json_path.write_text(json.dumps(existing, indent=2), encoding="utf-8")
+    with _file_lock(json_path):
+        existing = json.loads(json_path.read_text(encoding="utf-8")) if json_path.exists() else []
+        existing.extend(rows)
+        json_path.write_text(json.dumps(existing, indent=2), encoding="utf-8")
 
 
 def _load_named_configs(raw: str, flag_name: str) -> dict:
