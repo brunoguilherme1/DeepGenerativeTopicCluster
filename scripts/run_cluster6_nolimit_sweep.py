@@ -47,7 +47,12 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-MODELS = ["sbert_gte", "sbert_bge", "sbert_mpnet", "sbert_minilm", "fastopic", "hicot"]
+# SBERT variants dropped (user-authorized, 2026-09-14) - their results
+# here already closely matched FutureLab's own numbers for the same
+# model/dataset combos (cross-hardware validation, not a reason to
+# recompute them a second time). fastopic also dropped, replaced by
+# bertopic - this run's own explicit model set.
+MODELS = ["bertopic", "hicot"]
 
 DATASETS = [
     "20ng", "imdb", "agnews_short", "search_snippets", "stack_overflow",
@@ -82,9 +87,19 @@ def detect_num_gpus() -> int:
 
 
 class Sweep:
-    def __init__(self, run_dir: Path, num_gpus: int):
+    def __init__(self, run_dir: Path, num_gpus: int, workers_per_gpu: int = 1):
         self.run_dir = run_dir
         self.num_gpus = num_gpus
+        # Oversubscription: each physical GPU here has ~11GB VRAM but a
+        # single hicot/bertopic combo was observed using well under 2GB
+        # (see docs/methodological_notes.md #14's own note on this run) -
+        # running several concurrent workers PER GPU (each its own
+        # subprocess, same CUDA_VISIBLE_DEVICES index) uses the spare
+        # memory/compute headroom instead of leaving it idle. Still only
+        # ONE model per subprocess - no multi-GPU data-parallel training
+        # inside any single combo, just more independent combos sharing
+        # each physical card at once.
+        self.workers_per_gpu = workers_per_gpu
         self.logs_dir = run_dir / "logs"
         self.tables_dir = run_dir / "tables"
         self.logs_dir.mkdir(parents=True, exist_ok=True)
@@ -133,14 +148,14 @@ class Sweep:
         with self._lock:
             self.progress_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
-    def write_status(self, gpu_index: int, model: str | None, dataset: str | None, attempt: int | None) -> None:
+    def write_status(self, slot: int, gpu_index: int, model: str | None, dataset: str | None, attempt: int | None) -> None:
         with self._lock:
             if model is None:
-                self._active.pop(gpu_index, None)
+                self._active.pop(slot, None)
             else:
-                self._active[gpu_index] = f"model={model} dataset={dataset} attempt={attempt}"
+                self._active[slot] = f"GPU {gpu_index} (slot {slot}): model={model} dataset={dataset} attempt={attempt}"
             completed, successful, failed = self.counts()
-            lines = [f"GPU {g}: {self._active[g]}" for g in sorted(self._active)]
+            lines = [self._active[s] for s in sorted(self._active)]
             text = (
                 "\n".join(lines) + ("\n\n" if lines else "") +
                 f"Completed: {completed}/{self.total}\nSuccessful: {successful}\nFailed: {failed}\n"
@@ -148,7 +163,7 @@ class Sweep:
             )
             self.status_path.write_text(text, encoding="utf-8")
 
-    def run_one(self, model: str, dataset: str, progress_idx: int, gpu_index: int) -> None:
+    def run_one(self, model: str, dataset: str, progress_idx: int, slot: int, gpu_index: int) -> None:
         key = combo_key(model, dataset)
         with self._lock:
             existing = self.checkpoint.get(key)
@@ -178,7 +193,7 @@ class Sweep:
 
         last_error = ""
         for attempt in range(1, MAX_ATTEMPTS + 1):
-            self.write_status(gpu_index, model, dataset, attempt)
+            self.write_status(slot, gpu_index, model, dataset, attempt)
             self.log(f"START model={model} dataset={dataset} attempt={attempt} gpu={gpu_index} progress={progress_idx}/{self.total}")
             start = time.perf_counter()
             try:
@@ -210,7 +225,7 @@ class Sweep:
                         self.write_progress()
                         self.log(f"OK model={model} dataset={dataset} runtime={runtime:.0f}s gpu={gpu_index} "
                                  f"acc={outcome['acc']} nmi={outcome['nmi']} progress={progress_idx}/{self.total}")
-                        self.write_status(gpu_index, None, None, None)
+                        self.write_status(slot, gpu_index, None, None, None)
                         return
                     else:
                         last_error = (outcome.get("error") or "")[:500]
@@ -230,7 +245,7 @@ class Sweep:
         self.write_progress()
         self.log(f"ERROR model={model} dataset={dataset} FINAL after {MAX_ATTEMPTS} attempts, giving up "
                  f"progress={progress_idx}/{self.total}")
-        self.write_status(gpu_index, None, None, None)
+        self.write_status(slot, gpu_index, None, None, None)
 
     def _read_result(self, model: str, dataset: str) -> dict | None:
         # Safe to read concurrently without the lock - run_experiment.py's
@@ -245,7 +260,9 @@ class Sweep:
         return None
 
     def run(self) -> None:
-        self.log(f"SWEEP_START run_dir={self.run_dir} num_gpus={self.num_gpus}")
+        total_workers = self.num_gpus * self.workers_per_gpu
+        self.log(f"SWEEP_START run_dir={self.run_dir} num_gpus={self.num_gpus} "
+                 f"workers_per_gpu={self.workers_per_gpu} total_workers={total_workers}")
         self.log(f"MONITOR tail -f {self.run_dir}/run.log")
         self.log(f"MONITOR cat {self.run_dir}/current_status.txt")
         self.log(f"MONITOR cat {self.run_dir}/progress.txt")
@@ -262,16 +279,21 @@ class Sweep:
                     continue
                 work_q.put((model, dataset, idx))
 
-        def worker(gpu_index: int) -> None:
+        def worker(slot: int, gpu_index: int) -> None:
             while True:
                 try:
                     model, dataset, progress_idx = work_q.get_nowait()
                 except queue.Empty:
                     return
-                self.run_one(model, dataset, progress_idx, gpu_index)
+                self.run_one(model, dataset, progress_idx, slot, gpu_index)
                 work_q.task_done()
 
-        threads = [threading.Thread(target=worker, args=(g,), name=f"gpu{g}") for g in range(self.num_gpus)]
+        # slot -> gpu_index round-robin, so workers_per_gpu>1 puts several
+        # slots on the SAME physical GPU (see __init__'s own docstring).
+        threads = [
+            threading.Thread(target=worker, args=(slot, slot % self.num_gpus), name=f"slot{slot}")
+            for slot in range(total_workers)
+        ]
         for t in threads:
             t.start()
         for t in threads:
@@ -341,6 +363,10 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--run-dir", default=None)
     parser.add_argument("--num-gpus", type=int, default=None, help="Default: auto-detect via nvidia-smi -L")
+    parser.add_argument("--workers-per-gpu", type=int, default=1,
+                         help="Concurrent combinations sharing each physical GPU (default 1). "
+                              "Safe to raise when a single combo's own memory footprint is well "
+                              "under the card's total VRAM - see Sweep.__init__'s own docstring.")
     args = parser.parse_args()
 
     num_gpus = args.num_gpus if args.num_gpus is not None else detect_num_gpus()
@@ -356,7 +382,7 @@ def main() -> None:
         run_dir = REPO_ROOT / "results" / f"cluster6_all_datasets_{timestamp}"
         run_dir.mkdir(parents=True, exist_ok=False)
 
-    Sweep(run_dir, num_gpus).run()
+    Sweep(run_dir, num_gpus, args.workers_per_gpu).run()
 
 
 if __name__ == "__main__":
