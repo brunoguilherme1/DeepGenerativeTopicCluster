@@ -138,6 +138,7 @@ def per_run_rows(results: list[ClassificationRunResult]) -> list[dict]:
             "representation_source": r.representation_source,
             "num_train_docs": r.num_train_docs, "num_test_docs": r.num_test_docs,
             "runtime_seconds": round(r.runtime_seconds, 3), "status": r.status, "error": r.error,
+            "split_stratified": r.split_stratified,
         }
         for r in results
     ]

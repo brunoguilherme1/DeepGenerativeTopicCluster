@@ -54,6 +54,7 @@ class ClassificationRunResult:
     runtime_seconds: float
     status: str  # "ok" | "error"
     error: str = ""
+    split_stratified: bool = True
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -204,15 +205,32 @@ def run_single_random_split(
     representation_source = representation_source_for_model(model_name)
     start = time.perf_counter()
     model = None
+    stratified = True
     try:
         set_all_seeds(seed)
         resolved_id = resolve_dataset_id(dataset_id)
         documents, labels, num_classes = load_dataset(resolved_id)
         effective_k = k if k is not None else num_classes
 
-        train_docs, test_docs, train_labels, test_labels = train_test_split(
-            documents, labels, test_size=test_size, random_state=seed, stratify=labels,
-        )
+        try:
+            train_docs, test_docs, train_labels, test_labels = train_test_split(
+                documents, labels, test_size=test_size, random_state=seed, stratify=labels,
+            )
+        except ValueError as split_exc:
+            # Some datasets (e.g. "tweet") have singleton classes (exactly
+            # 1 document) - a stratified split is mathematically
+            # impossible for those (a class needs >=2 members to put
+            # >=1 in EACH of train/test), not a transient error retrying
+            # would fix. Fall back to a plain random split for this combo
+            # only - flagged via split_stratified=False below, never
+            # silent, rather than leaving every model's result on this
+            # dataset as a permanent, avoidable error.
+            if "least populated class" not in str(split_exc):
+                raise
+            stratified = False
+            train_docs, test_docs, train_labels, test_labels = train_test_split(
+                documents, labels, test_size=test_size, random_state=seed,
+            )
 
         model = _build_model_for_classification(model_name, effective_k, seed, voc_size, resolved_id)
         model.fit(train_docs)  # labels never passed to fit()
@@ -232,7 +250,7 @@ def run_single_random_split(
             experiment="classification", model=model_name, dataset=dataset_id, k=effective_k, seed=seed,
             accuracy=accuracy, f1=f1, representation_source=representation_source,
             num_train_docs=len(train_docs), num_test_docs=len(test_docs),
-            runtime_seconds=runtime, status="ok",
+            runtime_seconds=runtime, status="ok", split_stratified=stratified,
         )
     except Exception as exc:  # noqa: BLE001 - one failed combination must not abort the whole sweep
         runtime = time.perf_counter() - start
@@ -241,6 +259,7 @@ def run_single_random_split(
             accuracy=None, f1=None, representation_source=representation_source,
             num_train_docs=0, num_test_docs=0,
             runtime_seconds=runtime, status="error", error=f"{exc}\n{traceback.format_exc(limit=3)}",
+            split_stratified=stratified,
         )
     finally:
         from vaebm_benchmark.utils.gpu_memory import release_accelerator_memory

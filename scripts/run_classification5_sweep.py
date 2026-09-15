@@ -190,6 +190,7 @@ class Sweep:
                             "status": "ok", "attempts": attempt, "runtime": outcome["runtime_seconds"],
                             "k": outcome["k"], "accuracy": outcome["accuracy"], "f1": outcome["f1"],
                             "num_train_docs": outcome["num_train_docs"], "num_test_docs": outcome["num_test_docs"],
+                            "split_stratified": outcome.get("split_stratified", True),
                             "timestamp": now_iso(),
                         }
                         self.save_checkpoint()
@@ -276,6 +277,7 @@ class Sweep:
                         "seed": SEED, "accuracy": ck["accuracy"], "f1": ck["f1"],
                         "num_train_docs": ck.get("num_train_docs"), "num_test_docs": ck.get("num_test_docs"),
                         "runtime_seconds": ck["runtime"], "status": "ok", "error": "",
+                        "split_stratified": ck.get("split_stratified", True),
                     })
                 else:
                     row = [model, dataset, "N/A", "ERROR", "ERROR", "N/A"]
@@ -284,6 +286,7 @@ class Sweep:
                         "seed": SEED, "accuracy": None, "f1": None,
                         "num_train_docs": None, "num_test_docs": None,
                         "runtime_seconds": None, "status": "error", "error": ck.get("error", "not run"),
+                        "split_stratified": None,
                     })
                 rows_by_dataset[dataset].append(row)
 
