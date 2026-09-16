@@ -209,6 +209,8 @@ def _build_sbert_variant(embedder: str):
 
 MODEL_BUILDERS = {
     "vaebm": build_vaebm,
+    "vaebm_poe": build_vaebm_poe,
+    "vaebm_dec": build_vaebm_dec,
     "fastopic": build_fastopic,
     "lda": build_lda,
     "hicot": build_hicot,
