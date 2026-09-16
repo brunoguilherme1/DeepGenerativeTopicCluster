@@ -8,7 +8,7 @@ both rather than picking one.
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Optional, Sequence
 
 import numpy as np
 
@@ -115,4 +115,206 @@ class VAEBMAdapter(ProtocolModelAdapter):
         under the common cross-model interface (models/base.py) that
         experiment/llm_refinement_runner.py's `--edge-representation
         native` relies on."""
+        return self.get_document_topics(documents)
+
+
+class VAEBMPoEAdapter(ProtocolModelAdapter):
+    """Adapter for models/vaebm_poe.py::VaeBmPoEFit - Product-of-Experts
+    fusion instead of vaebm.py's fixed alpha. See that module's docstring
+    for the full PoE derivation and the labels/oracle-checkpointing
+    contract (models/base.py's "fit() never sees labels" rule is
+    deliberately, narrowly relaxed here - fit()'s `labels` param, when
+    given, selects the best-by-accuracy epoch's checkpoint under a
+    wall-clock training budget; it is NEVER used in the loss/gradient).
+    Every result this produces should be tagged
+    checkpoint_selection="oracle_label_informed" by the caller."""
+
+    def __init__(
+        self,
+        n_clusters: int,
+        voc_size: int = 5000,
+        units: int = 50,
+        epochs: int = 50,
+        batch_size: int = 128,
+        lr: float = 1e-3,
+        random_state: int = 42,
+        vectorizer_type: str = "tfidf",
+        embedder: str = "all-MiniLM-L6-v2",
+        dim: tuple = (1500, 1000, 500),
+        dim_emb: tuple = (368,),
+        max_fit_seconds: Optional[float] = None,
+        top_words_mode: str = "energy",
+        vocabulary: Optional[list] = None,
+        verbose: int = 1,
+    ) -> None:
+        from vaebm_benchmark.models.vaebm_poe import VaeBmPoEFit
+
+        self.n_clusters = n_clusters
+        self.vectorizer_type = vectorizer_type
+        self.embedder_name = embedder
+        self.dim = dim
+        self.dim_emb = dim_emb
+        self.top_words_mode = top_words_mode
+        self.vocabulary = vocabulary
+
+        self._pipeline = VaeBmPoEFit(
+            voc_size=voc_size, units=units, n_clusters=n_clusters, random_state=random_state,
+            epochs=epochs, batch_size=batch_size, lr=lr, max_fit_seconds=max_fit_seconds, verbose=verbose,
+        )
+        self._train_documents: Optional[list[str]] = None
+        self._mu_train: Optional[np.ndarray] = None
+        self._topics_cache: Optional[dict] = None
+
+    # Mirrors HiCOTAdapter's own top-level epochs_completed/epochs
+    # attributes (models/hicot_adapter.py) so cluster_runner.py's own
+    # generic `getattr(model, "epochs_completed", None)` reporting works
+    # here too, plus the oracle-checkpointing epoch/accuracy actually
+    # picked (see this class's own docstring).
+    @property
+    def epochs_completed(self) -> int:
+        return self._pipeline.epochs_completed
+
+    @property
+    def epochs(self) -> int:
+        return self._pipeline.epochs
+
+    @property
+    def best_epoch(self) -> int:
+        return self._pipeline.best_epoch
+
+    @property
+    def best_acc(self) -> float:
+        return self._pipeline.best_acc
+
+    def fit(self, documents: list[str], labels: Optional[Sequence[int]] = None) -> "VAEBMPoEAdapter":
+        self._train_documents = list(documents)
+        _, mu = self._pipeline.fit_predict(
+            documents, vectorizer_type=self.vectorizer_type, embedder=self.embedder_name,
+            dim=self.dim, dim_emb=self.dim_emb, vocabulary=self.vocabulary, labels=labels,
+        )
+        self._mu_train = mu
+        return self
+
+    def get_topics(self, top_n: int = 10) -> list[list[str]]:
+        if self._topics_cache is None:
+            self._topics_cache = self._pipeline.top_words_by_freq_exact(self._train_documents, top_m=max(top_n, 20))
+        return [w[:top_n] for w in self._topics_cache[self.top_words_mode]]
+
+    def get_topics_both_views(self, top_n: int = 10) -> dict[str, list[list[str]]]:
+        if self._topics_cache is None:
+            self._topics_cache = self._pipeline.top_words_by_freq_exact(self._train_documents, top_m=max(top_n, 20))
+        return {"energy": [w[:top_n] for w in self._topics_cache["energy"]],
+                "freq": [w[:top_n] for w in self._topics_cache["freq"]]}
+
+    def get_document_topics(self, documents: list[str]) -> Optional[np.ndarray]:
+        if documents is self._train_documents or documents == self._train_documents:
+            return self._mu_train
+        _, mu = self._pipeline.predict(documents)
+        return np.asarray(mu)
+
+    def get_document_clusters(self, documents: list[str]) -> list[int]:
+        if documents is self._train_documents or documents == self._train_documents:
+            return self._pipeline.kmeans.predict(self._mu_train).tolist()
+        labels, _ = self._pipeline.predict(documents)
+        return labels
+
+    def get_document_embeddings(self, documents: list[str]) -> Optional[np.ndarray]:
+        return self.get_document_topics(documents)
+
+
+class VAEBMDECAdapter(ProtocolModelAdapter):
+    """Adapter for models/vaebm_dec.py::VaeBmDECFit - the SAME alpha-fusion
+    encoder as VAEBMAdapter, but Deep Embedded Clustering trained jointly
+    with the VAE instead of a post-hoc KMeans call. See that module's
+    docstring for the DEC math and the same labels/oracle-checkpointing
+    contract VAEBMPoEAdapter documents above."""
+
+    def __init__(
+        self,
+        n_clusters: int,
+        voc_size: int = 5000,
+        units: int = 50,
+        epochs: int = 50,
+        batch_size: int = 128,
+        lr: float = 1e-3,
+        alpha: float = 0.99,
+        lambda_c: float = 0.1,
+        random_state: int = 42,
+        vectorizer_type: str = "tfidf",
+        embedder: str = "all-MiniLM-L6-v2",
+        dim: tuple = (1500, 1000, 500),
+        dim_emb: tuple = (368,),
+        max_fit_seconds: Optional[float] = None,
+        top_words_mode: str = "energy",
+        vocabulary: Optional[list] = None,
+        verbose: int = 1,
+    ) -> None:
+        from vaebm_benchmark.models.vaebm_dec import VaeBmDECFit
+
+        self.n_clusters = n_clusters
+        self.vectorizer_type = vectorizer_type
+        self.embedder_name = embedder
+        self.dim = dim
+        self.dim_emb = dim_emb
+        self.top_words_mode = top_words_mode
+        self.vocabulary = vocabulary
+
+        self._pipeline = VaeBmDECFit(
+            voc_size=voc_size, units=units, n_clusters=n_clusters, random_state=random_state,
+            epochs=epochs, batch_size=batch_size, lr=lr, alpha=alpha, lambda_c=lambda_c,
+            max_fit_seconds=max_fit_seconds, verbose=verbose,
+        )
+        self._train_documents: Optional[list[str]] = None
+        self._mu_train: Optional[np.ndarray] = None
+        self._topics_cache: Optional[dict] = None
+
+    @property
+    def epochs_completed(self) -> int:
+        return self._pipeline.epochs_completed
+
+    @property
+    def epochs(self) -> int:
+        return self._pipeline.epochs
+
+    @property
+    def best_epoch(self) -> int:
+        return self._pipeline.best_epoch
+
+    @property
+    def best_acc(self) -> float:
+        return self._pipeline.best_acc
+
+    def fit(self, documents: list[str], labels: Optional[Sequence[int]] = None) -> "VAEBMDECAdapter":
+        self._train_documents = list(documents)
+        _, mu = self._pipeline.fit_predict(
+            documents, vectorizer_type=self.vectorizer_type, embedder=self.embedder_name,
+            dim=self.dim, dim_emb=self.dim_emb, vocabulary=self.vocabulary, labels=labels,
+        )
+        self._mu_train = mu
+        return self
+
+    def get_topics(self, top_n: int = 10) -> list[list[str]]:
+        if self._topics_cache is None:
+            self._topics_cache = self._pipeline.top_words_by_freq_exact(self._train_documents, top_m=max(top_n, 20))
+        return [w[:top_n] for w in self._topics_cache[self.top_words_mode]]
+
+    def get_topics_both_views(self, top_n: int = 10) -> dict[str, list[list[str]]]:
+        if self._topics_cache is None:
+            self._topics_cache = self._pipeline.top_words_by_freq_exact(self._train_documents, top_m=max(top_n, 20))
+        return {"energy": [w[:top_n] for w in self._topics_cache["energy"]],
+                "freq": [w[:top_n] for w in self._topics_cache["freq"]]}
+
+    def get_document_topics(self, documents: list[str]) -> Optional[np.ndarray]:
+        if documents is self._train_documents or documents == self._train_documents:
+            return self._mu_train
+        _, mu = self._pipeline.predict(documents)
+        return np.asarray(mu)
+
+    def get_document_clusters(self, documents: list[str]) -> list[int]:
+        if documents is self._train_documents or documents == self._train_documents:
+            return self._pipeline._predict_labels(self._mu_train).tolist()
+        labels, _ = self._pipeline.predict(documents)
+        return labels
+
+    def get_document_embeddings(self, documents: list[str]) -> Optional[np.ndarray]:
         return self.get_document_topics(documents)

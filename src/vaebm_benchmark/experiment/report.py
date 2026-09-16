@@ -42,6 +42,8 @@ DATASET_DISPLAY_NAMES = {
 }
 MODEL_DISPLAY_NAMES = {
     "vaebm": "VAE-BM",
+    "vaebm_poe": "VAE-BM-PoE",
+    "vaebm_dec": "VAE-BM-DEC",
     "bertopic": "BERTopic",
     "fastopic": "FASTopic",
     "glocom": "GloCOM",

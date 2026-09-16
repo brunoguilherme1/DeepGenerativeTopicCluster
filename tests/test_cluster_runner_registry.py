@@ -9,14 +9,16 @@ no dataset download, no network access.
 from vaebm_benchmark.experiment.cluster_runner import CLUSTER_MODEL_BUILDERS, list_cluster_models
 
 
-def test_all_eleven_models_are_registered():
+def test_all_thirteen_models_are_registered():
     """vaebm/bertopic/fastopic/glocom, plus lda/hicot/sbert_kmeans added
     for the classification/cluster experiments' shared model set (see
     experiment/scientific_models.py), plus the 4 named SBERT+KMeans
     embedder variants (sbert_gte/sbert_bge/sbert_mpnet/sbert_minilm) the
-    cluster7_all_datasets sweep uses."""
+    cluster7_all_datasets sweep uses, plus vaebm_poe/vaebm_dec (2026-09-16
+    two-tower-fusion/joint-clustering VAE-BM variants - see
+    models/vaebm_poe.py, models/vaebm_dec.py)."""
     assert set(list_cluster_models()) == {
-        "vaebm", "bertopic", "fastopic", "glocom", "lda", "hicot", "sbert_kmeans",
+        "vaebm", "vaebm_poe", "vaebm_dec", "bertopic", "fastopic", "glocom", "lda", "hicot", "sbert_kmeans",
         "sbert_gte", "sbert_bge", "sbert_mpnet", "sbert_minilm",
     }
 

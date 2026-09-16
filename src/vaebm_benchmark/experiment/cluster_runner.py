@@ -103,6 +103,15 @@ class ClusterResult:
     # large/slow dataset is never mistaken for a fully-converged one.
     training_epochs_completed: Optional[int] = None
     training_epochs_requested: Optional[int] = None
+    # "oracle_label_informed" for vaebm_poe/vaebm_dec ONLY (user-authorized
+    # 2026-09-16 exception to models/base.py's "fit() never sees labels" -
+    # these two pick their best-epoch checkpoint by label-informed
+    # accuracy under a wall-clock budget; see vaebm_adapter.py's own
+    # VAEBMPoEAdapter/VAEBMDECAdapter docstrings). "none" for every other
+    # model (fully unsupervised, as always) - NEVER compare an
+    # oracle-selected number against a "none" one as if they were on
+    # equal footing.
+    checkpoint_selection: str = "none"
 
     def as_dict(self) -> dict:
         return asdict(self)
@@ -125,6 +134,49 @@ def _build_vaebm(k: int, seed: int, voc_size: int):
         dim_emb=(368,),
         alpha=0.99,
         top_words_mode="energy",
+    )
+
+
+def _build_vaebm_poe(k: int, seed: int, voc_size: int):
+    """Same two-tower BoW+embedding architecture as _build_vaebm() above,
+    but Product-of-Experts fusion instead of the fixed alpha=0.99 blend -
+    see models/vaebm_poe.py's own docstring for the math. epochs=50 (not
+    _build_vaebm's own 30) since the actual stop is wall-clock
+    (max_fit_seconds), not the epoch count - same convention _build_hicot
+    below already uses. max_fit_seconds is environment-configurable
+    (VAEBM_POE_MAX_FIT_SECONDS, default 1200s/20min, same 10-minute
+    margin under this sweep's own 30-minute external subprocess timeout
+    as hicot's own)."""
+    import os
+
+    from vaebm_benchmark.models.vaebm_adapter import VAEBMPoEAdapter
+
+    raw = os.environ.get("VAEBM_POE_MAX_FIT_SECONDS", "1200").strip().lower()
+    max_fit_seconds = None if raw in ("0", "none", "") else float(raw)
+    return VAEBMPoEAdapter(
+        n_clusters=k, voc_size=voc_size, units=50, epochs=50, batch_size=128, lr=1e-3,
+        random_state=seed, vectorizer_type="tfidf", embedder="all-MiniLM-L6-v2",
+        dim=(1500, 1000, 500), dim_emb=(368,), max_fit_seconds=max_fit_seconds, top_words_mode="energy",
+    )
+
+
+def _build_vaebm_dec(k: int, seed: int, voc_size: int):
+    """Same alpha=0.99 two-tower encoder as _build_vaebm() above, but Deep
+    Embedded Clustering trained jointly instead of post-hoc KMeans - see
+    models/vaebm_dec.py's own docstring. lambda_c=0.1 is a documented
+    default (DEC's own paper doesn't fix one universally), not a paper
+    reproduction. Same epochs/max_fit_seconds convention as
+    _build_vaebm_poe above (VAEBM_DEC_MAX_FIT_SECONDS env var)."""
+    import os
+
+    from vaebm_benchmark.models.vaebm_adapter import VAEBMDECAdapter
+
+    raw = os.environ.get("VAEBM_DEC_MAX_FIT_SECONDS", "1200").strip().lower()
+    max_fit_seconds = None if raw in ("0", "none", "") else float(raw)
+    return VAEBMDECAdapter(
+        n_clusters=k, voc_size=voc_size, units=50, epochs=50, batch_size=128, lr=1e-3,
+        alpha=0.99, lambda_c=0.1, random_state=seed, vectorizer_type="tfidf", embedder="all-MiniLM-L6-v2",
+        dim=(1500, 1000, 500), dim_emb=(368,), max_fit_seconds=max_fit_seconds, top_words_mode="energy",
     )
 
 
@@ -226,6 +278,8 @@ def _build_sbert_variant(embedder: str):
 
 CLUSTER_MODEL_BUILDERS = {
     "vaebm": _build_vaebm,
+    "vaebm_poe": _build_vaebm_poe,
+    "vaebm_dec": _build_vaebm_dec,
     "bertopic": _build_bertopic,
     "fastopic": _build_fastopic,
     "glocom": _build_glocom,
@@ -288,12 +342,26 @@ def run_single(model_name: str, dataset_id: str, seed: int = 42, voc_size: int =
             fit_documents = documents
             preprocessing_source = "none"
 
+        # User-authorized (2026-09-16) exception: vaebm_poe/vaebm_dec's
+        # own fit() accepts labels ONLY to pick which epoch's checkpoint
+        # to keep (oracle model selection under a wall-clock budget, this
+        # being the unsupervised `cluster` experiment with no held-out
+        # split to select on instead) - see vaebm_adapter.py's own
+        # VAEBMPoEAdapter/VAEBMDECAdapter docstrings. Labels are NEVER
+        # used in either model's loss/gradient, and every OTHER model
+        # here still never sees labels at all, unchanged.
+        uses_oracle_checkpointing = model_name in ("vaebm_poe", "vaebm_dec")
         model = CLUSTER_MODEL_BUILDERS[model_name](requested_k, seed, voc_size)
-        model.fit(fit_documents)  # labels never passed here
-        # hicot only - every other model has neither attribute, so both
-        # stay None (see ClusterResult's own field docstring above).
+        if uses_oracle_checkpointing:
+            model.fit(fit_documents, labels=labels)
+        else:
+            model.fit(fit_documents)  # labels never passed here
+        checkpoint_selection = "oracle_label_informed" if uses_oracle_checkpointing else "none"
+        # hicot/vaebm_poe/vaebm_dec only - every other model has neither
+        # attribute, so both stay None (see ClusterResult's own field
+        # docstring above).
         training_epochs_completed = getattr(model, "epochs_completed", None)
-        training_epochs_requested = getattr(model, "epochs", None) if model_name == "hicot" else None
+        training_epochs_requested = getattr(model, "epochs", None) if model_name in ("hicot", "vaebm_poe", "vaebm_dec") else None
 
         representation_source = representation_source_for_model(model_name)
         assignment_source = assignment_source_for_model(model_name)
@@ -332,6 +400,7 @@ def run_single(model_name: str, dataset_id: str, seed: int = 42, voc_size: int =
             representation_source=representation_source, assignment_source=assignment_source,
             num_documents=len(documents), preprocessing_source=preprocessing_source,
             training_epochs_completed=training_epochs_completed, training_epochs_requested=training_epochs_requested,
+            checkpoint_selection=checkpoint_selection,
             runtime_seconds=runtime, status="ok",
             **label_metrics, **geometry_metrics,
         )

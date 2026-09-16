@@ -272,6 +272,7 @@ def cluster_results_to_rows(results: list[ClusterResult]) -> list[dict]:
             "representation_source": r.representation_source, "assignment_source": r.assignment_source,
             "preprocessing_source": r.preprocessing_source,
             "training_epochs_completed": r.training_epochs_completed, "training_epochs_requested": r.training_epochs_requested,
+            "checkpoint_selection": r.checkpoint_selection,
             **{name: getattr(r, name) for name in CLUSTER_METRIC_ORDER},
             "runtime_seconds": round(r.runtime_seconds, 3), "status": r.status, "error": r.error,
         }
