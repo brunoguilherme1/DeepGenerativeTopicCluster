@@ -124,7 +124,14 @@ def _build_vaebm(k: int, seed: int, voc_size: int):
         n_clusters=k,
         voc_size=voc_size,
         units=50,
-        epochs=30,  # VaeBmKMeansFit's own supplied default
+        # Raised from VaeBmKMeansFit's own supplied default of 30 to 50
+        # (2026-09-16, user-authorized) - matches vaebm_poe/vaebm_dec's
+        # own epochs=50, for a fairer 3-way comparison. On HiCOT's own
+        # 5 datasets, plain "vaebm" already ran its full 30/30 epochs
+        # without Keras's own EarlyStopping(patience=1) ever triggering
+        # (loss kept improving throughout) - raising the ceiling gives
+        # it the same room to keep improving the other two variants get.
+        epochs=50,
         batch_size=128,
         lr=1e-3,  # see docs/methodological_notes.md #8 - 1e-2 diverges at these vocab scales
         random_state=seed,
