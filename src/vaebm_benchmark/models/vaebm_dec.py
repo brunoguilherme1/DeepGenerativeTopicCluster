@@ -104,6 +104,22 @@ class VaeBmDECFit:
         optimizer = Adam(self.lr)
         _ = self.model([X_bow[:1], E[:1]], training=False)
 
+        # Centroids must exist BEFORE the first optimizer.apply_gradients()
+        # call, not introduced partway through training - Keras's
+        # optimizer fixes its managed variable set on that first call, so
+        # adding a brand-new variable afterward raises "Unknown variable".
+        # Initialized via KMeans on the FRESH (untrained) encoder's own mu
+        # - a simplification of Xie et al. 2016's own separate
+        # pretrain-then-cluster phases (there, centroids are initialized
+        # from an already-pretrained autoencoder's embedding), appropriate
+        # given this model's wall-clock training budget; documented here,
+        # not silently different from the paper.
+        mu0, _, _ = self.model.encoder([X_bow, E], training=False)
+        init_kmeans = KMeans(n_clusters=self.n_clusters, random_state=22, n_init="auto")
+        init_kmeans.fit(mu0.numpy())
+        self.centroids = tf.Variable(init_kmeans.cluster_centers_.astype(np.float32), trainable=True, name="dec_centroids")
+        trainable_vars = self.model.trainable_variables + [self.centroids]
+
         n = X_bow.shape[0]
         rng = np.random.default_rng(self.random_state)
         best_weights = None
@@ -111,18 +127,23 @@ class VaeBmDECFit:
         best_preds = None
         best_metric = -1.0
         fit_start = time.perf_counter()
-        p_target = None  # set once centroids exist
 
         for epoch in range(1, self.epochs + 1):
+            # Target distribution P recomputed once per epoch (Xie et
+            # al.'s own "update every T iterations", T=1 epoch here) from
+            # the CURRENT (pre-this-epoch) state, then held fixed for all
+            # of this epoch's batches.
+            mu_pre, _, _ = self.model.encoder([X_bow, E], training=False)
+            q_pre = _student_t_assignment(mu_pre, self.centroids).numpy()
+            p_target = _target_distribution(q_pre)
+
             order = rng.permutation(n)
             epoch_losses = []
-            has_centroids = self.centroids is not None
-
             for start in range(0, n, self.batch_size):
                 idx = order[start:start + self.batch_size]
                 xb = tf.constant(X_bow[idx])
                 eb = tf.constant(E[idx])
-                p_batch = tf.constant(p_target[idx]) if has_centroids else None
+                p_batch = tf.constant(p_target[idx])
 
                 with tf.GradientTape() as tape:
                     mu, log_sigma, z = self.model.encoder([xb, eb])
@@ -132,37 +153,24 @@ class VaeBmDECFit:
                     )
                     vae_loss = -tf.reduce_mean(recon - kl)
 
-                    if has_centroids:
-                        q_batch = _student_t_assignment(mu, self.centroids)
-                        cluster_loss = tf.reduce_mean(
-                            tf.reduce_sum(p_batch * tf.math.log(p_batch / (q_batch + 1e-10) + 1e-10), axis=1)
-                        )
-                        loss = vae_loss + self.lambda_c * cluster_loss
-                    else:
-                        loss = vae_loss
+                    q_batch = _student_t_assignment(mu, self.centroids)
+                    cluster_loss = tf.reduce_mean(
+                        tf.reduce_sum(p_batch * tf.math.log(p_batch / (q_batch + 1e-10) + 1e-10), axis=1)
+                    )
+                    loss = vae_loss + self.lambda_c * cluster_loss
 
-                trainable = self.model.trainable_variables + ([self.centroids] if has_centroids else [])
-                grads = tape.gradient(loss, trainable)
-                optimizer.apply_gradients(zip(grads, trainable))
+                grads = tape.gradient(loss, trainable_vars)
+                optimizer.apply_gradients(zip(grads, trainable_vars))
                 epoch_losses.append(float(loss.numpy()))
             self.epochs_completed = epoch
 
+            # Checkpoint/metric eval reflects the POST-update state (this
+            # epoch's own trained weights+centroids), not the pre-update
+            # P/Q computed above.
             mu_full, _, _ = self.model.encoder([X_bow, E], training=False)
             Z = mu_full.numpy()
-
-            if self.centroids is None:
-                # First pass: initialize centroids via KMeans on this
-                # epoch's own mu (Xie et al.'s own pretrain-then-cluster
-                # init, compressed to epoch 1 here).
-                init_kmeans = KMeans(n_clusters=self.n_clusters, random_state=22, n_init="auto")
-                preds = init_kmeans.fit_predict(Z)
-                self.centroids = tf.Variable(init_kmeans.cluster_centers_.astype(np.float32), trainable=True, name="dec_centroids")
-                q_full = _student_t_assignment(tf.constant(Z), self.centroids).numpy()
-            else:
-                q_full = _student_t_assignment(tf.constant(Z), self.centroids).numpy()
-                preds = np.argmax(q_full, axis=1)
-
-            p_target = _target_distribution(q_full)  # for the NEXT epoch's batches
+            q_full = _student_t_assignment(tf.constant(Z), self.centroids).numpy()
+            preds = np.argmax(q_full, axis=1)
 
             mean_loss = float(np.mean(epoch_losses))
             if labels is not None:
