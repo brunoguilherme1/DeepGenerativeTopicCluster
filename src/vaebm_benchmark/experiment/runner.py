@@ -77,6 +77,7 @@ probability-simplex distribution.
 
 from __future__ import annotations
 
+import os
 import time
 import traceback
 from dataclasses import asdict, dataclass, field
@@ -125,11 +126,16 @@ class ExperimentResult:
 # and is the base every variant gets unless it overrides `lr` itself.
 _VAEBM_DEFAULTS = dict(
     units=50,
-    epochs=30,
+    epochs=50,  # raised from 30 (2026-09-16, user-authorized) - matches
+                # experiment/scientific_models.py::build_vaebm's own comment
     batch_size=128,
     lr=1e-3,
     vectorizer_type="tfidf",
-    embedder="all-MiniLM-L6-v2",
+    # environment-configurable (VAEBM_EMBEDDER, default unchanged) - see
+    # experiment/scientific_models.py::_vaebm_embedder's own docstring;
+    # --vaebm-embedder still overrides this per-run via set_vaebm_defaults()
+    # below, same as before.
+    embedder=os.environ.get("VAEBM_EMBEDDER", "all-MiniLM-L6-v2"),
     dim=(1500, 1000, 500),
     dim_emb=(368,),
     alpha=0.99,
@@ -155,7 +161,7 @@ _VAEBM_VARIANT_OVERRIDES: dict[str, dict] = {}
 # swapped in without a code change.
 _SBERT_KMEANS_DEFAULTS = dict(embedder="all-MiniLM-L6-v2")
 
-KNOWN_MODELS = ["vaebm", "bertopic", "sbert_kmeans"]
+KNOWN_MODELS = ["vaebm", "vaebm_poe", "vaebm_dec", "bertopic", "sbert_kmeans"]
 
 
 def _valid_vaebm_params() -> set[str]:
@@ -275,6 +281,28 @@ def _build_model(model_name: str, k: int, seed: int, voc_size: int):
         params = dict(_VAEBM_DEFAULTS)
         params.update(_VAEBM_VARIANT_OVERRIDES.get(model_name, {}))
         return VAEBMAdapter(n_clusters=k, voc_size=voc_size, random_state=seed, **params)
+    if model_name == "vaebm_poe":
+        # Product-of-Experts fusion variant (models/vaebm_poe.py) - shares
+        # _VAEBM_DEFAULTS' own embedder/dim/units/lr (including
+        # VAEBM_EMBEDDER env-var overrides), not a separate defaults dict,
+        # since every knob it takes besides max_fit_seconds is identical
+        # to plain "vaebm"'s own.
+        from vaebm_benchmark.models.vaebm_adapter import VAEBMPoEAdapter
+
+        raw = os.environ.get("VAEBM_POE_MAX_FIT_SECONDS", "1200").strip().lower()
+        max_fit_seconds = None if raw in ("0", "none", "") else float(raw)
+        params = {k2: v for k2, v in _VAEBM_DEFAULTS.items() if k2 != "alpha"}
+        return VAEBMPoEAdapter(n_clusters=k, voc_size=voc_size, random_state=seed, max_fit_seconds=max_fit_seconds, **params)
+    if model_name == "vaebm_dec":
+        # Joint Deep Embedded Clustering variant (models/vaebm_dec.py) -
+        # same _VAEBM_DEFAULTS base as "vaebm" (it uses the identical
+        # alpha-fusion encoder), plus lambda_c/max_fit_seconds.
+        from vaebm_benchmark.models.vaebm_adapter import VAEBMDECAdapter
+
+        raw = os.environ.get("VAEBM_DEC_MAX_FIT_SECONDS", "1200").strip().lower()
+        max_fit_seconds = None if raw in ("0", "none", "") else float(raw)
+        params = dict(_VAEBM_DEFAULTS)
+        return VAEBMDECAdapter(n_clusters=k, voc_size=voc_size, random_state=seed, lambda_c=0.1, max_fit_seconds=max_fit_seconds, **params)
     if model_name == "bertopic":
         from vaebm_benchmark.models.bertopic_adapter import BERTopicAdapter
 
@@ -299,7 +327,7 @@ def _assignment_source_for_model(model_name: str) -> str:
     is a fact about each adapter's own fit() (VAE-BM's latent mu vs. a
     plain/UMAP-reduced sentence embedding), not something derivable from
     the adapter interface alone."""
-    if model_name == "vaebm" or model_name in _VAEBM_VARIANT_OVERRIDES:
+    if model_name in ("vaebm", "vaebm_poe", "vaebm_dec") or model_name in _VAEBM_VARIANT_OVERRIDES:
         return "kmeans_on_latent_mu"
     if model_name == "sbert_kmeans" or model_name in _SBERT_KMEANS_VARIANT_OVERRIDES or model_name == "bertopic":
         return "kmeans_on_embeddings"

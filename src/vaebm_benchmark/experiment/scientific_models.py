@@ -38,7 +38,20 @@ from __future__ import annotations
 
 import os
 
-MODEL_NAMES = ["vaebm", "fastopic", "lda", "hicot", "sbert_kmeans", "bertopic", "sbert_gte", "sbert_minilm"]
+MODEL_NAMES = [
+    "vaebm", "vaebm_poe", "vaebm_dec", "fastopic", "lda", "hicot", "sbert_kmeans",
+    "bertopic", "sbert_gte", "sbert_minilm",
+]
+
+# Shared by build_vaebm/build_vaebm_poe/build_vaebm_dec below -
+# environment-configurable (VAEBM_EMBEDDER, default "all-MiniLM-L6-v2" -
+# unchanged prior behavior) so a launch script can swap every vaebm-family
+# model to e.g. "thenlper/gte-large" uniformly without a code change,
+# mirroring VAEBM_HICOT_SINKHORN_MAX_ITER's own env-var convention.
+def _vaebm_embedder() -> str:
+    import os
+
+    return os.environ.get("VAEBM_EMBEDDER", "all-MiniLM-L6-v2")
 
 
 def build_vaebm(k: int, seed: int, voc_size: int, dataset_id: str = None):
@@ -48,16 +61,51 @@ def build_vaebm(k: int, seed: int, voc_size: int, dataset_id: str = None):
         n_clusters=k,
         voc_size=voc_size,
         units=50,
-        epochs=30,
+        epochs=50,  # raised from 30 - see cluster_runner.py::_build_vaebm's own comment
         batch_size=128,
         lr=1e-3,  # see docs/methodological_notes.md #8
         random_state=seed,
         vectorizer_type="tfidf",
-        embedder="all-MiniLM-L6-v2",
+        embedder=_vaebm_embedder(),
         dim=(1500, 1000, 500),
         dim_emb=(368,),
         alpha=0.99,
         top_words_mode="energy",
+    )
+
+
+def build_vaebm_poe(k: int, seed: int, voc_size: int, dataset_id: str = None):
+    """Product-of-Experts fusion variant - see models/vaebm_poe.py's own
+    docstring. max_fit_seconds is environment-configurable
+    (VAEBM_POE_MAX_FIT_SECONDS, default 1200s/20min), same convention as
+    cluster_runner.py::_build_vaebm_poe."""
+    import os
+
+    from vaebm_benchmark.models.vaebm_adapter import VAEBMPoEAdapter
+
+    raw = os.environ.get("VAEBM_POE_MAX_FIT_SECONDS", "1200").strip().lower()
+    max_fit_seconds = None if raw in ("0", "none", "") else float(raw)
+    return VAEBMPoEAdapter(
+        n_clusters=k, voc_size=voc_size, units=50, epochs=50, batch_size=128, lr=1e-3,
+        random_state=seed, vectorizer_type="tfidf", embedder=_vaebm_embedder(),
+        dim=(1500, 1000, 500), dim_emb=(368,), max_fit_seconds=max_fit_seconds, top_words_mode="energy",
+    )
+
+
+def build_vaebm_dec(k: int, seed: int, voc_size: int, dataset_id: str = None):
+    """Joint Deep Embedded Clustering variant - see models/vaebm_dec.py's
+    own docstring. Same max_fit_seconds/lambda_c convention as
+    cluster_runner.py::_build_vaebm_dec."""
+    import os
+
+    from vaebm_benchmark.models.vaebm_adapter import VAEBMDECAdapter
+
+    raw = os.environ.get("VAEBM_DEC_MAX_FIT_SECONDS", "1200").strip().lower()
+    max_fit_seconds = None if raw in ("0", "none", "") else float(raw)
+    return VAEBMDECAdapter(
+        n_clusters=k, voc_size=voc_size, units=50, epochs=50, batch_size=128, lr=1e-3,
+        alpha=0.99, lambda_c=0.1, random_state=seed, vectorizer_type="tfidf", embedder=_vaebm_embedder(),
+        dim=(1500, 1000, 500), dim_emb=(368,), max_fit_seconds=max_fit_seconds, top_words_mode="energy",
     )
 
 
@@ -196,7 +244,7 @@ SBERT_KMEANS_VARIANT_NAMES = ("sbert_kmeans", "sbert_gte", "sbert_bge", "sbert_m
 # so that module can reuse these same three lookups for every model it
 # supports, not just this file's own five.
 def representation_source_for_model(model_name: str) -> str:
-    if model_name == "vaebm":
+    if model_name in ("vaebm", "vaebm_poe", "vaebm_dec"):
         return "mu"
     if model_name in ("fastopic", "lda", "hicot", "glocom"):
         return "theta"
@@ -208,9 +256,16 @@ def representation_source_for_model(model_name: str) -> str:
 # How hard cluster assignments are derived - "argmax_theta" for a genuine
 # theta, "kmeans_on_latent_mu" for VAE-BM (its EXISTING behavior, kept
 # as-is - never softmax mu into a fake theta), "kmeans_on_embeddings" for
-# a plain embed-then-cluster model with neither.
+# a plain embed-then-cluster model with neither. vaebm_dec is tagged the
+# same as vaebm/vaebm_poe here even though its OWN assignment is a
+# Student-t argmax over trained centroids (models/vaebm_dec.py), not a
+# literal KMeans call - both code paths that branch on this value
+# (cluster_runner.py/classification_runner.py) just call the adapter's
+# own get_document_clusters() for anything other than "argmax_theta", so
+# behavior is correct either way; this label is slightly imprecise for
+# vaebm_dec specifically, not worth a new enum value for.
 def assignment_source_for_model(model_name: str) -> str:
-    if model_name == "vaebm":
+    if model_name in ("vaebm", "vaebm_poe", "vaebm_dec"):
         return "kmeans_on_latent_mu"
     if model_name in ("fastopic", "lda", "hicot", "glocom"):
         return "argmax_theta"
