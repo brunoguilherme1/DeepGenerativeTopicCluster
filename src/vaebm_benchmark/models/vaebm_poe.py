@@ -30,6 +30,18 @@ other model's (which pick their sole/final epoch with no such benefit).
 
 from __future__ import annotations
 
+import os
+
+# Must run BEFORE `import tensorflow` below - see vaebm.py's own
+# module-level guard/docstring comment for why (auto-JIT needs
+# libdevice.10.bc, absent from a pip-only CUDA install). vaebm.py sets
+# this too, but only takes effect if it happens to be imported before
+# tensorflow itself - not guaranteed here, since this module may be the
+# first to trigger `import tensorflow` in a process that never imports
+# vaebm.py (e.g. running vaebm_poe alone). Not a change to this model's
+# math - a compute-backend setting only.
+os.environ.setdefault("TF_XLA_FLAGS", "--tf_xla_auto_jit=0")
+
 import time
 from typing import Optional, Sequence, Union
 

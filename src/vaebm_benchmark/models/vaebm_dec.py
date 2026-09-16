@@ -31,6 +31,12 @@ checkpoint_selection="oracle_label_informed" in persisted results).
 
 from __future__ import annotations
 
+import os
+
+# Must run BEFORE `import tensorflow` below - see vaebm_poe.py's own
+# comment (mirrors vaebm.py's module-level guard) for why.
+os.environ.setdefault("TF_XLA_FLAGS", "--tf_xla_auto_jit=0")
+
 import time
 from typing import Optional, Sequence, Union
 
