@@ -355,7 +355,12 @@ class VaeBmKMeansFit:
             units=self.units, voc=X_bow.shape[1], dim=dim, dim_emb=dim_emb, alpha=alpha,
             vectorizer_type=vectorizer_type, embedder=embedder,
         )
-        self.model.compile(optimizer=Adam(self.lr), loss=lossCluster)
+        # jit_compile explicitly False (not just TF_XLA_FLAGS above): recent
+        # Keras versions can default Model.compile()'s own jit_compile to
+        # "auto" and request XLA regardless of the auto-clustering env flag,
+        # which is what was triggering a cuDNN 9.1-runtime-vs-9.3-compiled
+        # version mismatch crash on labuai's older driver stack (2026-09-17).
+        self.model.compile(optimizer=Adam(self.lr), loss=lossCluster, jit_compile=False)
 
         _ = self.model([X_bow[:1], E[:1]], training=False)
 
