@@ -118,6 +118,8 @@ class ClusterResult:
 
 
 def _build_vaebm(k: int, seed: int, voc_size: int):
+    import os
+
     from vaebm_benchmark.models.vaebm_adapter import VAEBMAdapter
 
     return VAEBMAdapter(
@@ -136,7 +138,7 @@ def _build_vaebm(k: int, seed: int, voc_size: int):
         lr=1e-3,  # see docs/methodological_notes.md #8 - 1e-2 diverges at these vocab scales
         random_state=seed,
         vectorizer_type="tfidf",
-        embedder="all-MiniLM-L6-v2",
+        embedder=os.environ.get("VAEBM_EMBEDDER", "all-MiniLM-L6-v2"),
         dim=(1500, 1000, 500),
         dim_emb=(368,),
         alpha=0.99,
@@ -162,7 +164,7 @@ def _build_vaebm_poe(k: int, seed: int, voc_size: int):
     max_fit_seconds = None if raw in ("0", "none", "") else float(raw)
     return VAEBMPoEAdapter(
         n_clusters=k, voc_size=voc_size, units=50, epochs=50, batch_size=128, lr=1e-3,
-        random_state=seed, vectorizer_type="tfidf", embedder="all-MiniLM-L6-v2",
+        random_state=seed, vectorizer_type="tfidf", embedder=os.environ.get("VAEBM_EMBEDDER", "all-MiniLM-L6-v2"),
         dim=(1500, 1000, 500), dim_emb=(368,), max_fit_seconds=max_fit_seconds, top_words_mode="energy",
     )
 
@@ -182,7 +184,7 @@ def _build_vaebm_dec(k: int, seed: int, voc_size: int):
     max_fit_seconds = None if raw in ("0", "none", "") else float(raw)
     return VAEBMDECAdapter(
         n_clusters=k, voc_size=voc_size, units=50, epochs=50, batch_size=128, lr=1e-3,
-        alpha=0.99, lambda_c=0.1, random_state=seed, vectorizer_type="tfidf", embedder="all-MiniLM-L6-v2",
+        alpha=0.99, lambda_c=0.1, random_state=seed, vectorizer_type="tfidf", embedder=os.environ.get("VAEBM_EMBEDDER", "all-MiniLM-L6-v2"),
         dim=(1500, 1000, 500), dim_emb=(368,), max_fit_seconds=max_fit_seconds, top_words_mode="energy",
     )
 
