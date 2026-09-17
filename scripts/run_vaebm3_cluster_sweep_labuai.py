@@ -166,6 +166,14 @@ class Sweep:
         for p in (env["HF_HOME"], env["SENTENCE_TRANSFORMERS_HOME"], env["TORCH_HOME"]):
             Path(p).mkdir(parents=True, exist_ok=True)
         env["VAEBM_EMBEDDER"] = EMBEDDER
+        # Multiple concurrent workers per GPU (workers_per_gpu>1) means TF's
+        # default greedy allocator - which claims most of a device's free
+        # memory upfront regardless of actual need, observed here grabbing
+        # ~9GB/process on an 11GB card - guarantees any 2 co-located jobs
+        # collide. allow_growth lets each process claim only what it
+        # actually uses, so several modest jobs can genuinely share a card
+        # (2026-09-17, found live during the first GTE sweep run here).
+        env["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
         env["VAEBM_POE_MAX_FIT_SECONDS"] = "0"  # "0" -> internal early-stop disabled entirely
         env["VAEBM_DEC_MAX_FIT_SECONDS"] = "0"
 
@@ -216,7 +224,7 @@ class Sweep:
             except Exception as exc:  # noqa: BLE001 - the driver itself must never die on one combo
                 last_error = f"driver exception: {exc!r}\n{traceback.format_exc(limit=3)}"
 
-            is_oom = "out of memory" in last_error.lower() or "cuda error" in last_error.lower()
+            is_oom = any(s in last_error.lower() for s in ("out of memory", "cuda error", "failed to allocate memory", "exited -9"))
             tag = '"CUDA out of memory"' if is_oom else f'"{last_error[:200].splitlines()[0] if last_error else last_error}"'
             self.log(f"ERROR model={model} dataset={dataset} attempt={attempt} gpu={gpu_index} error={tag}")
             if attempt < MAX_ATTEMPTS:
