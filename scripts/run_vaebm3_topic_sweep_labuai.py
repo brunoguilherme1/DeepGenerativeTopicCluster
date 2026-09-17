@@ -49,6 +49,16 @@ MAX_ATTEMPTS = 5
 RETRY_BACKOFF_SECONDS = 30
 OOM_RETRY_BACKOFF_SECONDS = 90
 
+# dbpedia_14/yahoo_answers_topics OOM deterministically regardless of which
+# model, embedder, or GPU runs them (confirmed live 2026-09-17, on the
+# cluster/classification sweeps - not in this experiment's own DATASETS
+# list, kept here only for consistency with the other two labuai scripts).
+FAST_FAIL_DATASETS = {"dbpedia_14", "yahoo_answers_topics"}
+
+
+def max_attempts_for(dataset: str) -> int:
+    return 1 if dataset in FAST_FAIL_DATASETS else MAX_ATTEMPTS
+
 CACHE_ROOT = Path(os.environ.get("VAEBM_CACHE_ROOT", "/ssd/bruno.gomes/.cache"))
 
 
@@ -171,7 +181,8 @@ class Sweep:
         ]
 
         last_error = ""
-        for attempt in range(1, MAX_ATTEMPTS + 1):
+        combo_max_attempts = max_attempts_for(dataset)
+        for attempt in range(1, combo_max_attempts + 1):
             self.write_status(slot, gpu_index, model, dataset, k, attempt)
             self.log(f"START model={model} dataset={dataset} k={k} attempt={attempt} gpu={gpu_index} progress={progress_idx}/{self.total}")
             start = time.perf_counter()
@@ -215,17 +226,17 @@ class Sweep:
             is_oom = any(s in last_error.lower() for s in ("out of memory", "cuda error", "failed to allocate memory", "exited -9"))
             tag = '"CUDA out of memory"' if is_oom else f'"{last_error[:200].splitlines()[0] if last_error else last_error}"'
             self.log(f"ERROR model={model} dataset={dataset} k={k} attempt={attempt} gpu={gpu_index} error={tag}")
-            if attempt < MAX_ATTEMPTS:
+            if attempt < combo_max_attempts:
                 backoff = OOM_RETRY_BACKOFF_SECONDS if is_oom else RETRY_BACKOFF_SECONDS
                 self.log(f"RETRY model={model} dataset={dataset} k={k} attempt={attempt + 1} (backoff={backoff}s, oom={is_oom})")
                 time.sleep(backoff)
 
         with self._lock:
-            self.checkpoint[key] = {"status": "error", "attempts": MAX_ATTEMPTS, "error": last_error[:2000],
+            self.checkpoint[key] = {"status": "error", "attempts": combo_max_attempts, "error": last_error[:2000],
                                      "embedder": EMBEDDER, "timestamp": now_iso()}
         self.save_checkpoint()
         self.write_progress()
-        self.log(f"ERROR model={model} dataset={dataset} k={k} FINAL after {MAX_ATTEMPTS} attempts, giving up "
+        self.log(f"ERROR model={model} dataset={dataset} k={k} FINAL after {combo_max_attempts} attempts, giving up "
                  f"progress={progress_idx}/{self.total}")
         self.write_status(slot, gpu_index, None, None, None, None)
 
