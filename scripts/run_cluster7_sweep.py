@@ -305,7 +305,7 @@ class Sweep:
                 else:
                     results.append(ClusterResult(
                         experiment="cluster", model=model, dataset=dataset, seed=SEED,
-                        requested_k=0, actual_k=None, num_classes=0,
+                        requested_k=0, actual_k=None, num_classes=0, acc=None, nmi=None,
                         representation_source="", assignment_source="",
                         runtime_seconds=0.0, status="error", error=ck.get("error", "not run"),
                     ))
