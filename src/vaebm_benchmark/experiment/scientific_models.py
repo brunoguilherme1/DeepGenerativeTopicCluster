@@ -39,7 +39,7 @@ from __future__ import annotations
 import os
 
 MODEL_NAMES = [
-    "vaebm", "vaebm_poe", "vaebm_dec", "fastopic", "lda", "hicot", "sbert_kmeans",
+    "vaebm", "vaebm_poe", "vaebm_dec", "vaebm_ckpt", "fastopic", "lda", "hicot", "sbert_kmeans",
     "bertopic", "sbert_gte", "sbert_minilm",
 ]
 
@@ -105,6 +105,29 @@ def build_vaebm_dec(k: int, seed: int, voc_size: int, dataset_id: str = None):
     return VAEBMDECAdapter(
         n_clusters=k, voc_size=voc_size, units=50, epochs=50, batch_size=128, lr=1e-3,
         alpha=0.99, lambda_c=0.1, random_state=seed, vectorizer_type="tfidf", embedder=_vaebm_embedder(),
+        dim=(1500, 1000, 500), dim_emb=(368,), max_fit_seconds=max_fit_seconds, top_words_mode="energy",
+    )
+
+
+def build_vaebm_ckpt(k: int, seed: int, voc_size: int, dataset_id: str = None):
+    """Fixed-alpha VAE-BM with oracle-checkpoint selection - see
+    cluster_runner.py::_build_vaebm_ckpt and models/vaebm_ckpt.py's own
+    docstrings. No labels are ever passed to fit() in this experiment
+    (classification_runner.py's own "labels never passed to fit()"
+    convention, unchanged for every model here) - VaeBmCkptFit falls
+    back to its own -training-loss-based epoch selection automatically,
+    same as build_vaebm_poe/build_vaebm_dec above."""
+    import os
+
+    from vaebm_benchmark.models.vaebm_adapter import VAEBMCkptAdapter
+
+    raw = os.environ.get("VAEBM_CKPT_MAX_FIT_SECONDS", "1200").strip().lower()
+    max_fit_seconds = None if raw in ("0", "none", "") else float(raw)
+    alpha = float(os.environ.get("VAEBM_CKPT_ALPHA", "0.99"))
+    lr = float(os.environ.get("VAEBM_CKPT_LR", "1e-3"))
+    return VAEBMCkptAdapter(
+        n_clusters=k, voc_size=voc_size, units=50, epochs=50, batch_size=128, lr=lr, alpha=alpha,
+        random_state=seed, vectorizer_type="tfidf", embedder=_vaebm_embedder(),
         dim=(1500, 1000, 500), dim_emb=(368,), max_fit_seconds=max_fit_seconds, top_words_mode="energy",
     )
 
@@ -211,6 +234,7 @@ MODEL_BUILDERS = {
     "vaebm": build_vaebm,
     "vaebm_poe": build_vaebm_poe,
     "vaebm_dec": build_vaebm_dec,
+    "vaebm_ckpt": build_vaebm_ckpt,
     "fastopic": build_fastopic,
     "lda": build_lda,
     "hicot": build_hicot,
@@ -246,7 +270,7 @@ SBERT_KMEANS_VARIANT_NAMES = ("sbert_kmeans", "sbert_gte", "sbert_bge", "sbert_m
 # so that module can reuse these same three lookups for every model it
 # supports, not just this file's own five.
 def representation_source_for_model(model_name: str) -> str:
-    if model_name in ("vaebm", "vaebm_poe", "vaebm_dec"):
+    if model_name in ("vaebm", "vaebm_poe", "vaebm_dec", "vaebm_ckpt"):
         return "mu"
     if model_name in ("fastopic", "lda", "hicot", "glocom"):
         return "theta"
@@ -267,7 +291,7 @@ def representation_source_for_model(model_name: str) -> str:
 # behavior is correct either way; this label is slightly imprecise for
 # vaebm_dec specifically, not worth a new enum value for.
 def assignment_source_for_model(model_name: str) -> str:
-    if model_name in ("vaebm", "vaebm_poe", "vaebm_dec"):
+    if model_name in ("vaebm", "vaebm_poe", "vaebm_dec", "vaebm_ckpt"):
         return "kmeans_on_latent_mu"
     if model_name in ("fastopic", "lda", "hicot", "glocom"):
         return "argmax_theta"

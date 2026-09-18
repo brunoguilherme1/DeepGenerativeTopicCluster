@@ -169,6 +169,34 @@ def _build_vaebm_poe(k: int, seed: int, voc_size: int):
     )
 
 
+def _build_vaebm_ckpt(k: int, seed: int, voc_size: int):
+    """Fixed-alpha VAE-BM (same architecture as _build_vaebm() above) but
+    with vaebm_poe's own per-epoch oracle-checkpoint-selection loop - see
+    models/vaebm_ckpt.py's own docstring for why (2026-09-18,
+    user-authorized: testing whether alpha=0 + GTE-large + a very low LR
+    converges toward the SBERT-GTE+KMeans baseline's own behavior).
+    alpha/lr are environment-configurable (VAEBM_CKPT_ALPHA, default
+    "0.99" - i.e. behaves exactly like plain "vaebm" unless a sweep
+    overrides it; VAEBM_CKPT_LR, default "1e-3") rather than hardcoded to
+    the alpha=0 experiment's own values, since this builder is the
+    general "any fixed alpha, with oracle checkpoint selection" variant,
+    not solely that one ablation. Same VAEBM_CKPT_MAX_FIT_SECONDS
+    (default 1200s/20min) convention as _build_vaebm_poe/_build_vaebm_dec."""
+    import os
+
+    from vaebm_benchmark.models.vaebm_adapter import VAEBMCkptAdapter
+
+    raw = os.environ.get("VAEBM_CKPT_MAX_FIT_SECONDS", "1200").strip().lower()
+    max_fit_seconds = None if raw in ("0", "none", "") else float(raw)
+    alpha = float(os.environ.get("VAEBM_CKPT_ALPHA", "0.99"))
+    lr = float(os.environ.get("VAEBM_CKPT_LR", "1e-3"))
+    return VAEBMCkptAdapter(
+        n_clusters=k, voc_size=voc_size, units=50, epochs=50, batch_size=128, lr=lr, alpha=alpha,
+        random_state=seed, vectorizer_type="tfidf", embedder=os.environ.get("VAEBM_EMBEDDER", "all-MiniLM-L6-v2"),
+        dim=(1500, 1000, 500), dim_emb=(368,), max_fit_seconds=max_fit_seconds, top_words_mode="energy",
+    )
+
+
 def _build_vaebm_dec(k: int, seed: int, voc_size: int):
     """Same alpha=0.99 two-tower encoder as _build_vaebm() above, but Deep
     Embedded Clustering trained jointly instead of post-hoc KMeans - see
@@ -289,6 +317,7 @@ CLUSTER_MODEL_BUILDERS = {
     "vaebm": _build_vaebm,
     "vaebm_poe": _build_vaebm_poe,
     "vaebm_dec": _build_vaebm_dec,
+    "vaebm_ckpt": _build_vaebm_ckpt,
     "bertopic": _build_bertopic,
     "fastopic": _build_fastopic,
     "glocom": _build_glocom,
@@ -359,7 +388,7 @@ def run_single(model_name: str, dataset_id: str, seed: int = 42, voc_size: int =
         # VAEBMPoEAdapter/VAEBMDECAdapter docstrings. Labels are NEVER
         # used in either model's loss/gradient, and every OTHER model
         # here still never sees labels at all, unchanged.
-        uses_oracle_checkpointing = model_name in ("vaebm_poe", "vaebm_dec")
+        uses_oracle_checkpointing = model_name in ("vaebm_poe", "vaebm_dec", "vaebm_ckpt")
         model = CLUSTER_MODEL_BUILDERS[model_name](requested_k, seed, voc_size)
         if uses_oracle_checkpointing:
             model.fit(fit_documents, labels=labels)
@@ -370,7 +399,7 @@ def run_single(model_name: str, dataset_id: str, seed: int = 42, voc_size: int =
         # attribute, so both stay None (see ClusterResult's own field
         # docstring above).
         training_epochs_completed = getattr(model, "epochs_completed", None)
-        training_epochs_requested = getattr(model, "epochs", None) if model_name in ("hicot", "vaebm_poe", "vaebm_dec") else None
+        training_epochs_requested = getattr(model, "epochs", None) if model_name in ("hicot", "vaebm_poe", "vaebm_dec", "vaebm_ckpt") else None
 
         representation_source = representation_source_for_model(model_name)
         assignment_source = assignment_source_for_model(model_name)

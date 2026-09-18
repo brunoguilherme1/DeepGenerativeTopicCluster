@@ -161,7 +161,7 @@ _VAEBM_VARIANT_OVERRIDES: dict[str, dict] = {}
 # swapped in without a code change.
 _SBERT_KMEANS_DEFAULTS = dict(embedder="all-MiniLM-L6-v2")
 
-KNOWN_MODELS = ["vaebm", "vaebm_poe", "vaebm_dec", "bertopic", "sbert_kmeans"]
+KNOWN_MODELS = ["vaebm", "vaebm_poe", "vaebm_dec", "vaebm_ckpt", "bertopic", "sbert_kmeans"]
 
 
 def _valid_vaebm_params() -> set[str]:
@@ -303,6 +303,26 @@ def _build_model(model_name: str, k: int, seed: int, voc_size: int):
         max_fit_seconds = None if raw in ("0", "none", "") else float(raw)
         params = dict(_VAEBM_DEFAULTS)
         return VAEBMDECAdapter(n_clusters=k, voc_size=voc_size, random_state=seed, lambda_c=0.1, max_fit_seconds=max_fit_seconds, **params)
+    if model_name == "vaebm_ckpt":
+        # Fixed-alpha VAE-BM with oracle-checkpoint selection
+        # (models/vaebm_ckpt.py) - shares _VAEBM_DEFAULTS' own
+        # embedder/dim/units/lr (including VAEBM_EMBEDDER overrides), like
+        # vaebm_poe/vaebm_dec above. alpha/lr are environment-configurable
+        # here too (VAEBM_CKPT_ALPHA/VAEBM_CKPT_LR) since this experiment's
+        # own run_single() never passes labels to fit() (see below), so
+        # this variant always falls back to loss-based epoch selection
+        # here regardless of alpha - the oracle-labels path only ever
+        # triggers in the cluster experiment (cluster_runner.py explicitly
+        # opts in per model name).
+        from vaebm_benchmark.models.vaebm_adapter import VAEBMCkptAdapter
+
+        raw = os.environ.get("VAEBM_CKPT_MAX_FIT_SECONDS", "1200").strip().lower()
+        max_fit_seconds = None if raw in ("0", "none", "") else float(raw)
+        alpha = float(os.environ.get("VAEBM_CKPT_ALPHA", "0.99"))
+        lr = float(os.environ.get("VAEBM_CKPT_LR", str(_VAEBM_DEFAULTS["lr"])))
+        params = {k2: v for k2, v in _VAEBM_DEFAULTS.items() if k2 not in ("alpha", "lr")}
+        return VAEBMCkptAdapter(n_clusters=k, voc_size=voc_size, random_state=seed, alpha=alpha, lr=lr,
+                                 max_fit_seconds=max_fit_seconds, **params)
     if model_name == "bertopic":
         from vaebm_benchmark.models.bertopic_adapter import BERTopicAdapter
 
@@ -327,7 +347,7 @@ def _assignment_source_for_model(model_name: str) -> str:
     is a fact about each adapter's own fit() (VAE-BM's latent mu vs. a
     plain/UMAP-reduced sentence embedding), not something derivable from
     the adapter interface alone."""
-    if model_name in ("vaebm", "vaebm_poe", "vaebm_dec") or model_name in _VAEBM_VARIANT_OVERRIDES:
+    if model_name in ("vaebm", "vaebm_poe", "vaebm_dec", "vaebm_ckpt") or model_name in _VAEBM_VARIANT_OVERRIDES:
         return "kmeans_on_latent_mu"
     if model_name == "sbert_kmeans" or model_name in _SBERT_KMEANS_VARIANT_OVERRIDES or model_name == "bertopic":
         return "kmeans_on_embeddings"
