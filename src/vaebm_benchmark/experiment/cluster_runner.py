@@ -141,7 +141,13 @@ def _build_vaebm(k: int, seed: int, voc_size: int):
         embedder=os.environ.get("VAEBM_EMBEDDER", "all-MiniLM-L6-v2"),
         dim=(1500, 1000, 500),
         dim_emb=(368,),
-        alpha=0.99,
+        # Environment-configurable (VAEBM_ALPHA, default "0.99" - VAE-BM's
+        # own established default, unchanged prior behavior for every
+        # existing result) so a sweep script can run the whole "vaebm"/
+        # "vaebm_dec" family at a different fixed alpha (e.g. 0.01, mostly
+        # embedding-branch, 2026-09-18 user-authorized ablation) without a
+        # code change - mirrors VAEBM_EMBEDDER's own convention.
+        alpha=float(os.environ.get("VAEBM_ALPHA", "0.99")),
         top_words_mode="energy",
     )
 
@@ -212,7 +218,7 @@ def _build_vaebm_dec(k: int, seed: int, voc_size: int):
     max_fit_seconds = None if raw in ("0", "none", "") else float(raw)
     return VAEBMDECAdapter(
         n_clusters=k, voc_size=voc_size, units=50, epochs=50, batch_size=128, lr=1e-3,
-        alpha=0.99, lambda_c=0.1, random_state=seed, vectorizer_type="tfidf", embedder=os.environ.get("VAEBM_EMBEDDER", "all-MiniLM-L6-v2"),
+        alpha=float(os.environ.get("VAEBM_ALPHA", "0.99")), lambda_c=0.1, random_state=seed, vectorizer_type="tfidf", embedder=os.environ.get("VAEBM_EMBEDDER", "all-MiniLM-L6-v2"),
         dim=(1500, 1000, 500), dim_emb=(368,), max_fit_seconds=max_fit_seconds, top_words_mode="energy",
     )
 
