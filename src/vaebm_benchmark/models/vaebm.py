@@ -89,16 +89,26 @@ class Encoder(Model):
         self.voc = voc
         self.alpha = alpha
 
-        # BoW branch MLP
-        self.mlp_bow = tf.keras.Sequential(name="MLP_BOW")
-        for i, width in enumerate(dim):
-            self.mlp_bow.add(layers.Dense(
-                width,
-                activation=tf.nn.tanh,
-                kernel_initializer=initializers.Identity(gain=0.99999) if i == 10 else "glorot_uniform",
-                bias_initializer="zeros",
-                name=f"bow_dense_{i}"
-            ))
+        # BoW branch MLP. Keras 3's Sequential refuses to build with zero
+        # layers ("Sequential model MLP_BOW cannot be built because it has
+        # no layers") - unlike Keras 2, where an empty Sequential silently
+        # acted as an identity pass-through. dim=() is kept working as
+        # originally intended (h_bow = x_bow directly, no hidden layer) by
+        # skipping the Sequential entirely rather than building an empty one
+        # - see call() below. This is a compatibility fix for Keras 3's
+        # stricter Sequential API, not a change to VAE-BM's own math: an
+        # empty MLP was always meant to mean "no transformation."
+        self.mlp_bow = None
+        if len(dim) > 0:
+            self.mlp_bow = tf.keras.Sequential(name="MLP_BOW")
+            for i, width in enumerate(dim):
+                self.mlp_bow.add(layers.Dense(
+                    width,
+                    activation=tf.nn.tanh,
+                    kernel_initializer=initializers.Identity(gain=0.99999) if i == 10 else "glorot_uniform",
+                    bias_initializer="zeros",
+                    name=f"bow_dense_{i}"
+                ))
 
         self.mu_bow = layers.Dense(
             units, activation=None,
@@ -113,16 +123,21 @@ class Encoder(Model):
             name="log_sigma_bow"
         )
 
-        # Embedding branch MLP
-        self.mlp_emb = tf.keras.Sequential(name="MLP_EMB")
-        for i, width in enumerate(dim_emb):
-            self.mlp_emb.add(layers.Dense(
-                width,
-                activation=tf.nn.tanh,
-                kernel_initializer=initializers.Identity(gain=0.99999) if i == 0 else "glorot_uniform",
-                bias_initializer="zeros",
-                name=f"emb_dense_{i}"
-            ))
+        # Embedding branch MLP - same Keras 3 empty-Sequential fix as
+        # mlp_bow above. dim_emb=() means "no hidden layer": h_emb = e_txt
+        # directly, so mu_emb's own identity-initialized Dense is applied
+        # straight to the raw embedding.
+        self.mlp_emb = None
+        if len(dim_emb) > 0:
+            self.mlp_emb = tf.keras.Sequential(name="MLP_EMB")
+            for i, width in enumerate(dim_emb):
+                self.mlp_emb.add(layers.Dense(
+                    width,
+                    activation=tf.nn.tanh,
+                    kernel_initializer=initializers.Identity(gain=0.99999) if i == 0 else "glorot_uniform",
+                    bias_initializer="zeros",
+                    name=f"emb_dense_{i}"
+                ))
 
         self.mu_emb = layers.Dense(
             units, activation=None,
@@ -141,11 +156,11 @@ class Encoder(Model):
         x_bow, e_txt = inputs_tuple[0], inputs_tuple[1]
         batch_size = tf.shape(x_bow)[0]
 
-        h_bow = self.mlp_bow(x_bow)
+        h_bow = self.mlp_bow(x_bow) if self.mlp_bow is not None else x_bow
         mu_bow = self.mu_bow(h_bow)
         log_sigma_bow = self.log_sigma_bow(h_bow)
 
-        h_emb = self.mlp_emb(e_txt)
+        h_emb = self.mlp_emb(e_txt) if self.mlp_emb is not None else e_txt
         mu_emb = self.mu_emb(h_emb)
         log_sigma_emb = self.log_sigma_emb(h_emb)
 
