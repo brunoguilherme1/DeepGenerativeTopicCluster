@@ -140,7 +140,9 @@ _VAEBM_DEFAULTS = dict(
     # below, same as before.
     embedder=os.environ.get("VAEBM_EMBEDDER", "all-MiniLM-L6-v2"),
     dim=(1500, 1000, 500),
-    dim_emb=(368,),
+    # environment-configurable (VAEBM_DIM_EMB, default "368") - see
+    # experiment/cluster_runner.py::_build_vaebm's own comment.
+    dim_emb=tuple(int(x) for x in os.environ.get("VAEBM_DIM_EMB", "368").split(",")),
     # environment-configurable (VAEBM_ALPHA, default "0.99" - VAE-BM's own
     # established default, unchanged prior behavior) - see
     # experiment/cluster_runner.py::_build_vaebm's own comment.

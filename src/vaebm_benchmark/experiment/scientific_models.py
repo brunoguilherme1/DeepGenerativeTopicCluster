@@ -73,7 +73,9 @@ def build_vaebm(k: int, seed: int, voc_size: int, dataset_id: str = None):
         vectorizer_type="tfidf",
         embedder=_vaebm_embedder(),
         dim=(1500, 1000, 500),
-        dim_emb=(368,),
+        # Environment-configurable (VAEBM_DIM_EMB, default "368") - see
+        # cluster_runner.py::_build_vaebm's own comment.
+        dim_emb=tuple(int(x) for x in os.environ.get("VAEBM_DIM_EMB", "368").split(",")),
         # Environment-configurable (VAEBM_ALPHA, default "0.99") - see
         # cluster_runner.py::_build_vaebm's own comment.
         alpha=float(os.environ.get("VAEBM_ALPHA", "0.99")),

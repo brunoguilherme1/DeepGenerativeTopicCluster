@@ -143,7 +143,11 @@ def _build_vaebm(k: int, seed: int, voc_size: int):
         vectorizer_type="tfidf",
         embedder=os.environ.get("VAEBM_EMBEDDER", "all-MiniLM-L6-v2"),
         dim=(1500, 1000, 500),
-        dim_emb=(368,),
+        # Environment-configurable (VAEBM_DIM_EMB, default "368" - unchanged
+        # prior behavior), comma-separated hidden-layer widths for the
+        # embedding branch encoder, e.g. "1024" for a single 1024-unit layer
+        # (matching gte-large's own output width) - mirrors VAEBM_EPOCHS.
+        dim_emb=tuple(int(x) for x in os.environ.get("VAEBM_DIM_EMB", "368").split(",")),
         # Environment-configurable (VAEBM_ALPHA, default "0.99" - VAE-BM's
         # own established default, unchanged prior behavior for every
         # existing result) so a sweep script can run the whole "vaebm"/
