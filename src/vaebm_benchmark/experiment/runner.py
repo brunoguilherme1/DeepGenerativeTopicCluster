@@ -161,7 +161,12 @@ _VAEBM_DEFAULTS = dict(
     # unchanged prior behavior) - freezes the embedding branch right after
     # construction, see models/vaebm.py::VAEBM's own comment.
     freeze_embedding_branch=os.environ.get("VAEBM_FREEZE_EMB", "0").strip().lower() in ("1", "true", "yes"),
-    top_words_mode="energy",
+    # environment-configurable (VAEBM_TOP_WORDS_MODE, default "energy" -
+    # unchanged prior behavior) - "energy" (decoder R-matrix-driven) or
+    # "freq" (per-cluster word-frequency counts, decoupled from decoder
+    # training entirely) - see models/vaebm.py's own get_topics_energy()/
+    # get_topics_freq() (2026-09-19 "mimic GTE" research pass).
+    top_words_mode=os.environ.get("VAEBM_TOP_WORDS_MODE", "energy"),
     verbose=1,
 )
 

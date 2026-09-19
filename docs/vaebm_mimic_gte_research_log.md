@@ -118,4 +118,64 @@ though the embedding branch stays frozen, since mu = alpha*mu_bow +
 Model=vaebm, K=50, all 5 hicot_* datasets. Driver:
 `scripts/run_vaebm_gte_research_round3.py`.
 
+### Results (15/15 successful)
+
+| Config | Total beats /15 | 20ng | search_snippets | google_news | agnews | imdb |
+|---|---:|---|---|---|---|---|
+| A_freeze (Round 2 best) | 11 | 2/3 | 2/3 | 3/3 | 2/3 | 2/3 |
+| D_freeze_epochs15 | 11 | 2/3 | 2/3 | 3/3 | 2/3 | 2/3 |
+| E_freeze_alpha002 | 10 | **1/3 (crashed)** | 2/3 | 3/3 | 2/3 | 2/3 |
+| F_freeze_alpha002_epochs15 | 8 | 1/3 | 1/3 (Cv fixed, Purity/NMI broke) | 3/3 | 1/3 | 2/3 |
+
+**D ties A exactly on beats-count** - more decoder epochs shifts Cv
+magnitude slightly (up on search_snippets +0.014, down on 20ng -0.035)
+but never flips a beat/miss verdict.
+
+**E and F confirm alpha>0 is a NET NEGATIVE**, even at just 0.02: badly
+disrupts 20ng's clustering (Purity 0.664->0.360, NMI 0.580->0.348) the
+moment mu_bow's gradient path re-opens, and F's added epochs partially
+"fixes" Cv on search_snippets/agnews only by sacrificing Purity/NMI there
+too (net beats DROP versus A_freeze on both). **Idea abandoned** - do not
+pursue non-zero alpha under freeze further; the failure mode is the
+same untrained/newly-training mu_bow injecting noise into mu, not a
+signal that helps.
+
+**Ruled out**: embeddings are NOT unnormalized - checked
+`thenlper/gte-large`'s own `modules.json` on HF, it already has a
+`2_Normalize` (sentence_transformers.models.Normalize) module baked into
+its pipeline, so `.encode()` output is already L2-normalized without
+needing `normalize_embeddings=True`. Not the missing piece.
+
+**Standing best: A_freeze / D_freeze_epochs15, tied at 11/15, still only
+1/5 datasets (google_news) at 3/3.** Remaining blockers: search_snippets/
+imdb Cv (decoder/topic-word quality, untouched by epochs), agnews NMI
+(clustering geometry, untouched by decoder-side changes, made WORSE by
+non-zero alpha), 20ng NMI (agonizingly close, 0.580 vs 0.583).
+
+## Round 4 - frequency-based topic words + untested vaebm_dec (in progress)
+
+Two new, unrelated ideas (neither tried in Rounds 1-3, both model=vaebm_dec
+is a DIFFERENT model entirely from vaebm - first time it's tested in this
+research pass):
+  - G_freeze_freqwords: same as A_freeze (freeze=1, alpha=0, epochs=1,
+    lr=1e-4) but `top_words_mode="freq"` instead of the default "energy" -
+    topic words come from per-cluster word-frequency counts, completely
+    decoupled from the decoder's own trained R matrix. Since clustering
+    (mu) is already fixed/good under freeze, this tests whether Cv was
+    actually a DECODER-quality problem or a TOPIC-WORD-EXTRACTION-METHOD
+    problem - zero risk to Purity/NMI either way (doesn't touch mu).
+  - H_vaebm_dec: model="vaebm_dec" (not "vaebm") - Deep Embedded
+    Clustering trained JOINTLY with the VAE via its own clustering loss
+    (lambda_c=0.1), NOT frozen (freeze=0) since DEC's whole point is
+    letting its clustering-specific loss (not just BoW reconstruction)
+    shape mu toward better-separated clusters - untested in this research
+    pass so far. alpha=0, gte-large, units=1024, dim_emb="", epochs=15,
+    lr=1e-3. Targets agnews's NMI ceiling and 20ng's near-miss, since DEC's
+    loss is explicitly designed to sharpen cluster separation, unlike the
+    BoW branch's reconstruction objective which has no interest in
+    cluster quality.
+
+Model=vaebm for G, vaebm_dec for H. K=50, all 5 hicot_* datasets. Driver:
+`scripts/run_vaebm_gte_research_round4.py`.
+
 (results filled in as they land)
