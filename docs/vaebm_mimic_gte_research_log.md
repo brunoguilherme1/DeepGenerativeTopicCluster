@@ -276,4 +276,51 @@ orthogonal axis not tested in Rounds 1-5. Same G_freeze_freqwords recipe
 otherwise (freeze=1, alpha=0, epochs=1, lr=1e-4, top_words_mode=freq,
 units=1024, dim_emb=""). Driver: `scripts/run_vaebm_gte_research_round6.py`.
 
-(results filled in as they land)
+### Results (5/5 successful, after 1 resume for 2 transient OOMs)
+
+Two combos (hicot_20ng, hicot_imdb) hit `CUDA out of memory` on first
+attempt - not a bge-large-specific issue, but TF grabbing ~65GB of this
+H200 MIG 2c.3g.71gb slice upfront (no `TF_FORCE_GPU_ALLOW_GROWTH`),
+starving a later PyTorch-side allocation (sentence-transformers is
+PyTorch-backed) to ~200MB free. Fixed by resuming the same run-dir with
+`TF_FORCE_GPU_ALLOW_GROWTH=true` added - both combos then succeeded
+cleanly. Worth adding this env var to future sweeps as a general
+robustness improvement, independent of this research question.
+
+| Dataset | Cv | Purity | NMI | Beats |
+|---|---:|---:|---:|---|
+| hicot_20ng | 0.658 | 0.650 | 0.559 | 2/3 (NMI short, similar range to gte-large) |
+| hicot_search_snippets | 0.597 | 0.807 | 0.456 | 2/3 (REGRESSION from gte-large's 3/3) |
+| hicot_google_news | 0.593 | 0.602 | 0.809 | **3/3** |
+| hicot_agnews | 0.715 | 0.862 | 0.373 | 2/3 (NMI ~identical to every gte-large config, 0.364-0.375) |
+| hicot_imdb | 0.382 | 0.840 | 0.138 | 2/3 (Cv still short, Purity/NMI improved) |
+
+**11/15 beats - worse than G_freeze_freqwords's 12/15** (bge-large
+regressed search_snippets to 2/3 with no compensating win elsewhere).
+**Conclusion: embedder choice is not the missing lever either.**
+agnews's NMI landed in the exact same 0.36-0.38 range under a
+completely different embedder trained on a different objective -
+strong evidence this is a structural property of "frozen single
+sentence-embedding + KMeans, K=50" for AG News's 4 broad topic classes,
+not an artifact of gte-large specifically.
+
+## Conclusion of the deep search (Rounds 1-6)
+
+**Final best config: G_freeze_freqwords** - `VAEBM_EMBEDDER=thenlper/gte-large
+VAEBM_UNITS=1024 VAEBM_DIM_EMB="" VAEBM_ALPHA=0.0 VAEBM_FREEZE_EMB=1
+VAEBM_LR=1e-4 VAEBM_EPOCHS=1 VAEBM_TOP_WORDS_MODE=freq`, model=vaebm.
+12/15 beats, 2/5 datasets (google_news, search_snippets) at full 3/3 -
+up from the Round 1 baseline's 9/15, 1/5.
+
+Six independent levers were tried and systematically ruled out for the
+3 remaining blockers (search_snippets is now solved): non-zero alpha
+(destabilizes clustering), more decoder epochs alone (negligible Cv
+gain), joint DEC training (net negative, regresses Purity), embedding
+truncation (monotonically harmful for 20ng, no help elsewhere), a
+different embedder (same ceiling reappears). The 3 remaining gaps -
+agnews NMI (~0.37 vs 0.412), imdb Cv (~0.39 vs 0.404), 20ng NMI (~0.58
+vs 0.583) - are best understood as structural limits of this
+architecture class (frozen single-embedding + KMeans, K=50, top-N=15
+under the ecrtm_hicot-adjacent local protocol used here) for these 3
+specific datasets, not something a further hyperparameter search within
+this family is likely to close.
