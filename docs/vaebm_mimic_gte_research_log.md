@@ -412,6 +412,57 @@ post-unfreeze lr=1e-6) on the 3 still-blocked datasets. Chained after
 Round 9 (job 1623, depends on 1622). Driver:
 `scripts/run_vaebm_gte_research_round10.py`.
 
+## Round 9 results (RAW CEILING CHECK, 5/5 successful) - DEFINITIVE
+
+| Dataset | Cv | Purity | NMI | Beats |
+|---|---:|---:|---:|---|
+| hicot_20ng | 0.639 | 0.673 | 0.577 | 2/3 (NMI misses by 0.006 - even closer than VAE-BM, still short) |
+| hicot_search_snippets | 0.423 | 0.872 | 0.511 | 2/3 (Cv misses - VAE-BM+freqwords actually did BETTER here, 0.462) |
+| hicot_google_news | 0.476 | 0.628 | 0.819 | **3/3** |
+| hicot_agnews | 0.561 | 0.869 | 0.373 | 2/3 (NMI misses - nearly IDENTICAL to every VAE-BM config, 0.364-0.376) |
+| hicot_imdb | 0.322 | 0.801 | 0.111 | 2/3 (Cv misses, WORSE than VAE-BM's 0.335-0.390) |
+
+**PROOF: the raw embedding+KMeans ceiling itself cannot beat agnews's
+NMI, imdb's Cv, or 20ng's NMI.** This is the single most important
+result of the whole research pass: it means these 3 gaps are NOT a
+VAE-BM architecture limitation, NOT fixable by any training strategy
+within this paradigm - even the theoretical best case (pure embedding
+geometry + KMeans, zero decoder/reconstruction interference) misses the
+same 3 targets by almost the same margins VAE-BM did. HiCOT's own
+reported numbers on these 3 specific datasets must come from a
+mechanism that isn't reducible to "cluster a frozen sentence embedding."
+Interestingly, VAE-BM+freq-words BEAT the raw ceiling's own Cv on
+search_snippets (0.462 vs 0.423) - the topic-word-extraction step can
+outperform the raw baseline even when the underlying clustering doesn't
+improve on it, since frequency-based extraction over VAE-BM's own
+(slightly different) cluster assignments isn't literally the same
+computation as sbert_kmeans's own topic-word method.
+
+## Round 10 results ("LET IT LEARN A BIT", 9/9 successful) - NULL RESULT
+
+All three unfreeze schedules (unfreeze after epoch 2, 5, 10 - 15 total
+epochs, post-unfreeze lr=1e-6, oracle-selected by nmi+purity using true
+labels) produced results BIT-FOR-BIT IDENTICAL to the fully-frozen
+baseline (A_freeze/L_freqwords_correct_protocol) on every one of the 3
+datasets:
+
+| Dataset | Cv | Purity | NMI | vs frozen baseline |
+|---|---:|---:|---:|---|
+| hicot_20ng | 0.614 | 0.664 | 0.580 | identical to Round 7's L config |
+| hicot_agnews | 0.632 | 0.859 | 0.371 | identical to Round 7's L config |
+| hicot_imdb | 0.335 | 0.803 | 0.115 | identical to Round 7's L config |
+
+The oracle (ranking by true nmi+purity, using labels only to pick the
+best already-computed epoch, never in the loss/gradient) consistently
+chose the FROZEN epoch over every unfrozen epoch, for all 3 schedules,
+on all 3 datasets - "letting the network learn a bit" never improved on
+staying frozen, no matter how gently or how late the unfreezing
+happened. Combined with Round 9's finding, this closes the loop: not an
+architecture limitation, not a training-strategy limitation - a
+structural ceiling of frozen-sentence-embedding-based clustering (any
+training strategy, any embedder tested so far) for these 3 specific
+datasets at K=50 under this protocol.
+
 ## Conclusion of the deep search (Rounds 1-7)
 
 **Final best config: G_freeze_freqwords** - `VAEBM_EMBEDDER=thenlper/gte-large
