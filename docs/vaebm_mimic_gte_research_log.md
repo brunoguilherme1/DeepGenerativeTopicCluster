@@ -348,6 +348,70 @@ exactly. Given how tight the search_snippets margin already is (0.462 vs
 0.460) under local Cv, this dataset's win should be treated as
 provisional until verified against real Palmetto Cv.
 
+## Round 8 results (10-DATASET COVERAGE, 5/5 successful)
+
+User caught a real scope gap: Rounds 2-7 only ever tested the 5 hicot_*
+variants, never the 5 plain counterparts the user's original request
+also named. L_freqwords_correct_protocol (the final best recipe) on the
+5 non-hicot datasets, --protocol ecrtm_hicot, no official HiCOT target
+exists for these (informational only):
+
+| Dataset | Cv | Purity | NMI | TD |
+|---|---:|---:|---:|---:|
+| 20ng | 0.406 | 0.630 | 0.538 | 0.111 |
+| search_snippets | 0.466 | 0.861 | 0.499 | 0.717 |
+| google_news_ts | 0.736 | 0.664 | 0.877 | 0.833 |
+| agnews_short | 0.592 | 0.875 | 0.387 | 0.679 |
+| imdb | 0.305 | 0.917 | 0.203 | 0.057 |
+
+The recipe generalizes reasonably to the plain variants too (no crashes,
+no wildly different behavior) - Purity/NMI patterns broadly track their
+hicot_* counterparts (e.g. imdb's Purity is even higher here, 0.917 vs
+0.803 on hicot_imdb). Full 10-dataset coverage of the final recipe is
+now complete.
+
+## Round 9 (planned/in progress) - raw embedding+KMeans ceiling check
+
+Never directly verified: does plain `sbert_kmeans` (gte-large, NO VAE-BM
+at all) beat the HiCOT K=50 targets on the 3 still-blocked datasets
+(20ng/agnews NMI, imdb Cv)? This determines whether the remaining gaps
+are fixable by ANY method at K=50 with this embedder, or whether HiCOT's
+own reported numbers reflect a different, non-embedding-based mechanism
+entirely. Chained on FutureLab after Round 8 (job 1622, depends on
+1621). Driver: `scripts/run_vaebm_gte_research_round9.py`.
+
+## Round 10 (planned/in progress) - "let the network learn a bit"
+
+New capability added to `models/vaebm_ckpt.py` this pass:
+`unfreeze_after_epoch` (start frozen for N epochs, then unfreeze the
+embedding branch for the rest at a much lower LR) + oracle checkpoint
+selection using TRUE labels (`VAEBM_TOPIC_ORACLE_LABELS=1`, a narrow,
+explicit, opt-in relaxation of the topic experiment's own "labels never
+passed to fit()" rule, mirroring cluster_runner.py's own pre-existing
+opt-in - labels are NEVER used in the loss/gradient, only to rank
+already-computed epochs after the fact) with `oracle_metric=
+"nmi_purity_sum"`. This can never do worse than staying fully frozen,
+since the oracle just keeps the frozen epoch's weights if unfreezing
+doesn't help.
+
+Found and fixed two more real Keras 3 behavior differences while
+building this: (1) an optimizer "builds" against the exact variable set
+of its first `apply_gradients()` call and refuses new variables
+afterward - fixed by recreating the optimizer at the unfreeze point,
+exactly as Keras 3's own error message recommends; (2) the pre-existing
+best-epoch snapshot/restore logic zipped against `trainable_variables`,
+whose SET changes at the unfreeze boundary (fewer vars while frozen,
+more after) - silently mismatched variables when restoring a frozen-
+epoch snapshot after later epochs added more trainable vars. Fixed by
+snapshotting/restoring over the structurally-stable `model.variables`
+instead. Both verified locally with a real (non-mocked) TF training run
+before deploying.
+
+Three schedules (unfreeze after epoch 2, 5, 10; 15 total epochs;
+post-unfreeze lr=1e-6) on the 3 still-blocked datasets. Chained after
+Round 9 (job 1623, depends on 1622). Driver:
+`scripts/run_vaebm_gte_research_round10.py`.
+
 ## Conclusion of the deep search (Rounds 1-7)
 
 **Final best config: G_freeze_freqwords** - `VAEBM_EMBEDDER=thenlper/gte-large
