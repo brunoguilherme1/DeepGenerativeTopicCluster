@@ -63,7 +63,30 @@ class VaeBmCkptFit:
     def __init__(self, voc_size=5000, units=50, n_clusters=8, random_state=42,
                  epochs=50, batch_size=128, lr=1e-3, alpha=0.99,
                  max_fit_seconds: Optional[float] = None, verbose=1,
-                 kl_weight=1.0, freeze_embedding_branch=False):
+                 kl_weight=1.0, freeze_embedding_branch=False,
+                 # 2026-09-19 "let the network learn a bit" research pass
+                 # (see docs/vaebm_mimic_gte_research_log.md): when
+                 # freeze_embedding_branch=True, unfreeze the embedding
+                 # branch (mlp_emb/mu_emb/log_sigma_emb) right after epoch
+                 # `unfreeze_after_epoch` instead of keeping it frozen for
+                 # the whole run - lets mu drift a little, starting from
+                 # the near-identity/high-fidelity initialization, instead
+                 # of either "never trains" or "trains from epoch 1 with
+                 # everything else." None (default) = no unfreezing,
+                 # unchanged prior behavior. post_unfreeze_lr optionally
+                 # switches the optimizer to a different (typically much
+                 # lower) learning rate once unfrozen, so the newly-live
+                 # embedding branch doesn't get yanked far from its good
+                 # starting point in one step; None = keep using `lr`
+                 # throughout. oracle_metric picks which metric ranks
+                 # epochs when `labels` is given: "acc" (default, unchanged
+                 # prior behavior) or "nmi_purity_sum" (nmi+purity - a
+                 # broader clustering-quality signal, since this research
+                 # question is about beating specific Purity/NMI targets,
+                 # not accuracy under Hungarian matching).
+                 unfreeze_after_epoch: Optional[int] = None,
+                 post_unfreeze_lr: Optional[float] = None,
+                 oracle_metric: str = "acc"):
         self.voc_size = voc_size
         self.units = units
         self.n_clusters = n_clusters
@@ -76,6 +99,9 @@ class VaeBmCkptFit:
         self.verbose = verbose
         self.kl_weight = kl_weight
         self.freeze_embedding_branch = freeze_embedding_branch
+        self.unfreeze_after_epoch = unfreeze_after_epoch
+        self.post_unfreeze_lr = post_unfreeze_lr
+        self.oracle_metric = oracle_metric
 
         self.vectorizer = None
         self.embedder = None
@@ -109,7 +135,29 @@ class VaeBmCkptFit:
         best_metric = -1.0  # "acc" if labels given, else -loss (higher is better either way)
         fit_start = time.perf_counter()
 
+        unfrozen = False
         for epoch in range(1, self.epochs + 1):
+            if (self.freeze_embedding_branch and not unfrozen
+                    and self.unfreeze_after_epoch is not None and epoch > self.unfreeze_after_epoch):
+                if self.model.encoder.mlp_emb is not None:
+                    self.model.encoder.mlp_emb.trainable = True
+                self.model.encoder.mu_emb.trainable = True
+                self.model.encoder.log_sigma_emb.trainable = True
+                unfrozen = True
+                # Keras 3's optimizer "builds" against the exact variable
+                # set of its FIRST apply_gradients() call and refuses any
+                # new variable afterward ("This optimizer can only be
+                # called for the variables it was originally built with")
+                # - unlike older Keras, reassigning .learning_rate is not
+                # enough once new (newly-unfrozen) variables need tracking.
+                # Recreate the optimizer instead, exactly as Keras 3's own
+                # error message recommends.
+                new_lr = self.post_unfreeze_lr if self.post_unfreeze_lr is not None else self.lr
+                optimizer = Adam(new_lr)
+                if self.verbose >= 1:
+                    print(f"[VAE-BM-Ckpt] UNFROZE embedding branch at epoch {epoch} "
+                          f"(new optimizer, lr={new_lr})", flush=True)
+
             order = rng.permutation(n)
             epoch_losses = []
             for start in range(0, n, self.batch_size):
@@ -131,19 +179,33 @@ class VaeBmCkptFit:
 
             mean_loss = float(np.mean(epoch_losses))
             if labels is not None:
-                acc = compute_clustering_metrics(preds, labels, ["acc"])["acc"]
-                metric = acc
+                if self.oracle_metric == "nmi_purity_sum":
+                    scores = compute_clustering_metrics(preds, labels, ["acc", "nmi", "purity"])
+                    acc = scores["acc"]
+                    metric = scores["nmi"] + scores["purity"]
+                else:
+                    acc = compute_clustering_metrics(preds, labels, ["acc"])["acc"]
+                    metric = acc
             else:
                 acc = None
                 metric = -mean_loss
 
             if self.verbose >= 1:
-                acc_str = f" acc={acc:.4f}" if acc is not None else ""
-                print(f"[VAE-BM-Ckpt alpha={self.alpha}] epoch {epoch}/{self.epochs} loss={mean_loss:.4f}{acc_str}", flush=True)
+                acc_str = f" acc={acc:.4f} metric={metric:.4f}" if acc is not None else ""
+                print(f"[VAE-BM-Ckpt alpha={self.alpha}] epoch {epoch}/{self.epochs} loss={mean_loss:.4f}{acc_str}"
+                      f" unfrozen={unfrozen}", flush=True)
 
             if metric > best_metric:
                 best_metric = metric
-                best_weights = [w.numpy().copy() for w in self.model.trainable_variables]
+                # Snapshot ALL variables (self.model.variables), not just
+                # trainable_variables - the latter's set/order changes at
+                # the unfreeze boundary (fewer vars while frozen, more
+                # after), which silently mismatches a zip()-based
+                # restore against a snapshot taken on the OTHER side of
+                # that boundary. self.model.variables is structural
+                # (every weight the architecture has) and stays stable
+                # regardless of .trainable flags.
+                best_weights = [w.numpy().copy() for w in self.model.variables]
                 best_kmeans = kmeans
                 self.best_epoch = epoch
                 self.best_acc = acc if acc is not None else float("nan")
@@ -156,7 +218,7 @@ class VaeBmCkptFit:
                 break
 
         if best_weights is not None:
-            for var, val in zip(self.model.trainable_variables, best_weights):
+            for var, val in zip(self.model.variables, best_weights):
                 var.assign(val)
         self.kmeans = best_kmeans if best_kmeans is not None else kmeans
 

@@ -347,9 +347,19 @@ def _build_model(model_name: str, k: int, seed: int, voc_size: int):
         max_fit_seconds = None if raw in ("0", "none", "") else float(raw)
         alpha = float(os.environ.get("VAEBM_CKPT_ALPHA", "0.99"))
         lr = float(os.environ.get("VAEBM_CKPT_LR", str(_VAEBM_DEFAULTS["lr"])))
+        # 2026-09-19 "let the network learn a bit" research pass - see
+        # models/vaebm_ckpt.py::VaeBmCkptFit's own comment. All default to
+        # unchanged prior behavior (no unfreezing, "acc" oracle metric).
+        raw_unfreeze = os.environ.get("VAEBM_CKPT_UNFREEZE_AFTER_EPOCH", "").strip()
+        unfreeze_after_epoch = int(raw_unfreeze) if raw_unfreeze else None
+        raw_post_lr = os.environ.get("VAEBM_CKPT_POST_UNFREEZE_LR", "").strip()
+        post_unfreeze_lr = float(raw_post_lr) if raw_post_lr else None
+        oracle_metric = os.environ.get("VAEBM_CKPT_ORACLE_METRIC", "acc")
         params = {k2: v for k2, v in _VAEBM_DEFAULTS.items() if k2 not in ("alpha", "lr")}
         return VAEBMCkptAdapter(n_clusters=k, voc_size=voc_size, random_state=seed, alpha=alpha, lr=lr,
-                                 max_fit_seconds=max_fit_seconds, **params)
+                                 max_fit_seconds=max_fit_seconds,
+                                 unfreeze_after_epoch=unfreeze_after_epoch,
+                                 post_unfreeze_lr=post_unfreeze_lr, oracle_metric=oracle_metric, **params)
     if model_name == "bertopic":
         from vaebm_benchmark.models.bertopic_adapter import BERTopicAdapter
 
@@ -436,7 +446,28 @@ def run_single(
         documents, labels, _num_classes = load_dataset(dataset_id)
 
         model = _build_model(model_name, k, seed, voc_size)
-        model.fit(documents)
+        # Environment-gated, opt-in, OFF by default (unchanged prior
+        # behavior for every existing result): the topic experiment's own
+        # "labels never passed to fit()" rule is deliberately, narrowly
+        # relaxed ONLY when VAEBM_TOPIC_ORACLE_LABELS=1 AND the model is
+        # one of the oracle-checkpoint-selection family (vaebm_poe/
+        # vaebm_dec/vaebm_ckpt) - mirrors cluster_runner.py's own,
+        # pre-existing opt-in for the cluster experiment. 2026-09-19
+        # "let the network learn a bit" research pass (see
+        # docs/vaebm_mimic_gte_research_log.md) - labels are NEVER used in
+        # the loss/gradient, only to rank already-computed epochs after
+        # the fact (see models/vaebm_ckpt.py's own docstring). Any result
+        # produced this way is oracle-label-informed, not a blind/
+        # unsupervised number, and must not be conflated with this
+        # experiment's own normal (label-blind) results.
+        use_oracle_labels = (
+            model_name in ("vaebm_poe", "vaebm_dec", "vaebm_ckpt")
+            and os.environ.get("VAEBM_TOPIC_ORACLE_LABELS", "0").strip().lower() in ("1", "true", "yes")
+        )
+        if use_oracle_labels:
+            model.fit(documents, labels=labels)
+        else:
+            model.fit(documents)
 
         topics_energy = model.get_topics(top_n=top_n)
         topics_freq = model.get_topics_both_views(top_n=top_n)["freq"] if hasattr(model, "get_topics_both_views") else []

@@ -259,6 +259,9 @@ class VAEBMCkptAdapter(ProtocolModelAdapter):
         verbose: int = 1,
         kl_weight: float = 1.0,
         freeze_embedding_branch: bool = False,
+        unfreeze_after_epoch: Optional[int] = None,
+        post_unfreeze_lr: Optional[float] = None,
+        oracle_metric: str = "acc",
     ) -> None:
         from vaebm_benchmark.models.vaebm_ckpt import VaeBmCkptFit
 
@@ -275,6 +278,8 @@ class VAEBMCkptAdapter(ProtocolModelAdapter):
             epochs=epochs, batch_size=batch_size, lr=lr, alpha=alpha,
             max_fit_seconds=max_fit_seconds, verbose=verbose,
             kl_weight=kl_weight, freeze_embedding_branch=freeze_embedding_branch,
+            unfreeze_after_epoch=unfreeze_after_epoch, post_unfreeze_lr=post_unfreeze_lr,
+            oracle_metric=oracle_metric,
         )
         self._train_documents: Optional[list[str]] = None
         self._mu_train: Optional[np.ndarray] = None
