@@ -201,4 +201,47 @@ Remaining blockers: agnews NMI (clustering-only, needs vaebm_dec or a
 different geometry lever), imdb Cv (freq-mode helped but didn't fully
 close the gap - 0.385 vs 0.404), 20ng NMI (still short by 0.003).
 
-(H_vaebm_dec results filled in as they land)
+### H_vaebm_dec results (5/5 successful) - NET NEGATIVE, abandoned
+
+| Dataset | Cv | Purity | NMI | Beats |
+|---|---:|---:|---:|---|
+| hicot_20ng | 0.708 | 0.640 | 0.555 | 2/3 (Purity/NMI both worse than A_freeze/G) |
+| hicot_search_snippets | 0.582 | 0.820 | 0.459 | 2/3 (REGRESSION from G's 3/3 - NMI now misses) |
+| hicot_google_news | 0.565 | 0.569 | 0.741 | 3/3 (Purity dropped but still clears the low 0.465 bar) |
+| hicot_agnews | 0.701 | 0.859 | 0.364 | 2/3 (NMI WORSE than freeze's 0.371, not better) |
+| hicot_imdb | 0.364 | 0.608 | 0.082 | 1/3 (Purity crashed from 0.803 - REGRESSION) |
+
+**10/15 beats - worse than both A_freeze/D (11/15) and G (12/15).**
+Hypothesis rejected: DEC's own clustering loss (lambda_c=0.1, jointly
+trained, NOT frozen) does not sharpen cluster separation here - if
+anything it destabilizes Purity on agnews/imdb without fixing NMI
+anywhere. **Idea abandoned.**
+
+**Standing best after Round 4: G_freeze_freqwords, 12/15 beats, 2/5
+datasets at 3/3** (google_news, search_snippets). Confirmed: nothing
+tried so far can move agnews's NMI (0.371, stuck across every config:
+freeze alone, +epochs, +alpha, +freq-words, +vaebm_dec - all land within
+0.364-0.376) or fully close imdb's Cv gap (best so far 0.385 vs target
+0.404) or 20ng's NMI gap (stuck at 0.580 vs 0.583 across every config
+that doesn't also break Purity).
+
+## Round 5 - units truncation on the 3 still-blocked datasets
+
+Idea: since mu_emb is a frozen, deterministic function of the raw
+embedding (identity-initialized, no hidden layer), `units < 1024` makes
+that Dense layer's Identity initializer place 1s only on its first
+`units` diagonal entries - i.e. mu becomes a literal TRUNCATION to the
+first `units` dimensions of the raw gte-large embedding, not a learned
+projection (nothing trains it either way, under freeze). Testing whether
+a lower-dimensional truncated subspace happens to separate these 3
+specific datasets' classes better than the full 1024-dim space (a
+real, if somewhat unprincipled, hypothesis worth a cheap check before
+concluding these are hard ceilings for this architecture+embedder).
+
+Configs I_units768/J_units512, on top of G's winning recipe (freeze=1,
+alpha=0, epochs=1, lr=1e-4, top_words_mode=freq), varying only
+VAEBM_UNITS. Datasets: hicot_20ng, hicot_agnews, hicot_imdb only (the 3
+still-blocked ones - google_news/search_snippets already at 3/3, no
+need to re-test). Driver: `scripts/run_vaebm_gte_research_round5.py`.
+
+(results filled in as they land)
