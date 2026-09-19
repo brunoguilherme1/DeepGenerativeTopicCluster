@@ -125,7 +125,12 @@ def _build_vaebm(k: int, seed: int, voc_size: int):
     return VAEBMAdapter(
         n_clusters=k,
         voc_size=voc_size,
-        units=50,
+        # Environment-configurable (VAEBM_UNITS, default "50" - unchanged
+        # prior behavior) - latent dimension. Set to the embedder's own
+        # output width (e.g. 1024 for gte-large) together with VAEBM_DIM_EMB=""
+        # (no hidden layer) so mu_emb's identity-initialized Dense layer is
+        # square and starts as a near-identity copy of the raw embedding.
+        units=int(os.environ.get("VAEBM_UNITS", "50")),
         # Raised from VaeBmKMeansFit's own supplied default of 30 to 50
         # (2026-09-16, user-authorized) - matches vaebm_poe/vaebm_dec's
         # own epochs=50, for a fairer 3-way comparison. On HiCOT's own
@@ -138,7 +143,10 @@ def _build_vaebm(k: int, seed: int, voc_size: int):
         # quick ablation (e.g. epochs=1) needs no code change.
         epochs=int(os.environ.get("VAEBM_EPOCHS", "50")),
         batch_size=128,
-        lr=1e-3,  # see docs/methodological_notes.md #8 - 1e-2 diverges at these vocab scales
+        # Environment-configurable (VAEBM_LR, default "1e-3" - unchanged
+        # prior behavior; see docs/methodological_notes.md #8 - 1e-2 diverges
+        # at these vocab scales) - mirrors VAEBM_EPOCHS.
+        lr=float(os.environ.get("VAEBM_LR", "1e-3")),
         random_state=seed,
         vectorizer_type="tfidf",
         embedder=os.environ.get("VAEBM_EMBEDDER", "all-MiniLM-L6-v2"),
@@ -146,8 +154,12 @@ def _build_vaebm(k: int, seed: int, voc_size: int):
         # Environment-configurable (VAEBM_DIM_EMB, default "368" - unchanged
         # prior behavior), comma-separated hidden-layer widths for the
         # embedding branch encoder, e.g. "1024" for a single 1024-unit layer
-        # (matching gte-large's own output width) - mirrors VAEBM_EPOCHS.
-        dim_emb=tuple(int(x) for x in os.environ.get("VAEBM_DIM_EMB", "368").split(",")),
+        # (matching gte-large's own output width), or "" (empty) for NO
+        # hidden layer at all - mlp_emb becomes an empty Sequential, which
+        # Keras runs as a pure identity pass-through, so mu_emb's own
+        # identity-initialized Dense is applied directly to the raw
+        # embedding - mirrors VAEBM_EPOCHS.
+        dim_emb=tuple(int(x) for x in os.environ.get("VAEBM_DIM_EMB", "368").split(",") if x.strip()),
         # Environment-configurable (VAEBM_ALPHA, default "0.99" - VAE-BM's
         # own established default, unchanged prior behavior for every
         # existing result) so a sweep script can run the whole "vaebm"/

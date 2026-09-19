@@ -125,14 +125,18 @@ class ExperimentResult:
 # 1e-2 diverges to inf/NaN at these vocab scales; 1e-3 trains stably,
 # and is the base every variant gets unless it overrides `lr` itself.
 _VAEBM_DEFAULTS = dict(
-    units=50,
+    # environment-configurable (VAEBM_UNITS, default "50") - see
+    # experiment/cluster_runner.py::_build_vaebm's own comment.
+    units=int(os.environ.get("VAEBM_UNITS", "50")),
     # Environment-configurable (VAEBM_EPOCHS, default "50", unchanged prior
     # behavior) - mirrors VAEBM_ALPHA below. Raised from 30 (2026-09-16,
     # user-authorized) - matches experiment/scientific_models.py::build_vaebm's
     # own comment.
     epochs=int(os.environ.get("VAEBM_EPOCHS", "50")),
     batch_size=128,
-    lr=1e-3,
+    # environment-configurable (VAEBM_LR, default "1e-3") - see
+    # experiment/cluster_runner.py::_build_vaebm's own comment.
+    lr=float(os.environ.get("VAEBM_LR", "1e-3")),
     vectorizer_type="tfidf",
     # environment-configurable (VAEBM_EMBEDDER, default unchanged) - see
     # experiment/scientific_models.py::_vaebm_embedder's own docstring;
@@ -140,9 +144,10 @@ _VAEBM_DEFAULTS = dict(
     # below, same as before.
     embedder=os.environ.get("VAEBM_EMBEDDER", "all-MiniLM-L6-v2"),
     dim=(1500, 1000, 500),
-    # environment-configurable (VAEBM_DIM_EMB, default "368") - see
-    # experiment/cluster_runner.py::_build_vaebm's own comment.
-    dim_emb=tuple(int(x) for x in os.environ.get("VAEBM_DIM_EMB", "368").split(",")),
+    # environment-configurable (VAEBM_DIM_EMB, default "368"; "" for no
+    # hidden layer at all) - see experiment/cluster_runner.py::_build_vaebm's
+    # own comment.
+    dim_emb=tuple(int(x) for x in os.environ.get("VAEBM_DIM_EMB", "368").split(",") if x.strip()),
     # environment-configurable (VAEBM_ALPHA, default "0.99" - VAE-BM's own
     # established default, unchanged prior behavior) - see
     # experiment/cluster_runner.py::_build_vaebm's own comment.

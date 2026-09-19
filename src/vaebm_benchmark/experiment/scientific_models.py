@@ -62,20 +62,26 @@ def build_vaebm(k: int, seed: int, voc_size: int, dataset_id: str = None):
     return VAEBMAdapter(
         n_clusters=k,
         voc_size=voc_size,
-        units=50,
+        # Environment-configurable (VAEBM_UNITS, default "50") - see
+        # cluster_runner.py::_build_vaebm's own comment.
+        units=int(os.environ.get("VAEBM_UNITS", "50")),
         # Environment-configurable (VAEBM_EPOCHS, default "50", unchanged
         # prior behavior) - mirrors VAEBM_ALPHA below, see
         # cluster_runner.py::_build_vaebm's own comment.
         epochs=int(os.environ.get("VAEBM_EPOCHS", "50")),
         batch_size=128,
-        lr=1e-3,  # see docs/methodological_notes.md #8
+        # Environment-configurable (VAEBM_LR, default "1e-3") - see
+        # docs/methodological_notes.md #8 and cluster_runner.py::_build_vaebm's
+        # own comment.
+        lr=float(os.environ.get("VAEBM_LR", "1e-3")),
         random_state=seed,
         vectorizer_type="tfidf",
         embedder=_vaebm_embedder(),
         dim=(1500, 1000, 500),
-        # Environment-configurable (VAEBM_DIM_EMB, default "368") - see
-        # cluster_runner.py::_build_vaebm's own comment.
-        dim_emb=tuple(int(x) for x in os.environ.get("VAEBM_DIM_EMB", "368").split(",")),
+        # Environment-configurable (VAEBM_DIM_EMB, default "368"; "" for no
+        # hidden layer at all) - see cluster_runner.py::_build_vaebm's own
+        # comment.
+        dim_emb=tuple(int(x) for x in os.environ.get("VAEBM_DIM_EMB", "368").split(",") if x.strip()),
         # Environment-configurable (VAEBM_ALPHA, default "0.99") - see
         # cluster_runner.py::_build_vaebm's own comment.
         alpha=float(os.environ.get("VAEBM_ALPHA", "0.99")),
