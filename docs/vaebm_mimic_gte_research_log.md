@@ -304,13 +304,62 @@ strong evidence this is a structural property of "frozen single
 sentence-embedding + KMeans, K=50" for AG News's 4 broad topic classes,
 not an artifact of gte-large specifically.
 
-## Conclusion of the deep search (Rounds 1-6)
+## Round 7 results (PROTOCOL VALIDATION, 10/10 successful) - CONCLUSION CONFIRMED
+
+| Dataset | Config | Cv | Purity | NMI | Beats |
+|---|---|---:|---:|---:|---|
+| hicot_20ng | M_energy | 0.628 | 0.664 | 0.580 | 2/3 |
+| hicot_20ng | L_freqwords | 0.614 | 0.664 | 0.580 | 2/3 |
+| hicot_search_snippets | M_energy | 0.329 | 0.856 | 0.503 | 2/3 (Cv gap widened vs old protocol) |
+| hicot_search_snippets | L_freqwords | **0.462** | 0.856 | 0.503 | **3/3 (barely - margin 0.462 vs 0.460 target)** |
+| hicot_google_news | M_energy | 0.446 | 0.614 | 0.820 | 2/3 (Cv MISS - was a false 3/3 under the wrong protocol!) |
+| hicot_google_news | L_freqwords | **0.491** | 0.614 | 0.820 | **3/3 (comfortable margin)** |
+| hicot_agnews | M_energy | 0.460 | 0.859 | 0.371 | 2/3 |
+| hicot_agnews | L_freqwords | 0.632 | 0.859 | 0.371 | 2/3 |
+| hicot_imdb | M_energy | 0.312 | 0.803 | 0.115 | 2/3 |
+| hicot_imdb | L_freqwords | 0.335 | 0.803 | 0.115 | 2/3 |
+
+**Purity/NMI are IDENTICAL between protocols on every dataset** (expected -
+they're clustering-only metrics, unaffected by top_n/TD's own
+computation). Only Cv changed, sometimes substantially (top_n=15 pulls
+in more, often less-coherent words than top_n=10).
+
+**M_energy_correct_protocol: 10/15 beats, 0/5 datasets at 3/3** - notably
+worse than what Rounds 1-4 reported under the wrong protocol (which
+showed 11/15, 1/5 at 3/3 for the equivalent config). google_news's
+apparent "energy-mode" win was a false positive of the wrong protocol.
+
+**L_freqwords_correct_protocol (the TRUE final answer): 12/15 beats, 2/5
+datasets at full 3/3** (search_snippets - barely, margin 0.462 vs 0.460;
+google_news - comfortably, margin 0.491 vs 0.454). **This matches the
+same beats-count and the same 2 winning datasets originally found under
+the wrong protocol** - the qualitative conclusion (freq-mode is the key
+fix; agnews NMI/imdb Cv/20ng NMI are the 3 remaining hard blockers)
+holds up under correct measurement, even though several individual Cv
+values shifted (mostly downward) once corrected. This is the number to
+report and reproduce going forward, not any Round 1-6 Cv value.
+
+Remaining caveat: Cv still uses `--cv-method local` (gensim, local
+training corpus) under `--protocol ecrtm_hicot`, NOT Palmetto/Wikipedia
+Cv, which is HiCOT's own actual Cv computation. This was not attempted
+(triggers a ~5.1GB one-time download) - a fully rigorous comparison
+would still need `--cv-method palmetto` to match HiCOT's own numbers
+exactly. Given how tight the search_snippets margin already is (0.462 vs
+0.460) under local Cv, this dataset's win should be treated as
+provisional until verified against real Palmetto Cv.
+
+## Conclusion of the deep search (Rounds 1-7)
 
 **Final best config: G_freeze_freqwords** - `VAEBM_EMBEDDER=thenlper/gte-large
 VAEBM_UNITS=1024 VAEBM_DIM_EMB="" VAEBM_ALPHA=0.0 VAEBM_FREEZE_EMB=1
-VAEBM_LR=1e-4 VAEBM_EPOCHS=1 VAEBM_TOP_WORDS_MODE=freq`, model=vaebm.
-12/15 beats, 2/5 datasets (google_news, search_snippets) at full 3/3 -
-up from the Round 1 baseline's 9/15, 1/5.
+VAEBM_LR=1e-4 VAEBM_EPOCHS=1 VAEBM_TOP_WORDS_MODE=freq --protocol
+ecrtm_hicot`, model=vaebm. **Validated by Round 7 under the correct
+protocol**: 12/15 beats, 2/5 datasets (google_news, search_snippets) at
+full 3/3 - up from the Round 1 baseline's 9/15, 1/5 (also re-measured
+under the correct protocol as a fair comparison: M_energy_correct_protocol
+scored 10/15, 0/5). search_snippets' win is narrow (Cv 0.462 vs target
+0.460) and still uses local (gensim) Cv, not Palmetto - see Round 7's
+own caveat above.
 
 Six independent levers were tried and systematically ruled out for the
 3 remaining blockers (search_snippets is now solved): non-zero alpha
