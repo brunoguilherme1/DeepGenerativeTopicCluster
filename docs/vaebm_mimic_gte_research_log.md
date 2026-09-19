@@ -244,4 +244,36 @@ VAEBM_UNITS. Datasets: hicot_20ng, hicot_agnews, hicot_imdb only (the 3
 still-blocked ones - google_news/search_snippets already at 3/3, no
 need to re-test). Driver: `scripts/run_vaebm_gte_research_round5.py`.
 
+### Results (6/6 successful) - no threshold crossed, confirms hard ceilings
+
+| Dataset | Config | Cv | Purity | NMI | Beats |
+|---|---|---:|---:|---:|---|
+| hicot_20ng | I_units768 | 0.661 | 0.670 | 0.576 | 2/3 (NMI worse than G's 0.580) |
+| hicot_20ng | J_units512 | 0.657 | 0.654 | 0.564 | 2/3 (NMI worse still - monotonic decline 1024->768->512) |
+| hicot_agnews | I_units768 | 0.724 | 0.875 | 0.375 | 2/3 (local NMI peak among truncations, still far from 0.412) |
+| hicot_agnews | J_units512 | 0.713 | 0.861 | 0.368 | 2/3 (worse than both 1024 and 768) |
+| hicot_imdb | I_units768 | 0.390 | 0.806 | 0.111 | 2/3 (Cv still short of 0.404) |
+| hicot_imdb | J_units512 | 0.387 | 0.790 | 0.107 | 2/3 (Cv still short) |
+
+**No config crossed any remaining threshold.** Truncating the frozen
+embedding to fewer dimensions never helps enough to matter, and for
+20ng's NMI it's monotonically harmful (1024: 0.580 -> 768: 0.576 -> 512:
+0.564). **Conclusion: agnews's NMI (~0.37 ceiling vs 0.412 target),
+imdb's Cv (~0.39 ceiling vs 0.404 target), and 20ng's NMI (~0.58 vs
+0.583) are genuine ceilings for gte-large + this frozen-identity
+architecture** - not fixable by epochs, alpha, kl_weight, top-word
+extraction method, joint DEC training, or dimensionality alone. Round 6
+tries the one still-unexplored orthogonal axis: a different embedder.
+
+## Round 6 - different embedder (bge-large-en-v1.5) on the 3 blocked datasets
+
+Idea: agnews/imdb/20ng's residual gaps might be embedder-specific (how
+well gte-large's own training happens to separate these particular
+classes), not an architectural limitation. `BAAI/bge-large-en-v1.5` is
+also 1024-dim (no units/dim_emb change needed) and trained on a
+different contrastive-retrieval mixture than gte-large - a genuinely
+orthogonal axis not tested in Rounds 1-5. Same G_freeze_freqwords recipe
+otherwise (freeze=1, alpha=0, epochs=1, lr=1e-4, top_words_mode=freq,
+units=1024, dim_emb=""). Driver: `scripts/run_vaebm_gte_research_round6.py`.
+
 (results filled in as they land)
