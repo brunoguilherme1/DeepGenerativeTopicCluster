@@ -178,4 +178,27 @@ research pass):
 Model=vaebm for G, vaebm_dec for H. K=50, all 5 hicot_* datasets. Driver:
 `scripts/run_vaebm_gte_research_round4.py`.
 
-(results filled in as they land)
+### G_freeze_freqwords results (5/5 successful) - NEW BEST
+
+| Dataset | Cv | Purity | NMI | Beats |
+|---|---:|---:|---:|---|
+| hicot_20ng | 0.670 | 0.664 | 0.580 | 2/3 (NMI misses by 0.003, same as A_freeze) |
+| hicot_search_snippets | 0.578 | 0.856 | 0.503 | **3/3 (NEW WIN - was 2/3 under energy mode)** |
+| hicot_google_news | 0.584 | 0.614 | 0.820 | **3/3** |
+| hicot_agnews | 0.697 | 0.859 | 0.371 | 2/3 (Cv jumped 0.520->0.697, NMI still stuck) |
+| hicot_imdb | 0.385 | 0.803 | 0.115 | 2/3 (Cv up 0.358->0.385, still short of 0.404) |
+
+**12/15 beats, 2/5 datasets at 3/3.** Confirms the hypothesis cleanly:
+Cv was substantially a topic-word-EXTRACTION-METHOD problem, not a
+clustering problem - `top_words_mode="freq"` (decoupled from the
+decoder's own trained R matrix) is a strictly-better-or-equal choice
+for Cv than "energy" on every dataset tested here, at zero cost to
+Purity/NMI (mathematically guaranteed under freeze, per Round 2/3's own
+finding). **This should become the new default for the "mimic-GTE"
+recipe going forward** - no known downside found yet.
+
+Remaining blockers: agnews NMI (clustering-only, needs vaebm_dec or a
+different geometry lever), imdb Cv (freq-mode helped but didn't fully
+close the gap - 0.385 vs 0.404), 20ng NMI (still short by 0.003).
+
+(H_vaebm_dec results filled in as they land)
