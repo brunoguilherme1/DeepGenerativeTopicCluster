@@ -34,6 +34,8 @@ class VAEBMAdapter(ProtocolModelAdapter):
         top_words_mode: str = "energy",  # "energy" or "freq" - which view get_topics() returns
         vocabulary: Optional[list] = None,  # fixes the exact vocab (protocol fidelity) - see vaebm.py fit_predict
         verbose: int = 1,  # 0: silent, 1: one concise summary line, 2: full Keras per-epoch output - see vaebm.py VaeBmKMeansFit
+        kl_weight: float = 1.0,  # see vaebm.py::VAEBM's own comment - "mimic GTE" research knob
+        freeze_embedding_branch: bool = False,  # see vaebm.py::VAEBM's own comment
     ) -> None:
         self.n_clusters = n_clusters
         self.vectorizer_type = vectorizer_type
@@ -53,6 +55,8 @@ class VAEBMAdapter(ProtocolModelAdapter):
             batch_size=batch_size,
             lr=lr,
             verbose=verbose,
+            kl_weight=kl_weight,
+            freeze_embedding_branch=freeze_embedding_branch,
         )
         self._train_documents: Optional[list[str]] = None
         self._mu_train: Optional[np.ndarray] = None
@@ -146,6 +150,8 @@ class VAEBMPoEAdapter(ProtocolModelAdapter):
         top_words_mode: str = "energy",
         vocabulary: Optional[list] = None,
         verbose: int = 1,
+        kl_weight: float = 1.0,
+        freeze_embedding_branch: bool = False,
     ) -> None:
         from vaebm_benchmark.models.vaebm_poe import VaeBmPoEFit
 
@@ -160,6 +166,7 @@ class VAEBMPoEAdapter(ProtocolModelAdapter):
         self._pipeline = VaeBmPoEFit(
             voc_size=voc_size, units=units, n_clusters=n_clusters, random_state=random_state,
             epochs=epochs, batch_size=batch_size, lr=lr, max_fit_seconds=max_fit_seconds, verbose=verbose,
+            kl_weight=kl_weight, freeze_embedding_branch=freeze_embedding_branch,
         )
         self._train_documents: Optional[list[str]] = None
         self._mu_train: Optional[np.ndarray] = None
@@ -250,6 +257,8 @@ class VAEBMCkptAdapter(ProtocolModelAdapter):
         top_words_mode: str = "energy",
         vocabulary: Optional[list] = None,
         verbose: int = 1,
+        kl_weight: float = 1.0,
+        freeze_embedding_branch: bool = False,
     ) -> None:
         from vaebm_benchmark.models.vaebm_ckpt import VaeBmCkptFit
 
@@ -265,6 +274,7 @@ class VAEBMCkptAdapter(ProtocolModelAdapter):
             voc_size=voc_size, units=units, n_clusters=n_clusters, random_state=random_state,
             epochs=epochs, batch_size=batch_size, lr=lr, alpha=alpha,
             max_fit_seconds=max_fit_seconds, verbose=verbose,
+            kl_weight=kl_weight, freeze_embedding_branch=freeze_embedding_branch,
         )
         self._train_documents: Optional[list[str]] = None
         self._mu_train: Optional[np.ndarray] = None
@@ -348,6 +358,8 @@ class VAEBMDECAdapter(ProtocolModelAdapter):
         top_words_mode: str = "energy",
         vocabulary: Optional[list] = None,
         verbose: int = 1,
+        kl_weight: float = 1.0,
+        freeze_embedding_branch: bool = False,
     ) -> None:
         from vaebm_benchmark.models.vaebm_dec import VaeBmDECFit
 
@@ -363,6 +375,7 @@ class VAEBMDECAdapter(ProtocolModelAdapter):
             voc_size=voc_size, units=units, n_clusters=n_clusters, random_state=random_state,
             epochs=epochs, batch_size=batch_size, lr=lr, alpha=alpha, lambda_c=lambda_c,
             max_fit_seconds=max_fit_seconds, verbose=verbose,
+            kl_weight=kl_weight, freeze_embedding_branch=freeze_embedding_branch,
         )
         self._train_documents: Optional[list[str]] = None
         self._mu_train: Optional[np.ndarray] = None

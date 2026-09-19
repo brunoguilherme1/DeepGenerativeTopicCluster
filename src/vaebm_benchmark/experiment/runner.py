@@ -152,6 +152,15 @@ _VAEBM_DEFAULTS = dict(
     # established default, unchanged prior behavior) - see
     # experiment/cluster_runner.py::_build_vaebm's own comment.
     alpha=float(os.environ.get("VAEBM_ALPHA", "0.99")),
+    # environment-configurable (VAEBM_KL_WEIGHT, default "1.0" - the
+    # ORIGINAL unweighted ELBO, unchanged prior behavior) - beta-VAE-style
+    # weight on the KL term, see models/vaebm.py::VAEBM's own comment
+    # (2026-09-19 "mimic GTE" research pass).
+    kl_weight=float(os.environ.get("VAEBM_KL_WEIGHT", "1.0")),
+    # environment-configurable (VAEBM_FREEZE_EMB, default "0"/unset -
+    # unchanged prior behavior) - freezes the embedding branch right after
+    # construction, see models/vaebm.py::VAEBM's own comment.
+    freeze_embedding_branch=os.environ.get("VAEBM_FREEZE_EMB", "0").strip().lower() in ("1", "true", "yes"),
     top_words_mode="energy",
     verbose=1,
 )

@@ -232,12 +232,33 @@ class VAEBM(Model):
         # in call() below.
         vectorizer_type: str = "tfidf",  # BoW branch (x_bow): "tfidf", or anything else -> CountVectorizer/"bag"
         embedder: Union[str, np.ndarray] = "thenlper/gte-small",  # embedding branch (e_txt): any SentenceTransformer/HuggingFace model name, or a precomputed array - never "tfidf"/"bag"
+        # beta-VAE-style KL weight (2026-09-19, user-authorized "mimic GTE"
+        # research pass - see docs/methodological_notes.md). Default 1.0 =
+        # the ORIGINAL unweighted ELBO, unchanged for every prior result.
+        # A weight < 1 reduces how hard the KL term pulls mu/log_sigma
+        # toward the standard-normal prior, which otherwise fights
+        # preserving an embedding's own (non-isotropic) geometry.
+        kl_weight: float = 1.0,
+        # If True, freeze the embedding branch (mlp_emb/mu_emb/log_sigma_emb)
+        # right after construction - same "mimic GTE" motivation: guarantees
+        # mu_emb stays exactly at its identity-initialized value (a near-
+        # exact copy of the raw embedding, when dim_emb=() and units matches
+        # the embedder's own output width) for the ENTIRE training run,
+        # fully decoupled from the BoW decoder's reconstruction pressure.
+        # The decoder/BoW branch remain trainable either way.
+        freeze_embedding_branch: bool = False,
     ):
         super().__init__()
         self.vectorizer_type = vectorizer_type
         self.embedder_name = embedder if isinstance(embedder, str) else None
+        self.kl_weight = kl_weight
         self.encoder = Encoder(units=units, voc=voc, dim=dim, dim_emb=dim_emb, alpha=alpha)
         self.decoder = Decoder(units=units, voc=voc)
+        if freeze_embedding_branch:
+            if self.encoder.mlp_emb is not None:
+                self.encoder.mlp_emb.trainable = False
+            self.encoder.mu_emb.trainable = False
+            self.encoder.log_sigma_emb.trainable = False
 
     def call(self, inputs_tuple, training: Optional[bool] = None):
         x_bow, e_txt = inputs_tuple  # [B, voc], [B, d_emb]
@@ -251,7 +272,7 @@ class VAEBM(Model):
             tf.square(mu) + tf.exp(2.0 * log_sigma) - 1.0 - 2.0 * log_sigma,
             axis=1,
         )
-        elbo = recon - kl
+        elbo = recon - self.kl_weight * kl
         return elbo
 
 
@@ -289,6 +310,10 @@ class VaeBmKMeansFit:
         # a per-epoch progress bar plus the EarlyStopping/ModelCheckpoint
         # callbacks' own verbose logging.
         verbose: int = 1,
+        # See VAEBM's own docstring/comment on both of these - "mimic GTE"
+        # research knobs, defaults unchanged from prior behavior.
+        kl_weight: float = 1.0,
+        freeze_embedding_branch: bool = False,
     ):
         self.voc_size = voc_size
         self.units = units
@@ -298,6 +323,8 @@ class VaeBmKMeansFit:
         self.batch_size = batch_size
         self.lr = lr
         self.verbose = verbose
+        self.kl_weight = kl_weight
+        self.freeze_embedding_branch = freeze_embedding_branch
 
         self.vectorizer: Optional[Union[TfidfVectorizer, CountVectorizer]] = None
         self.model: Optional[VAEBM] = None
@@ -369,6 +396,7 @@ class VaeBmKMeansFit:
         self.model = VAEBM(
             units=self.units, voc=X_bow.shape[1], dim=dim, dim_emb=dim_emb, alpha=alpha,
             vectorizer_type=vectorizer_type, embedder=embedder,
+            kl_weight=self.kl_weight, freeze_embedding_branch=self.freeze_embedding_branch,
         )
         # jit_compile explicitly False (not just TF_XLA_FLAGS above): recent
         # Keras versions can default Model.compile()'s own jit_compile to

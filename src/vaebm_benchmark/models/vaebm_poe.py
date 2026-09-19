@@ -135,10 +135,17 @@ class VAEBMPoE(Model):
     """Same forward pass/ELBO as vaebm.py::VAEBM, using PoEEncoder instead
     of the fixed-alpha Encoder. Decoder is imported unchanged."""
 
-    def __init__(self, units=50, voc=2000, dim=(1500, 1000, 300), dim_emb=(368,)):
+    def __init__(self, units=50, voc=2000, dim=(1500, 1000, 300), dim_emb=(368,),
+                 kl_weight=1.0, freeze_embedding_branch=False):
         super().__init__()
+        self.kl_weight = kl_weight
         self.encoder = PoEEncoder(units=units, voc=voc, dim=dim, dim_emb=dim_emb)
         self.decoder = Decoder(units=units, voc=voc)
+        if freeze_embedding_branch:
+            if self.encoder.mlp_emb is not None:
+                self.encoder.mlp_emb.trainable = False
+            self.encoder.mu_emb.trainable = False
+            self.encoder.log_sigma_emb.trainable = False
 
     def call(self, inputs_tuple, training: Optional[bool] = None):
         x_bow, e_txt = inputs_tuple
@@ -147,7 +154,7 @@ class VAEBMPoE(Model):
         kl = 0.5 * tf.reduce_sum(
             tf.square(mu) + tf.exp(2.0 * log_sigma) - 1.0 - 2.0 * log_sigma, axis=1,
         )
-        return recon - kl  # per-sample ELBO
+        return recon - self.kl_weight * kl  # per-sample ELBO
 
 
 class VaeBmPoEFit:
@@ -157,7 +164,8 @@ class VaeBmPoEFit:
     docstring for the labels/oracle-checkpointing rationale."""
 
     def __init__(self, voc_size=5000, units=50, n_clusters=8, random_state=42,
-                 epochs=50, batch_size=128, lr=1e-3, max_fit_seconds: Optional[float] = None, verbose=1):
+                 epochs=50, batch_size=128, lr=1e-3, max_fit_seconds: Optional[float] = None, verbose=1,
+                 kl_weight=1.0, freeze_embedding_branch=False):
         self.voc_size = voc_size
         self.units = units
         self.n_clusters = n_clusters
@@ -167,6 +175,8 @@ class VaeBmPoEFit:
         self.lr = lr
         self.max_fit_seconds = max_fit_seconds
         self.verbose = verbose
+        self.kl_weight = kl_weight
+        self.freeze_embedding_branch = freeze_embedding_branch
 
         self.vectorizer = None
         self.embedder = None
@@ -185,7 +195,8 @@ class VaeBmPoEFit:
             texts, self.voc_size, vectorizer_type, embedder, vocabulary,
         )
 
-        self.model = VAEBMPoE(units=self.units, voc=X_bow.shape[1], dim=dim, dim_emb=dim_emb)
+        self.model = VAEBMPoE(units=self.units, voc=X_bow.shape[1], dim=dim, dim_emb=dim_emb,
+                              kl_weight=self.kl_weight, freeze_embedding_branch=self.freeze_embedding_branch)
         optimizer = Adam(self.lr)
         _ = self.model([X_bow[:1], E[:1]], training=False)
 

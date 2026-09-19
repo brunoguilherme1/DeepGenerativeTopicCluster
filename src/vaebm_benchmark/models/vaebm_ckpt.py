@@ -62,7 +62,8 @@ class VaeBmCkptFit:
 
     def __init__(self, voc_size=5000, units=50, n_clusters=8, random_state=42,
                  epochs=50, batch_size=128, lr=1e-3, alpha=0.99,
-                 max_fit_seconds: Optional[float] = None, verbose=1):
+                 max_fit_seconds: Optional[float] = None, verbose=1,
+                 kl_weight=1.0, freeze_embedding_branch=False):
         self.voc_size = voc_size
         self.units = units
         self.n_clusters = n_clusters
@@ -73,6 +74,8 @@ class VaeBmCkptFit:
         self.alpha = alpha
         self.max_fit_seconds = max_fit_seconds
         self.verbose = verbose
+        self.kl_weight = kl_weight
+        self.freeze_embedding_branch = freeze_embedding_branch
 
         self.vectorizer = None
         self.embedder = None
@@ -94,6 +97,7 @@ class VaeBmCkptFit:
         self.model = VAEBM(
             units=self.units, voc=X_bow.shape[1], dim=dim, dim_emb=dim_emb, alpha=self.alpha,
             vectorizer_type=vectorizer_type, embedder=embedder,
+            kl_weight=self.kl_weight, freeze_embedding_branch=self.freeze_embedding_branch,
         )
         optimizer = Adam(self.lr)
         _ = self.model([X_bow[:1], E[:1]], training=False)

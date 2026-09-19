@@ -69,7 +69,8 @@ def _target_distribution(q: np.ndarray) -> np.ndarray:
 class VaeBmDECFit:
     def __init__(self, voc_size=5000, units=50, n_clusters=8, random_state=42,
                  epochs=50, batch_size=128, lr=1e-3, alpha=0.99, lambda_c=0.1,
-                 max_fit_seconds: Optional[float] = None, verbose=1):
+                 max_fit_seconds: Optional[float] = None, verbose=1,
+                 kl_weight=1.0, freeze_embedding_branch=False):
         self.voc_size = voc_size
         self.units = units
         self.n_clusters = n_clusters
@@ -81,6 +82,8 @@ class VaeBmDECFit:
         self.lambda_c = lambda_c
         self.max_fit_seconds = max_fit_seconds
         self.verbose = verbose
+        self.kl_weight = kl_weight
+        self.freeze_embedding_branch = freeze_embedding_branch
 
         self.vectorizer = None
         self.embedder = None
@@ -100,7 +103,8 @@ class VaeBmDECFit:
         )
 
         self.model = VAEBM(units=self.units, voc=X_bow.shape[1], dim=dim, dim_emb=dim_emb, alpha=self.alpha,
-                            vectorizer_type=vectorizer_type, embedder=embedder)
+                            vectorizer_type=vectorizer_type, embedder=embedder,
+                            kl_weight=self.kl_weight, freeze_embedding_branch=self.freeze_embedding_branch)
         optimizer = Adam(self.lr)
         _ = self.model([X_bow[:1], E[:1]], training=False)
 
