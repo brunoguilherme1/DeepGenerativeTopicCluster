@@ -73,25 +73,33 @@ class PoEEncoder(Model):
         self.units = units
         self.voc = voc
 
-        self.mlp_bow = tf.keras.Sequential(name="MLP_BOW")
-        for i, width in enumerate(dim):
-            self.mlp_bow.add(layers.Dense(
-                width, activation=tf.nn.tanh,
-                kernel_initializer=initializers.Identity(gain=0.99999) if i == 10 else "glorot_uniform",
-                bias_initializer="zeros", name=f"bow_dense_{i}",
-            ))
+        # Keras 3's Sequential refuses to build with zero layers - see
+        # vaebm.py::Encoder's own comment on this same fix. dim=()/
+        # dim_emb=() are kept working as "no hidden layer" by skipping the
+        # Sequential entirely - see call() below.
+        self.mlp_bow = None
+        if len(dim) > 0:
+            self.mlp_bow = tf.keras.Sequential(name="MLP_BOW")
+            for i, width in enumerate(dim):
+                self.mlp_bow.add(layers.Dense(
+                    width, activation=tf.nn.tanh,
+                    kernel_initializer=initializers.Identity(gain=0.99999) if i == 10 else "glorot_uniform",
+                    bias_initializer="zeros", name=f"bow_dense_{i}",
+                ))
         self.mu_bow = layers.Dense(units, activation=None, kernel_initializer=initializers.Identity(gain=0.99999),
                                     bias_initializer="zeros", name="mu_bow")
         self.log_sigma_bow = layers.Dense(units, activation=None, kernel_initializer="glorot_uniform",
                                            bias_initializer="zeros", name="log_sigma_bow")
 
-        self.mlp_emb = tf.keras.Sequential(name="MLP_EMB")
-        for i, width in enumerate(dim_emb):
-            self.mlp_emb.add(layers.Dense(
-                width, activation=tf.nn.tanh,
-                kernel_initializer=initializers.Identity(gain=0.99999) if i == 0 else "glorot_uniform",
-                bias_initializer="zeros", name=f"emb_dense_{i}",
-            ))
+        self.mlp_emb = None
+        if len(dim_emb) > 0:
+            self.mlp_emb = tf.keras.Sequential(name="MLP_EMB")
+            for i, width in enumerate(dim_emb):
+                self.mlp_emb.add(layers.Dense(
+                    width, activation=tf.nn.tanh,
+                    kernel_initializer=initializers.Identity(gain=0.99999) if i == 0 else "glorot_uniform",
+                    bias_initializer="zeros", name=f"emb_dense_{i}",
+                ))
         self.mu_emb = layers.Dense(units, activation=None, kernel_initializer=initializers.Identity(gain=0.99999),
                                     bias_initializer="zeros", name="mu_emb")
         self.log_sigma_emb = layers.Dense(units, activation=None, kernel_initializer="glorot_uniform",
@@ -101,11 +109,11 @@ class PoEEncoder(Model):
         x_bow, e_txt = inputs_tuple[0], inputs_tuple[1]
         batch_size = tf.shape(x_bow)[0]
 
-        h_bow = self.mlp_bow(x_bow)
+        h_bow = self.mlp_bow(x_bow) if self.mlp_bow is not None else x_bow
         mu_bow = self.mu_bow(h_bow)
         log_sigma_bow = self.log_sigma_bow(h_bow)
 
-        h_emb = self.mlp_emb(e_txt)
+        h_emb = self.mlp_emb(e_txt) if self.mlp_emb is not None else e_txt
         mu_emb = self.mu_emb(h_emb)
         log_sigma_emb = self.log_sigma_emb(h_emb)
 
