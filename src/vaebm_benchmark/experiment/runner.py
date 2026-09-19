@@ -126,8 +126,11 @@ class ExperimentResult:
 # and is the base every variant gets unless it overrides `lr` itself.
 _VAEBM_DEFAULTS = dict(
     units=50,
-    epochs=50,  # raised from 30 (2026-09-16, user-authorized) - matches
-                # experiment/scientific_models.py::build_vaebm's own comment
+    # Environment-configurable (VAEBM_EPOCHS, default "50", unchanged prior
+    # behavior) - mirrors VAEBM_ALPHA below. Raised from 30 (2026-09-16,
+    # user-authorized) - matches experiment/scientific_models.py::build_vaebm's
+    # own comment.
+    epochs=int(os.environ.get("VAEBM_EPOCHS", "50")),
     batch_size=128,
     lr=1e-3,
     vectorizer_type="tfidf",

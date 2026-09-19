@@ -133,7 +133,10 @@ def _build_vaebm(k: int, seed: int, voc_size: int):
         # without Keras's own EarlyStopping(patience=1) ever triggering
         # (loss kept improving throughout) - raising the ceiling gives
         # it the same room to keep improving the other two variants get.
-        epochs=50,
+        # Environment-configurable (VAEBM_EPOCHS, default "50" - unchanged
+        # prior behavior) - mirrors VAEBM_ALPHA's own convention below, so a
+        # quick ablation (e.g. epochs=1) needs no code change.
+        epochs=int(os.environ.get("VAEBM_EPOCHS", "50")),
         batch_size=128,
         lr=1e-3,  # see docs/methodological_notes.md #8 - 1e-2 diverges at these vocab scales
         random_state=seed,

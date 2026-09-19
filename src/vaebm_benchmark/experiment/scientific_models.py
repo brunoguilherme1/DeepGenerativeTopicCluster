@@ -63,7 +63,10 @@ def build_vaebm(k: int, seed: int, voc_size: int, dataset_id: str = None):
         n_clusters=k,
         voc_size=voc_size,
         units=50,
-        epochs=50,  # raised from 30 - see cluster_runner.py::_build_vaebm's own comment
+        # Environment-configurable (VAEBM_EPOCHS, default "50", unchanged
+        # prior behavior) - mirrors VAEBM_ALPHA below, see
+        # cluster_runner.py::_build_vaebm's own comment.
+        epochs=int(os.environ.get("VAEBM_EPOCHS", "50")),
         batch_size=128,
         lr=1e-3,  # see docs/methodological_notes.md #8
         random_state=seed,
