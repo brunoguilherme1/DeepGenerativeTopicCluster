@@ -696,6 +696,36 @@ dilutes relevance - fixed via a new `static_candidate_pool` parameter
 default 40). Round 15 tests this refinement before concluding the whole
 static-embedding-centroid direction doesn't work.
 
+## Round 15 results (candidate-pool-restricted static-GloVe, 10/10 successful) - MIXED, non-monotonic
+
+| Dataset | T (freq) Palmetto | U (unrestricted static) Palmetto | V (pool=40) Palmetto | Target |
+|---|---:|---:|---:|---:|
+| hicot_20ng | 0.396 | 0.363 | **0.319 (worse than both)** | 0.451 |
+| hicot_search_snippets | 0.429 | 0.426 | **0.450 (best of all 3, closest to target ever - off by 0.010)** | 0.460 |
+| hicot_google_news | 0.399 | 0.378 | 0.378 (ties U) | 0.454 |
+| hicot_agnews | 0.421 | 0.404 | 0.407 (between U and T) | 0.446 |
+| hicot_imdb | 0.333 | 0.277 | 0.287 (between U and T) | 0.404 |
+
+**Non-monotonic across datasets**: pool=40 helps search_snippets/agnews
+meaningfully, HURTS 20ng (worse than even the unrestricted version - the
+opposite of the intended fix), and is roughly neutral elsewhere. Also
+important: local C_V and Palmetto C_V sometimes move in OPPOSITE
+directions for the same config (20ng: local Cv improved 0.404->0.445
+with pool=40, but Palmetto Cv got WORSE 0.363->0.319) - local C_V is
+genuinely unreliable as a proxy signal for this specific technique,
+confirming the value of tracking both per the user's instruction.
+
+**search_snippets is now the closest any config in this entire research
+pass has come to a genuine Palmetto C_V win** (0.450 vs 0.460 target,
+with Purity 0.856/NMI 0.503 already beating their own targets) - a real,
+actionable near-miss worth continuing to chase.
+
+Given the pool cutoff's brittleness, Round 16 tests a SOFT blend instead
+of a hard filter-then-rank: `static_hybrid_weight` (new
+models/vaebm.py::top_words_by_freq_exact parameter) rank-normalizes
+frequency and similarity to [0,1] over the candidate set and combines
+them linearly, avoiding the pool-size sensitivity seen here.
+
 ## FINAL CORRECTED CONCLUSION (supersedes everything above - see Round 12)
 
 Rounds 1-11 all used `--cv-method local` (gensim, local training
