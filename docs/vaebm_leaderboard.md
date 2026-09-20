@@ -631,3 +631,31 @@ recipe - Palmetto Cv only (the decision-relevant metric), to see whether
 NMI naturally crosses 0.583 under real clustering-initialization
 variance. Reported transparently regardless of outcome.
 
+## Round 28 (complete, job 1642): the gap is NOT KMeans-init noise - closing this micro-lead
+
+| KMeans variant | Cv | Purity | NMI | NMI Δ target |
+|---|---:|---:|---:|---:|
+| seed=22 (Round 27, original) | 0.4605 | 0.6764 | **0.5822** | **-0.0008 (best of all 6)** |
+| seed=1 | 0.4545 | 0.6702 | 0.5808 | -0.0022 |
+| seed=7 | 0.4518 | 0.6786 | 0.5768 | -0.0062 |
+| seed=13 | 0.4517 | 0.6778 | 0.5792 | -0.0038 |
+| seed=99 | 0.4628 (best Cv of the sweep) | 0.6760 | 0.5788 | -0.0042 |
+| n_init=20 (seed=22) | 0.4535 | 0.6760 | 0.5816 | -0.0014 |
+
+**None of the 5 variations closed the gap - the ORIGINAL seed=22 result
+remains the best of all 6, including a more exhaustive n_init=20 search
+at the same seed.** NMI stayed in a narrow 0.577-0.582 band across every
+KMeans-initialization variant while Cv/Purity both stayed robustly above
+target throughout (Cv range 0.452-0.463, Purity range 0.670-0.679) -
+confirms Cv/Purity's wins are NOT fragile/seed-dependent, but also
+confirms the NMI shortfall is a genuine, stable property of this `mu`
+representation (frozen gte-large + relevance+normalize_mu), not
+KMeans-initialization noise that a lucky restart could fix. **Closing
+this specific 0.0008 lead this way - diminishing returns per the "stop
+unproductive experiments early" instruction.** 20NG's standing best
+remains Round 27's result (Cv 0.4605/Purity 0.6764/NMI 0.5822, 2/3,
+missing only NMI). A genuinely different lever (different embedder,
+different latent dim, or a clustering-quality-focused architecture
+change) would be needed to move NMI further - noted in the idea backlog
+for a future round, not chased further right now.
+
