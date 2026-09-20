@@ -351,6 +351,8 @@ class VaeBmKMeansFit:
 
         self.embedder: Optional["SentenceTransformer"] = None
         self.teacher_embedder: Optional["SentenceTransformer"] = None
+        self._fit_texts: Optional[list] = None
+        self._E_fit: Optional[np.ndarray] = None
 
     def fit_predict(
         self,
@@ -416,6 +418,16 @@ class VaeBmKMeansFit:
             norms = np.linalg.norm(E, axis=1, keepdims=True)
             norms[norms == 0.0] = 1.0
             E = E / norms
+
+        # Cached so top_words_by_freq_exact()/predict() can reuse this
+        # exact embedding matrix when self.embedder is None (a
+        # precomputed-array `embedder`, e.g. VAEBM_DOC_EMBEDDER=
+        # hicot_glove_avg - see experiment/runner.py) - there is no live
+        # encoder to re-embed `texts` with in that case. 2026-09-20,
+        # found when Round 25 of the research pass crashed here with
+        # 'NoneType' object has no attribute 'encode'.
+        self._fit_texts = list(texts)
+        self._E_fit = E
 
         self.model = VAEBM(
             units=self.units, voc=X_bow.shape[1], dim=dim, dim_emb=dim_emb, alpha=alpha,
@@ -579,7 +591,22 @@ class VaeBmKMeansFit:
         X_all = X
         X_bow = X_all.toarray().astype(np.float32)
 
-        E = self.embedder.encode(texts, batch_size=128, convert_to_numpy=True).astype(np.float32)
+        if self.embedder is not None:
+            E = self.embedder.encode(texts, batch_size=128, convert_to_numpy=True).astype(np.float32)
+        elif self._fit_texts is not None and list(texts) == self._fit_texts:
+            # No live encoder (a precomputed-array `embedder` was used at
+            # fit time, e.g. VAEBM_DOC_EMBEDDER=hicot_glove_avg - see
+            # experiment/runner.py) - reuse the exact fit-time embedding
+            # matrix rather than crashing, valid only because `texts` here
+            # is the SAME sequence already embedded during fit_predict()
+            # (this method is always called with the training documents,
+            # e.g. VAEBMAdapter.get_topics()'s own self._train_documents).
+            E = self._E_fit
+        else:
+            raise RuntimeError(
+                "No live embedder and `texts` does not match the fit-time documents - "
+                "a precomputed-array embedder cannot re-embed different/new text."
+            )
 
         mu, _, _ = self.model.encoder([X_bow, E], training=False)
         Z = mu.numpy()
