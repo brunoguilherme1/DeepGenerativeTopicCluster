@@ -120,9 +120,78 @@ Stage C's actual transferable lesson so far is narrower than originally
 hoped: **strip stopwords/junk-tokens from topic-word extraction**, not
 "whatever makes the plain dataset easier."
 
-## Round 17 (running, job 1630): Stage A re-baseline with stopword fix
+## Round 17 (complete, job 1630): Stage A re-baseline with stopword fix
 
-Re-tests all 10 datasets (vaebm + sbert_kmeans, cv_local + Palmetto) with
+Re-tested all 10 datasets (vaebm + sbert_kmeans, cv_local + Palmetto) with
 `VAEBM_EXCLUDE_STOPWORDS=1` and the corrected `google_news_t` pairing.
-Results pending - table above still reflects pre-fix Rounds 1-16 numbers
-and should be treated as provisional, especially plain `imdb`'s 0.469.
+**Confirms the measurement-artifact hypothesis decisively**: plain
+`imdb`'s Palmetto Cv collapsed 0.469 -> 0.338 once stopwords/`br` are
+excluded from topic words - it is now BELOW both `hicot_imdb` (0.350)
+and the HiCOT target (0.404). The "plain imdb beats HiCOT" claim from
+Rounds 1-16 is retracted: it was measurement noise, not a real result.
+Plain `20ng`'s ceiling (sbert_kmeans) also dropped sharply (0.469 ->
+0.355 Palmetto), same artifact. `search_snippets`/`google_news_t` moved
+much less (~flat), consistent with the diagnostic finding that those
+pairs' differences were provenance/subsampling, not stopword leakage.
+
+### hicot_* results (vaebm recipe: frozen, alpha=0, freq words, gte-large, stopwords excluded)
+
+| Dataset | Palmetto Cv | Δ vs target | cv_local | Purity | Δ Purity | NMI | Δ NMI | 3/3? |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| hicot_20ng | 0.397 | -0.054 | 0.630 | 0.664 | +0.038 | 0.580 | -0.003 | no |
+| hicot_search_snippets* | 0.431 | -0.029 | 0.461 | 0.856 | +0.038 | 0.503 | +0.025 | no |
+| hicot_google_news | 0.398 | -0.056 | 0.491 | 0.614 | +0.149 | 0.820 | +0.163 | no |
+| hicot_agnews | 0.426 | -0.020 | 0.622 | 0.859 | +0.002 | 0.371 | -0.041 | no |
+| hicot_imdb | 0.350 | -0.054 | 0.351 | 0.803 | +0.066 | 0.115 | +0.033 | no |
+
+\* search_snippets used plain freq-mode here (Round 17's uniform recipe),
+NOT the GloVe-hybrid config that previously got it to 0.450 - the two
+fixes haven't been combined yet, see Round 18 below. Every other
+dataset's Cv gap held flat (20NG, GoogleNews) or narrowed (AGNews
+-0.025->-0.020, IMDB -0.071->-0.054) under the stopword fix alone.
+Still 0/5 on 3/3, but IMDB and AGNews both moved the right direction.
+
+### Plain-dataset results (same recipe)
+
+| Dataset | Palmetto Cv | cv_local | Purity | NMI |
+|---|---:|---:|---:|---:|
+| 20ng | 0.335 | 0.447 | 0.630 | 0.538 |
+| search_snippets | 0.424 | 0.465 | 0.861 | 0.499 |
+| google_news_t (replaces google_news_ts) | 0.408 | 0.493 | 0.614 | 0.807 |
+| agnews_short | 0.410 | 0.591 | 0.875 | 0.387 |
+| imdb | 0.338 | 0.334 | 0.917 | 0.203 |
+
+`google_news_t` (correct pair) now sits almost exactly ON hicot_google_news
+(0.408 vs 0.398 Palmetto) - the large gap the old (wrong) `google_news_ts`
+pairing suggested was mostly a "richer document" artifact, not something
+transferable to hicot's title-only corpus.
+
+### Raw sbert_kmeans ceiling (Palmetto, gte-large, stopwords excluded)
+
+hicot_20ng 0.432, hicot_search_snippets 0.454, hicot_google_news 0.431,
+hicot_agnews 0.457, hicot_imdb 0.349 (barely moved from pre-fix - these
+5 were already close to their pre-fix values, confirming hicot_*'s own
+vocab was already close to stopword-clean). Plain: 20ng 0.355 (was
+0.469 pre-fix - large drop), search_snippets 0.464 (flat), google_news_t
+0.432 (new pairing), agnews_short 0.483 (flat - HTML-entity artifacts
+`lt/gt/quot/href/aspx` are NOT standard English stopwords, so this
+generic fix didn't touch them - see Round 18), imdb 0.322 (was 0.453
+pre-fix - large drop, same artifact as the vaebm result above).
+
+## Round 18 (next): targeted follow-ups from Round 17's evidence
+
+1. **Recombine search_snippets' GloVe-hybrid config with the stopword
+   fix** (previously 0.450 Palmetto without the fix, -0.010 from
+   target - the closest Cv miss of any dataset) - test whether the two
+   fixes compound.
+2. **Dataset-specific junk-word lists**, since Round 17 showed the
+   generic English-stopword list doesn't touch non-stopword junk:
+   `VAEBM_EXTRA_EXCLUDE_WORDS="subject,organization,nntp,posting,host,lines,writes,article,edu"`
+   on hicot_20ng (email header artifacts, per the provenance diagnostic);
+   `VAEBM_EXTRA_EXCLUDE_WORDS="lt,gt,quot,href,aspx"` on hicot_agnews
+   AND agnews_short (unescaped HTML entities).
+3. **`VAEBM_NORMALIZE_MU=1` sensitivity sweep** across all 5 hicot_*
+   datasets (new Tier-1 capability, untested) - L2-normalizing mu before
+   KMeans approximates spherical clustering, the "alternative clustering
+   geometry" the user's directive explicitly called for and the audit
+   confirmed was otherwise entirely absent from this codebase.
