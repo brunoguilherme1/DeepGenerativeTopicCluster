@@ -310,13 +310,51 @@ and clustering-geometry tweaks (Round 18's B/C, Round 19's E/F, Round
 20's H). Per the user's "stop clearly unproductive experiments early and
 redirect resources" instruction, pivoting away from this axis.
 
-## Round 21 (next): embedding-family sensitivity - completely unexplored so far
+## Round 21 (complete, job 1634): BGE-large - the most significant finding of the pass
 
-Every round in this entire pass (1-20) has used `thenlper/gte-large`
-exclusively as `VAEBM_EMBEDDER`. The user's directive explicitly requires
-testing BGE, E5, SBERT variants, GloVe/Word2Vec/FastText, and hybrid
-representations - none of that has happened yet. Testing `BAAI/bge-large-en-v1.5`
-(strong MTEB clustering performance, no special query/passage prefix
-needed unlike E5) as a drop-in `VAEBM_EMBEDDER` replacement, same recipe
-as Round 17 (freq+stopword, no normalize_mu/GloVe-hybrid yet - isolate
-the embedder effect first) across all 5 hicot_* datasets.
+| Dataset | Palmetto Cv (BGE) | Δ vs GTE (R17) | Purity (BGE) | Δ vs GTE | NMI (BGE) | Δ vs GTE |
+|---|---:|---:|---:|---:|---:|---:|
+| hicot_20ng | 0.400 | ~flat (+0.003) | 0.649 | -0.015 | 0.559 | -0.021 |
+| hicot_search_snippets | 0.419 | **-0.012 (worse)** | 0.807 | -0.049 | 0.456 | -0.047 |
+| hicot_google_news | 0.395 | ~flat (-0.003) | 0.602 | -0.012 | 0.809 | -0.011 |
+| hicot_agnews | 0.423 | ~flat (-0.003) | 0.862 | +0.003 | 0.373 | +0.002 |
+| **hicot_imdb** | **0.362** | **+0.012 (BEST of the whole pass)** | **0.840** | **+0.037** | **0.138** | **+0.023** |
+
+**IMDB improves on all 3 metrics simultaneously with BGE-large** - Cv gap
+narrows from -0.054 to -0.042 (Δ Purity now +0.103, Δ NMI now +0.056).
+This is the best hicot_imdb Cv result of the entire pass, under ANY
+config tried (stopword-only, GloVe-hybrid, normalize_mu, or this).
+
+**Bigger finding**: the raw sbert_kmeans ceiling under BGE for hicot_imdb
+is 0.353 (barely moved from GTE's 0.349 ceiling) - but vaebm+BGE reaches
+0.362, ABOVE its own raw-embedding ceiling. This is the first genuine
+"learned VAE-BM representation exceeds the raw embedding+KMeans ceiling"
+result of the whole pass - exactly the outcome the user's directive said
+was possible and explicitly forbade dismissing in advance ("do not
+declare something a structural ceiling just because GTE+KMeans failed").
+
+BGE is flat-to-worse everywhere else, especially search_snippets (real
+Purity/NMI cost, -0.049/-0.047) - **not a universal upgrade, an
+IMDB-specific one.** Consistent with the user's own explicit allowance
+that different datasets may need different best configs. **Decision:
+hicot_imdb's new standing best embedder is BGE-large; the other 4
+datasets keep gte-large.**
+
+## Current standing best per hicot_* dataset (after Rounds 17-21)
+
+| Dataset | Recipe | Palmetto Cv | Δ Cv | Purity | Δ Purity | NMI | Δ NMI | 3/3? |
+|---|---|---:|---:|---:|---:|---:|---:|---|
+| hicot_20ng | gte-large, freq+stopword+normalize_mu | 0.399 | -0.052 | 0.676 | +0.050 | 0.582 | -0.001 | no |
+| hicot_search_snippets | gte-large, GloVe-hybrid+stopword | 0.450 | -0.010 | 0.856 | +0.038 | 0.503 | +0.025 | no |
+| hicot_google_news | gte-large, freq+stopword | 0.398 | -0.056 | 0.614 | +0.149 | 0.820 | +0.163 | no |
+| hicot_agnews | gte-large, freq+stopword+normalize_mu | 0.430 | -0.016 | 0.872 | +0.015 | 0.380 | -0.032 | no |
+| **hicot_imdb** | **bge-large**, freq+stopword | **0.362** | **-0.042** | **0.840** | **+0.103** | **0.138** | **+0.056** | no |
+
+## Round 22 (next): does normalize_mu compound with BGE for IMDB?
+
+`normalize_mu` gave clean, Cv-safe Purity/NMI gains on GTE for 20NG/
+AGNews (Round 18's Finding D) but was never tried with BGE. Given
+BGE+IMDB is now the pass's biggest open lead, testing
+`VAEBM_EMBEDDER=BAAI/bge-large-en-v1.5` + `VAEBM_NORMALIZE_MU=1` on
+hicot_imdb - if it compounds cleanly (unlike Round 19's search_snippets
+attempt, which traded Cv away), this could close IMDB's gap further.
