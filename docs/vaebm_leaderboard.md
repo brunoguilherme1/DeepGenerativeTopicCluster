@@ -513,3 +513,30 @@ makes sense") is empirically confirmed: GloVe helps for topic-word
 ranking on one dataset, but actively hurts as a clustering
 representation everywhere.
 
+## New idea backlog (2026-09-20): see docs/vaebm_idea_backlog.md
+
+The user requested an exhaustive, no-limit brainstorm after Round 25 -
+40 ideas across 8 categories (vocabulary/vectorizer params, embeddings,
+BoW/alpha fusion, new topic-word-extraction methods, clustering
+algorithm alternatives, architecture, multi-seed robustness,
+dataset-specific engineering), ranked by expected value. Two of the
+top-ranked ideas are implemented and tested in Round 26 below; the rest
+remain queued.
+
+New capabilities implemented this pass:
+- `VAEBM_MIN_DF`/`VAEBM_MAX_DF` (idea #2) - data-driven vocabulary
+  filtering, a principled alternative to Round 18's hand-curated
+  exclude-word lists (which sometimes made Cv worse).
+- `VAEBM_TOP_WORDS_MODE=relevance` + `VAEBM_LAMBDA_RELEVANCE` (idea #19)
+  - LDAvis-style relevance scoring, down-weighting words common across
+  many clusters without a hand list. Verified with a synthetic test: a
+  cross-cluster-ubiquitous word ranks like frequency mode at lambda=0.99
+  but is correctly demoted at lambda=0.1.
+
+## Round 26 (next): testing the two new mechanisms
+
+`relevance` mode (lambda=0.5) and `min_df=2, max_df=0.5` vocabulary
+filtering (kept on freq-mode ranking, to isolate the vocabulary effect
+from the ranking-method effect), both against the same Round 17
+baseline recipe, across all 5 hicot_* datasets.
+
