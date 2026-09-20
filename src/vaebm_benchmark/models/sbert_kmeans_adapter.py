@@ -29,11 +29,22 @@ import numpy as np
 from vaebm_benchmark.models.base import ProtocolModelAdapter
 
 
-def _class_based_tfidf(documents: list[str], cluster_labels: list[int], top_n: int = 10) -> dict[int, list[str]]:
+def _class_based_tfidf(documents: list[str], cluster_labels: list[int], top_n: int = 10,
+                        exclude_words: Optional[set] = None) -> dict[int, list[str]]:
+    # exclude_words (2026-09-20, see vaebm.py::top_words_by_freq_exact's own
+    # comment on why): this function counts raw `doc.split()` tokens with NO
+    # vectorizer/vocab/stopword handling at all - more exposed to the same
+    # function-word/HTML-artifact inflation than vaebm's own TfidfVectorizer
+    # path, since c-TF-IDF's own IDF term only partially suppresses words
+    # that appear in literally every cluster.
+    exclude_lower = {w.lower() for w in exclude_words} if exclude_words else None
     clusters = sorted(set(cluster_labels))
     cluster_word_counts: dict[int, Counter] = {c: Counter() for c in clusters}
     for doc, cluster in zip(documents, cluster_labels):
-        cluster_word_counts[cluster].update(doc.split())
+        tokens = doc.split()
+        if exclude_lower:
+            tokens = [t for t in tokens if t.lower() not in exclude_lower]
+        cluster_word_counts[cluster].update(tokens)
 
     word_cluster_df: Counter = Counter()
     for counts in cluster_word_counts.values():
@@ -61,11 +72,13 @@ class SBERTKMeansAdapter(ProtocolModelAdapter):
         embedder: str = "all-MiniLM-L6-v2",  # any SentenceTransformer/HuggingFace model name
         random_state: int = 42,
         n_init: int = 10,
+        exclude_words: Optional[set] = None,  # see _class_based_tfidf's own comment (2026-09-20)
     ) -> None:
         self.n_clusters = n_clusters
         self.embedder_name = embedder
         self.random_state = random_state
         self.n_init = n_init
+        self.exclude_words = exclude_words
         self._encoder = None
         self._kmeans = None
         self._train_documents: Optional[list[str]] = None
@@ -85,7 +98,8 @@ class SBERTKMeansAdapter(ProtocolModelAdapter):
     def get_topics(self, top_n: int = 10) -> list[list[str]]:
         if self._train_documents is None:
             raise RuntimeError("Call fit() before get_topics().")
-        topics = _class_based_tfidf(self._train_documents, self._train_clusters, top_n=top_n)
+        topics = _class_based_tfidf(self._train_documents, self._train_clusters, top_n=top_n,
+                                     exclude_words=self.exclude_words)
         return [topics.get(k, []) for k in range(self.n_clusters)]
 
     def get_document_topics(self, documents: list[str]) -> Optional[np.ndarray]:

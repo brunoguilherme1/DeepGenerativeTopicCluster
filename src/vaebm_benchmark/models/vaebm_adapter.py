@@ -39,6 +39,7 @@ class VAEBMAdapter(ProtocolModelAdapter):
         static_embeddings=None,  # [voc_size, d] array row-aligned to `vocabulary`'s own word order - see vaebm.py::top_words_by_freq_exact's own docstring (2026-09-20 "topic-word generation" research pass)
         static_candidate_pool: Optional[int] = None,  # narrows "static" mode's re-ranking pool to the top-N most frequent present words - see vaebm.py::top_words_by_freq_exact's own docstring
         static_hybrid_weight: Optional[float] = None,  # soft frequency+similarity blend instead of a hard filter-then-rank - see vaebm.py::top_words_by_freq_exact's own docstring
+        exclude_words: Optional[set] = None,  # stopwords/junk tokens excluded from every topic-word mode - see vaebm.py::top_words_by_freq_exact's own docstring (2026-09-20)
     ) -> None:
         self.n_clusters = n_clusters
         self.vectorizer_type = vectorizer_type
@@ -51,6 +52,7 @@ class VAEBMAdapter(ProtocolModelAdapter):
         self.static_embeddings = static_embeddings
         self.static_candidate_pool = static_candidate_pool
         self.static_hybrid_weight = static_hybrid_weight
+        self.exclude_words = exclude_words
 
         self._pipeline = VaeBmKMeansFit(
             voc_size=voc_size,
@@ -87,6 +89,7 @@ class VAEBMAdapter(ProtocolModelAdapter):
             self._topics_cache = self._pipeline.top_words_by_freq_exact(
                 self._train_documents, top_m=max(top_n, 20), static_embeddings=self.static_embeddings,
                 static_candidate_pool=self.static_candidate_pool, static_hybrid_weight=self.static_hybrid_weight,
+                exclude_words=self.exclude_words,
             )
         words = self._topics_cache[self.top_words_mode]
         return [w[:top_n] for w in words]
@@ -96,6 +99,7 @@ class VAEBMAdapter(ProtocolModelAdapter):
             self._topics_cache = self._pipeline.top_words_by_freq_exact(
                 self._train_documents, top_m=max(top_n, 20), static_embeddings=self.static_embeddings,
                 static_candidate_pool=self.static_candidate_pool, static_hybrid_weight=self.static_hybrid_weight,
+                exclude_words=self.exclude_words,
             )
         views = {
             "energy": [w[:top_n] for w in self._topics_cache["energy"]],

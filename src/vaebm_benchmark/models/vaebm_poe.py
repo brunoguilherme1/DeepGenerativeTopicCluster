@@ -204,7 +204,15 @@ class VaeBmPoEFit:
         rng = np.random.default_rng(self.random_state)
         best_weights = None
         best_kmeans = None
-        best_metric = -1.0  # "acc" if labels given, else -loss (higher is better either way)
+        # 2026-09-20 bug fix (parameter audit, see docs/vaebm_parameter_audit.md):
+        # was -1.0, but the unsupervised metric (-mean_loss, mean_loss a large
+        # positive number = negative ELBO) is essentially never > -1.0 early
+        # on, so best_weights/best_kmeans rarely got set from a genuinely
+        # better epoch - this silently degraded to "keep whatever epoch ran
+        # last" for every non-oracle (no labels) run. float("-inf") makes the
+        # very first epoch always qualify, restoring the intended "keep the
+        # best-loss epoch" behavior.
+        best_metric = float("-inf")
         fit_start = time.perf_counter()
 
         for epoch in range(1, self.epochs + 1):

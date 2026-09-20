@@ -499,7 +499,8 @@ class VaeBmKMeansFit:
 
     def top_words_by_freq_exact(self, texts: Sequence[str], top_m: int = 20, static_embeddings=None,
                                  static_candidate_pool: Optional[int] = None,
-                                 static_hybrid_weight: Optional[float] = None):
+                                 static_hybrid_weight: Optional[float] = None,
+                                 exclude_words: Optional[set] = None):
         """Returns {"energy": [...], "freq": [...], "static": [...] if
         static_embeddings given} - per-cluster top words by decoder energy
         (R/b logits, masked to observed terms), by raw frequency, and (when
@@ -520,9 +521,16 @@ class VaeBmKMeansFit:
         normalized to [0, 1] over the (optionally pool-filtered) candidate
         set and combined as `freq_rank + static_hybrid_weight * sim_rank`
         - Round 15 found the hard pool cutoff helped some datasets and hurt
-        others non-monotonically; this avoids that brittleness. Never
-        affects mu/KMeans clustering - purely a post-hoc topic-word
-        display/ranking choice, same as "energy" vs "freq" already were."""
+        others non-monotonically; this avoids that brittleness. `exclude_words`
+        (a set of lowercase strings) removes those vocabulary terms from
+        candidacy in EVERY mode (energy/freq/static) - found necessary
+        2026-09-20 when a diagnostic showed plain-dataset topic-word lists
+        can be dominated by un-filtered stopwords/HTML artifacts (e.g. "the",
+        "and", "br"), which score artificially high on Palmetto C_V (function
+        words co-occur with everything) without reflecting genuine topic
+        quality - see docs/vaebm_mimic_gte_research_log.md. Never affects
+        mu/KMeans clustering - purely a post-hoc topic-word display/ranking
+        choice, same as "energy" vs "freq" already were."""
         if self.model is None or self.vectorizer is None or self.kmeans is None:
             raise RuntimeError("model, vectorizer and kmeans must already be fit.")
 
@@ -542,6 +550,11 @@ class VaeBmKMeansFit:
 
         vocab = self.vectorizer.get_feature_names_out()
         K = self.n_clusters
+
+        excluded_mask = None
+        if exclude_words:
+            lowered = {w.lower() for w in exclude_words}
+            excluded_mask = np.array([w.lower() in lowered for w in vocab], dtype=bool)
 
         static_dense = None
         if static_embeddings is not None:
@@ -575,6 +588,13 @@ class VaeBmKMeansFit:
             h_k = Z[idx_k]
 
             counts_k = np.asarray(X_k.sum(axis=0)).ravel()
+            if excluded_mask is not None:
+                # Zeroed, not just excluded from the final top-N: flows
+                # through to "freq" ranking AND "static" mode's present-word
+                # candidate pool/centroid weighting - excluded terms never
+                # appear anywhere, not just at the last step.
+                counts_k = counts_k.copy()
+                counts_k[excluded_mask] = 0.0
             if counts_k.sum() == 0:
                 empty_clusters += 1
                 continue

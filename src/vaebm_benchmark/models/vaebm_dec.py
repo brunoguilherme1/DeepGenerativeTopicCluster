@@ -129,7 +129,8 @@ class VaeBmDECFit:
         best_weights = None
         best_centroids = None
         best_preds = None
-        best_metric = -1.0
+        # 2026-09-20 bug fix - see vaebm_poe.py's own comment on this same fix.
+        best_metric = float("-inf")
         fit_start = time.perf_counter()
 
         for epoch in range(1, self.epochs + 1):

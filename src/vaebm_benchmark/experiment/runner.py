@@ -496,6 +496,27 @@ def run_single(
                     model.static_hybrid_weight = float(raw_hybrid) if raw_hybrid else None
 
         # Environment-gated, opt-in, OFF by default (unchanged prior
+        # behavior for every existing result): excludes standard English
+        # stopwords (+ an optional extra custom list) from EVERY topic-word
+        # mode. 2026-09-20 diagnostic finding (see
+        # docs/vaebm_mimic_gte_research_log.md): plain (non-hicot) datasets'
+        # default TfidfVectorizer applies no stopword filter, so their
+        # topic-word lists can be dominated by function words ("the", "and",
+        # "of") and un-stripped HTML artifacts ("br") that score
+        # artificially high on Palmetto C_V (they co-occur with everything)
+        # without reflecting genuine topic quality - this is suspected to be
+        # why plain `imdb` appeared to beat HiCOT's own Cv target while
+        # hicot_imdb (already stopword-free upstream) did not. Applies to
+        # ANY dataset (not gated on hicot_*), independent of the
+        # VAEBM_USE_HICOT_VOCAB/STATIC_EMB knobs above.
+        if os.environ.get("VAEBM_EXCLUDE_STOPWORDS", "0").strip().lower() in ("1", "true", "yes") and hasattr(model, "exclude_words"):
+            from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+
+            extra_raw = os.environ.get("VAEBM_EXTRA_EXCLUDE_WORDS", "").strip()
+            extra = {w.strip().lower() for w in extra_raw.split(",") if w.strip()}
+            model.exclude_words = set(ENGLISH_STOP_WORDS) | extra
+
+        # Environment-gated, opt-in, OFF by default (unchanged prior
         # behavior for every existing result): the topic experiment's own
         # "labels never passed to fit()" rule is deliberately, narrowly
         # relaxed ONLY when VAEBM_TOPIC_ORACLE_LABELS=1 AND the model is

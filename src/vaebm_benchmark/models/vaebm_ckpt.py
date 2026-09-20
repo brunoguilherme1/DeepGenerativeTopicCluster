@@ -132,7 +132,8 @@ class VaeBmCkptFit:
         rng = np.random.default_rng(self.random_state)
         best_weights = None
         best_kmeans = None
-        best_metric = -1.0  # "acc" if labels given, else -loss (higher is better either way)
+        # 2026-09-20 bug fix - see vaebm_poe.py's own comment on this same fix.
+        best_metric = float("-inf")
         fit_start = time.perf_counter()
 
         unfrozen = False
