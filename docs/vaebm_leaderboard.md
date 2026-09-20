@@ -195,3 +195,66 @@ pre-fix - large drop, same artifact as the vaebm result above).
    KMeans approximates spherical clustering, the "alternative clustering
    geometry" the user's directive explicitly called for and the audit
    confirmed was otherwise entirely absent from this codebase.
+
+## Round 18 (complete, job 1631): results
+
+| Combo | Dataset | Palmetto Cv | Δ vs R17 | cv_local | Purity | Δ Purity | NMI | Δ NMI |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| A: GloVe-hybrid+stopword | hicot_search_snippets | 0.450 | +0.019 (recovers pre-fix best) | 0.488 | 0.856 | 0 | 0.503 | 0 |
+| B: header-junk exclude | hicot_20ng | 0.361 | **-0.036 (worse)** | 0.603 | 0.664 | 0 | 0.580 | 0 |
+| C: HTML-junk exclude | hicot_agnews | 0.424 | -0.002 (~flat) | 0.622 | 0.859 | 0 | 0.371 | 0 |
+| C: HTML-junk exclude | agnews_short | 0.407 | -0.003 (~flat/worse) | 0.592 | 0.875 | 0 | 0.387 | 0 |
+| D: normalize_mu | hicot_20ng | 0.399 | +0.002 (~flat) | 0.635 | 0.676 | **+0.012** | 0.582 | **+0.002** |
+| D: normalize_mu | hicot_search_snippets | 0.425 | -0.007 (slightly worse) | 0.479 | 0.869 | +0.013 | 0.512 | +0.009 |
+| D: normalize_mu | hicot_google_news | 0.398 | 0 (exactly flat) | 0.491 | 0.614 | 0 | 0.820 | 0 |
+| D: normalize_mu | hicot_agnews | 0.430 | **+0.004** | 0.652 | 0.872 | **+0.013** | 0.380 | **+0.009** |
+| D: normalize_mu | hicot_imdb | 0.350 | ~flat | 0.352 | 0.802 | 0 | 0.114 | 0 |
+
+**Finding A (recovered, not improved)**: combining the GloVe-hybrid topic-word
+config with stopword exclusion gives 0.450 - statistically the same as
+the pre-fix hybrid-only result (0.450). The two fixes don't compound;
+search_snippets' topic words were apparently never stopword-polluted in
+the first place (consistent with the diagnostic's "smallest, most benign
+difference" finding for this pair). Still the closest Cv miss of any
+dataset (-0.010).
+
+**Finding B/C (important failed idea - logged per the user's explicit
+instruction to record failures)**: hand-excluding dataset-specific junk
+words (email headers on 20NG, HTML entities on AGNews) made Palmetto Cv
+*worse*, not better - the opposite of IMDB's result. Hypothesis:
+IMDB's stopwords/`br` are near-universal filler that inflates Cv via
+trivial co-occurrence with everything; 20NG's header words and AGNews's
+HTML entities are dataset-local artifacts that, once removed, simply
+expose different (not more Wikipedia-coherent) words in the topic list -
+there's no guarantee the next-ranked word scores higher NPMI than the
+removed one. **Conclusion: stopword/junk exclusion is not a general-purpose
+Cv lever - it only helps when the excluded terms are true near-universal
+filler words, not any "obviously junky" token.** Abandoning further
+hand-curated exclude-word lists; not pursuing this direction further.
+
+**Finding D (adopt as new default for 20NG/AGNews)**: `VAEBM_NORMALIZE_MU=1`
+gives small, consistent, Cv-safe gains on Purity/NMI for 20NG and AGNews,
+flat/no-op on GoogleNews and IMDB, and a small Cv cost on search_snippets
+(only when NOT combined with the GloVe-hybrid config - untested combined).
+Most notable: **20NG's NMI gap narrows from -0.003 to -0.001** (0.582 vs
+0.583 target) - almost an exact match, achieved with zero Cv cost (0.397
+-> 0.399), directly satisfying the user's own guidance to "prioritize
+small [20NG] improvements without hurting Cv." AGNews improves on all
+three metrics simultaneously (Cv -0.020 -> -0.016, Purity +0.002 ->
++0.015, NMI -0.041 -> -0.032) - the best AGNews result of the whole pass,
+though still short of 3/3.
+
+## Round 19 (next)
+
+1. Combine Finding A (GloVe-hybrid+stopword) with Finding D
+   (normalize_mu) for hicot_search_snippets - untested together; A fixes
+   topic-word Cv, D improves clustering Purity/NMI - they act on
+   different pipeline stages (topic-word extraction vs. KMeans geometry)
+   so may compose, though cluster reassignment under normalize_mu could
+   also change which documents feed each cluster's topic words.
+2. Adopt `normalize_mu=1` into the standing best recipe for hicot_20ng
+   and hicot_agnews given Finding D; re-verify on their plain
+   counterparts for diagnostic completeness.
+3. IMDB remains the largest unresolved Cv gap (-0.054, no experiment
+   this pass has moved it beyond the stopword fix itself) - needs a
+   genuinely new idea, not another parameter tweak on the current recipe.
