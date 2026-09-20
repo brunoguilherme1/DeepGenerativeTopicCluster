@@ -323,6 +323,37 @@ def register_vaebm_variants(variants: dict[str, dict]) -> None:
             KNOWN_MODELS.append(name)
 
 
+def _compute_hicot_glove_doc_embeddings(dataset_id: str, documents: list[str]):
+    """Per-document embedding = the mean of HiCOT's own 200-dim GloVe
+    vectors (load_hicot_word_embeddings) over the document's own words
+    that appear in HiCOT's own vocab.txt (load_hicot_vocab) - simple
+    `str.split()` tokenization, matching this project's own established
+    convention for HiCOT-vocab-aligned text (see models/vaebm.py::
+    VaeBmKMeansFit.fit_predict's own `vocabulary=` docstring on why
+    str.split()/no-lowercasing is used against HiCOT's own artifacts).
+    A document with zero matching words gets an all-zero vector (KMeans
+    still runs, just with that document as an equidistant outlier - rare
+    in practice given HiCOT's own vocab.txt was built FROM these same
+    corpora). Used only by VAEBM_DOC_EMBEDDER=hicot_glove_avg above -
+    this is a genuine "static embeddings AS the document/clustering
+    representation" test, not the existing topic-word-ranking use of
+    these same GloVe vectors (VAEBM_USE_HICOT_STATIC_EMB)."""
+    import numpy as np
+
+    from vaebm_benchmark.datasets.definitions.hicot_datasets import load_hicot_vocab, load_hicot_word_embeddings
+
+    vocab = load_hicot_vocab(dataset_id)
+    word_to_idx = {w: i for i, w in enumerate(vocab)}
+    word_embeddings = np.asarray(load_hicot_word_embeddings(dataset_id).todense(), dtype=np.float32)
+
+    doc_embeddings = np.zeros((len(documents), word_embeddings.shape[1]), dtype=np.float32)
+    for i, doc in enumerate(documents):
+        idxs = [word_to_idx[w] for w in doc.split() if w in word_to_idx]
+        if idxs:
+            doc_embeddings[i] = word_embeddings[idxs].mean(axis=0)
+    return doc_embeddings
+
+
 def _build_model(model_name: str, k: int, seed: int, voc_size: int):
     if model_name == "vaebm" or model_name in _VAEBM_VARIANT_OVERRIDES:
         from vaebm_benchmark.models.vaebm_adapter import VAEBMAdapter
@@ -474,6 +505,35 @@ def run_single(
         documents, labels, _num_classes = load_dataset(dataset_id)
 
         model = _build_model(model_name, k, seed, voc_size)
+
+        # Environment-gated, opt-in, OFF by default (unchanged prior
+        # behavior): replaces the CLUSTERING embedding itself (not just
+        # topic-word ranking, see VAEBM_USE_HICOT_STATIC_EMB below) with a
+        # per-document average of HiCOT's own 200-dim GloVe word vectors -
+        # a genuine "static embeddings as document embeddings" test, per
+        # the user's 2026-09-20 directive's own explicit framing that this
+        # should be deliberate/tested, never a silent default. Only
+        # meaningful for vaebm-family models (VAEBMAdapter's own
+        # embedder_name is passed straight to VaeBmKMeansFit.fit_predict's
+        # `embedder` param, which already branches on isinstance(...,str)
+        # vs. a precomputed array - models/vaebm.py was never touched for
+        # this, the array-acceptance path already existed). Deliberately
+        # NOT applied to sbert_kmeans - its own fit() always does
+        # SentenceTransformer(self.embedder_name), unconditionally
+        # treating it as a model name string; feeding it an array would
+        # crash, not silently misbehave, so this is gated to the
+        # vaebm-family model names explicitly rather than via hasattr.
+        if os.environ.get("VAEBM_DOC_EMBEDDER", "").strip().lower() == "hicot_glove_avg":
+            if model_name not in ("vaebm", "vaebm_poe", "vaebm_dec", "vaebm_ckpt") and model_name not in _VAEBM_VARIANT_OVERRIDES:
+                raise ValueError(
+                    f"VAEBM_DOC_EMBEDDER=hicot_glove_avg requires a vaebm-family model, got {model_name!r}"
+                )
+            if not dataset_id.startswith("hicot_"):
+                raise ValueError(
+                    f"VAEBM_DOC_EMBEDDER=hicot_glove_avg requires a hicot_* dataset_id, got {dataset_id!r} "
+                    "- HiCOT's own vocab.txt/word_embeddings.npz only exist for its own 5 datasets."
+                )
+            model.embedder_name = _compute_hicot_glove_doc_embeddings(dataset_id, documents)
 
         # Environment-gated, opt-in, OFF by default (unchanged prior
         # behavior): fixes VAE-BM's own vocabulary to HiCOT's own official
