@@ -40,3 +40,6 @@ cluster7_slurm_*.out
 cluster7_resume_slurm_*.out
 run_cluster7_sweep.sbatch
 resume_cluster7_sweep.sbatch
+NAACL_HLT_2021_Latex_Template__1_/main.pdf
+NAACL_HLT_2021_Latex_Template__1_/main.log
+NAACL_HLT_2021_Latex_Template__1_/main.blg
