@@ -726,6 +726,44 @@ models/vaebm.py::top_words_by_freq_exact parameter) rank-normalizes
 frequency and similarity to [0,1] over the candidate set and combines
 them linearly, avoiding the pool-size sensitivity seen here.
 
+## Round 16 results (soft frequency+similarity blend, 20/20 successful) - CONCLUDES the topic-word-generation sub-pass
+
+Full comparison across all 5 topic-word-extraction methods tried
+(Palmetto C_V, the metric that matters):
+
+| Dataset | T (freq) | U (unrestricted static) | V (pool=40) | W (hybrid 0.5) | X (hybrid 1.5) | Target |
+|---|---:|---:|---:|---:|---:|---:|
+| hicot_20ng | **0.396** | 0.363 | 0.319 | 0.336 | 0.354 | 0.451 |
+| hicot_search_snippets | 0.429 | 0.426 | **0.450** | 0.431 | 0.434 | 0.460 |
+| hicot_google_news | **0.399** | 0.378 | 0.378 | 0.365 | 0.374 | 0.454 |
+| hicot_agnews | **0.421** | 0.404 | 0.407 | 0.349 | 0.351 | 0.446 |
+| hicot_imdb | **0.333** | 0.277 | 0.287 | 0.286 | 0.291 | 0.404 |
+
+**T (plain frequency-based extraction) is the best or tied-best config
+on 4/5 datasets.** The only exception is search_snippets, where V (hard
+top-40-most-frequent pool, then pure similarity ranking within it) beats
+T by 0.021 (0.450 vs 0.429) - the closest any config in this entire
+research pass has come to a genuine Palmetto C_V win (0.460 target,
+Purity 0.856/NMI 0.503 already passing).
+
+**Conclusion of the static-embedding-centroid topic-word-scoring
+direction (Rounds 14-16, 5 implementation variants, 50 total (config,
+dataset, cv_method) combos): does not reliably beat plain frequency
+ranking under Palmetto C_V.** Neither a hard hard candidate-pool filter,
+no filter at all, nor a soft rank-blend (at two different weights)
+produced a consistent win - only one dataset-specific near-win
+(search_snippets + hard pool=40). Vocabulary fidelity was independently
+ruled out in Round 14 (zero effect). This sub-direction is concluded;
+further tuning of pool size or blend weight is not expected to change
+this conclusion given the non-monotonic, dataset-inconsistent pattern
+already observed across 5 variants.
+
+**What this pass established that DOES generalize**: local (gensim) C_V
+is not a reliable proxy for Palmetto C_V for word-embedding-based
+re-ranking techniques - the two metrics diverged in direction (not just
+magnitude) multiple times across Rounds 14-16, validating the user's
+explicit instruction to track both.
+
 ## FINAL CORRECTED CONCLUSION (supersedes everything above - see Round 12)
 
 Rounds 1-11 all used `--cv-method local` (gensim, local training
