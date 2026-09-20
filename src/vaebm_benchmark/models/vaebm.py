@@ -497,10 +497,20 @@ class VaeBmKMeansFit:
         Z = mu.numpy()
         return self.kmeans.predict(Z).tolist(), mu
 
-    def top_words_by_freq_exact(self, texts: Sequence[str], top_m: int = 20):
-        """Returns {"energy": [...], "freq": [...]} - per-cluster top words
-        by decoder energy (R/b logits, masked to observed terms) and by raw
-        frequency, respectively."""
+    def top_words_by_freq_exact(self, texts: Sequence[str], top_m: int = 20, static_embeddings=None):
+        """Returns {"energy": [...], "freq": [...], "static": [...] if
+        static_embeddings given} - per-cluster top words by decoder energy
+        (R/b logits, masked to observed terms), by raw frequency, and (when
+        `static_embeddings` - a [voc_size, d] dense/sparse array ROW-ALIGNED
+        to self.vectorizer's own vocabulary order, e.g. HiCOT's own GloVe
+        via datasets/definitions/hicot_datasets.py::load_hicot_word_embeddings -
+        is supplied) by cosine similarity to the cluster's own frequency-
+        weighted centroid in that static embedding space, restricted to
+        words that actually appear in the cluster (counts_k > 0) - a
+        relevance-filtered, coherence-ranked hybrid (2026-09-20 "topic-word
+        generation" research pass, see docs/vaebm_mimic_gte_research_log.md).
+        Never affects mu/KMeans clustering - purely a post-hoc topic-word
+        display/ranking choice, same as "energy" vs "freq" already were."""
         if self.model is None or self.vectorizer is None or self.kmeans is None:
             raise RuntimeError("model, vectorizer and kmeans must already be fit.")
 
@@ -521,8 +531,23 @@ class VaeBmKMeansFit:
         vocab = self.vectorizer.get_feature_names_out()
         K = self.n_clusters
 
+        static_dense = None
+        if static_embeddings is not None:
+            static_dense = static_embeddings.toarray() if hasattr(static_embeddings, "toarray") else np.asarray(static_embeddings)
+            static_dense = static_dense.astype(np.float32)
+            if static_dense.shape[0] != len(vocab):
+                raise ValueError(
+                    f"static_embeddings has {static_dense.shape[0]} rows but vocabulary has {len(vocab)} words - "
+                    "must be row-aligned to self.vectorizer's own vocabulary order (e.g. pair with a fixed "
+                    "`vocabulary=` matching the same word order the embeddings were built against)."
+                )
+            static_norms = np.linalg.norm(static_dense, axis=1, keepdims=True)
+            static_norms[static_norms == 0.0] = 1.0
+            static_unit = static_dense / static_norms
+
         top_words_energy = []
         top_words_freq = []
+        top_words_static = []
         empty_clusters = 0
 
         R = self.model.decoder.R.numpy()
@@ -544,6 +569,25 @@ class VaeBmKMeansFit:
             top_idx_freq = np.argsort(counts_k)[::-1][:top_m]
             top_words_freq.append(vocab[top_idx_freq].tolist())
 
+            if static_dense is not None:
+                # Relevance filter (only words that actually appear in this
+                # cluster) + coherence ranking (cosine similarity to the
+                # cluster's own frequency-weighted centroid in static-
+                # embedding space) - see this method's own docstring.
+                present_idx = np.where(counts_k > 0)[0]
+                if present_idx.size == 0:
+                    top_words_static.append([])
+                else:
+                    centroid = (counts_k[:, None] * static_dense).sum(axis=0) / counts_k.sum()
+                    centroid_norm = np.linalg.norm(centroid)
+                    if centroid_norm == 0.0:
+                        top_words_static.append(vocab[present_idx][:top_m].tolist())
+                    else:
+                        centroid_unit = centroid / centroid_norm
+                        sims = static_unit[present_idx] @ centroid_unit
+                        order = np.argsort(sims)[::-1][:top_m]
+                        top_words_static.append(vocab[present_idx][order].tolist())
+
             logits_k = h_k @ R.T + b
             mask_k = (X_k.toarray() > 0).astype(np.float32)
             # See _vaebm_topic_scoring.energy_scores's docstring for why
@@ -563,4 +607,7 @@ class VaeBmKMeansFit:
         if empty_clusters > 0:
             print(f"   {empty_clusters} empty clusters ignored for TC/TD.")
 
-        return {"energy": top_words_energy, "freq": top_words_freq}
+        result = {"energy": top_words_energy, "freq": top_words_freq}
+        if static_dense is not None:
+            result["static"] = top_words_static
+        return result

@@ -446,6 +446,38 @@ def run_single(
         documents, labels, _num_classes = load_dataset(dataset_id)
 
         model = _build_model(model_name, k, seed, voc_size)
+
+        # Environment-gated, opt-in, OFF by default (unchanged prior
+        # behavior): fixes VAE-BM's own vocabulary to HiCOT's own official
+        # vocab.txt (matching ECRTM's own Table 9 vocab-size column) and/or
+        # scores topic words by cosine similarity to each cluster's own
+        # frequency-weighted centroid in HiCOT's own 200-dim GloVe space
+        # (matching ECRTM's Appendix B) instead of fitting a fresh
+        # TfidfVectorizer vocabulary from these texts - both artifacts were
+        # already downloaded/available (datasets/definitions/
+        # hicot_datasets.py::load_hicot_vocab/load_hicot_word_embeddings)
+        # but never wired into this runner before this pass (see their own
+        # "NOT wired into experiment/runner.py automatically" docstrings).
+        # 2026-09-20 "topic-word generation" research pass (see
+        # docs/vaebm_mimic_gte_research_log.md). VAEBM_USE_HICOT_STATIC_EMB
+        # implies the vocab fix too (the embeddings are row-aligned to it,
+        # so using one without the other would silently misalign words).
+        use_hicot_vocab = os.environ.get("VAEBM_USE_HICOT_VOCAB", "0").strip().lower() in ("1", "true", "yes")
+        use_hicot_static_emb = os.environ.get("VAEBM_USE_HICOT_STATIC_EMB", "0").strip().lower() in ("1", "true", "yes")
+        if (use_hicot_vocab or use_hicot_static_emb) and hasattr(model, "vocabulary"):
+            from vaebm_benchmark.datasets.definitions.hicot_datasets import (
+                load_hicot_vocab, load_hicot_word_embeddings,
+            )
+
+            if not dataset_id.startswith("hicot_"):
+                raise ValueError(
+                    f"VAEBM_USE_HICOT_VOCAB/VAEBM_USE_HICOT_STATIC_EMB require a hicot_* dataset_id, got {dataset_id!r} "
+                    "- HiCOT's own vocab.txt/word_embeddings.npz only exist for its own 5 datasets."
+                )
+            model.vocabulary = load_hicot_vocab(dataset_id)
+            if use_hicot_static_emb and hasattr(model, "static_embeddings"):
+                model.static_embeddings = load_hicot_word_embeddings(dataset_id)
+
         # Environment-gated, opt-in, OFF by default (unchanged prior
         # behavior for every existing result): the topic experiment's own
         # "labels never passed to fit()" rule is deliberately, narrowly

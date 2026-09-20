@@ -31,11 +31,12 @@ class VAEBMAdapter(ProtocolModelAdapter):
         dim: tuple = (1500, 1000, 500),
         dim_emb: tuple = (368,),
         alpha: float = 0.99,
-        top_words_mode: str = "energy",  # "energy" or "freq" - which view get_topics() returns
+        top_words_mode: str = "energy",  # "energy", "freq", or "static" (requires static_embeddings) - which view get_topics() returns
         vocabulary: Optional[list] = None,  # fixes the exact vocab (protocol fidelity) - see vaebm.py fit_predict
         verbose: int = 1,  # 0: silent, 1: one concise summary line, 2: full Keras per-epoch output - see vaebm.py VaeBmKMeansFit
         kl_weight: float = 1.0,  # see vaebm.py::VAEBM's own comment - "mimic GTE" research knob
         freeze_embedding_branch: bool = False,  # see vaebm.py::VAEBM's own comment
+        static_embeddings=None,  # [voc_size, d] array row-aligned to `vocabulary`'s own word order - see vaebm.py::top_words_by_freq_exact's own docstring (2026-09-20 "topic-word generation" research pass)
     ) -> None:
         self.n_clusters = n_clusters
         self.vectorizer_type = vectorizer_type
@@ -45,6 +46,7 @@ class VAEBMAdapter(ProtocolModelAdapter):
         self.alpha = alpha
         self.top_words_mode = top_words_mode
         self.vocabulary = vocabulary
+        self.static_embeddings = static_embeddings
 
         self._pipeline = VaeBmKMeansFit(
             voc_size=voc_size,
@@ -79,7 +81,7 @@ class VAEBMAdapter(ProtocolModelAdapter):
     def get_topics(self, top_n: int = 10) -> list[list[str]]:
         if self._topics_cache is None:
             self._topics_cache = self._pipeline.top_words_by_freq_exact(
-                self._train_documents, top_m=max(top_n, 20)
+                self._train_documents, top_m=max(top_n, 20), static_embeddings=self.static_embeddings
             )
         words = self._topics_cache[self.top_words_mode]
         return [w[:top_n] for w in words]
@@ -87,12 +89,15 @@ class VAEBMAdapter(ProtocolModelAdapter):
     def get_topics_both_views(self, top_n: int = 10) -> dict[str, list[list[str]]]:
         if self._topics_cache is None:
             self._topics_cache = self._pipeline.top_words_by_freq_exact(
-                self._train_documents, top_m=max(top_n, 20)
+                self._train_documents, top_m=max(top_n, 20), static_embeddings=self.static_embeddings
             )
-        return {
+        views = {
             "energy": [w[:top_n] for w in self._topics_cache["energy"]],
             "freq": [w[:top_n] for w in self._topics_cache["freq"]],
         }
+        if "static" in self._topics_cache:
+            views["static"] = [w[:top_n] for w in self._topics_cache["static"]]
+        return views
 
     def get_document_topics(self, documents: list[str]) -> Optional[np.ndarray]:
         """Returns mu (the latent Gaussian mean), NOT a normalized topic
