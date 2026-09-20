@@ -502,9 +502,64 @@ unaffected by cv_method (confirmed in Round 7) - only C_V can change
 here. Chained after Round 11 (job 1625, depends on 1624). Driver:
 `scripts/run_vaebm_gte_research_round12.py`.
 
-(results filled in as they land)
+### Round 12 results (10/10 successful) - MAJOR CORRECTION
 
-## Conclusion of the deep search (Rounds 1-7)
+| Config | Dataset | Cv | Purity | NMI | Beats |
+|---|---|---:|---:|---:|---|
+| R_sbert_kmeans_gte (raw ceiling) | hicot_20ng | 0.427 | 0.673 | 0.577 | 1/3 |
+| R_sbert_kmeans_gte (raw ceiling) | hicot_search_snippets | 0.453 | 0.872 | 0.511 | 2/3 |
+| R_sbert_kmeans_gte (raw ceiling) | hicot_google_news | 0.431 | 0.628 | 0.819 | 2/3 |
+| R_sbert_kmeans_gte (raw ceiling) | hicot_agnews | 0.457 | 0.869 | 0.373 | 2/3 |
+| R_sbert_kmeans_gte (raw ceiling) | hicot_imdb | 0.326 | 0.801 | 0.111 | 2/3 |
+| S_vaebm_freqwords_gte | hicot_20ng | 0.396 | 0.664 | 0.580 | 1/3 |
+| S_vaebm_freqwords_gte | hicot_search_snippets | 0.429 | 0.856 | 0.503 | 2/3 (was 3/3 under local Cv!) |
+| S_vaebm_freqwords_gte | hicot_google_news | 0.398 | 0.614 | 0.820 | 2/3 (was 3/3 under local Cv!) |
+| S_vaebm_freqwords_gte | hicot_agnews | 0.421 | 0.859 | 0.371 | 1/3 (Cv also flips to a miss) |
+| S_vaebm_freqwords_gte | hicot_imdb | 0.333 | 0.803 | 0.115 | 2/3 |
+
+**Raw ceiling: 9/15 beats, 0/5 at 3/3. VAE-BM: 8/15 beats, 0/5 at 3/3.**
+
+**This is the single most important correction of the whole research
+pass.** Under real Palmetto/Wikipedia C_V (the metric that actually
+matches HiCOT's own protocol), Palmetto C_V is SYSTEMATICALLY LOWER than
+local-corpus C_V for both methods on 4/5 datasets (only agnews's C_V
+went up slightly) - likely because Palmetto's Wikipedia-derived
+coherence signal reflects genuine topical/semantic relatedness, which is
+harder to satisfy than local-corpus co-occurrence (computable, and
+apparently satisfiable, just from words that happen to co-occur within
+the same small in-domain corpus, regardless of real-world semantic
+relatedness).
+
+**Both of VAE-BM's previously-reported "wins" (SearchSnippets 0.462 vs
+0.460, GoogleNews 0.491 vs 0.454) do not survive under the correct C_V
+metric** (0.429 and 0.398 respectively - both now clear misses).
+Purity/NMI are unaffected either way (confirmed identical to Round 7/9's
+own local-Cv numbers), so those verdicts stand; only C_V changed, but
+C_V changing was enough to erase every full 3/3 result found in this
+entire research pass.
+
+**Corrected final answer: at K=50, under HiCOT's own actual protocol
+(top_n=15, Palmetto C_V), NEITHER VAE-BM NOR the raw embedding+KMeans
+ceiling it was built to approximate beats HiCOT on all 3 metrics
+simultaneously, on any of the 5 target datasets.** The user's original
+premise ("GTE-large+KMeans can exceed many of these numbers") does not
+hold once measured with the metric HiCOT itself actually uses - it only
+appeared to hold under local C_V, which is measurably easier to satisfy.
+This also means the entire "beat HiCOT" framing needs revisiting: HiCOT's
+own reported numbers may reflect real strengths of their specific neural
+topic model (not reducible to embedding-space clustering, regardless of
+method) at the C_V metric specifically, even though Purity/NMI ARE
+consistently beatable by simple embedding+KMeans-family methods across
+every embedder and config tested in this whole pass.
+
+## Conclusion of the deep search (Rounds 1-7) - SUPERSEDED BY ROUND 12
+
+**This section's "2/5 datasets at 3/3" conclusion no longer holds** -
+see Round 12 above. It used `--cv-method local` throughout, and the
+real Palmetto C_V (HiCOT's own actual metric) is systematically lower,
+erasing both full wins found here. Kept below for the historical record
+of how the search progressed, not as the final answer - see the FINAL
+CORRECTED CONCLUSION section at the end of this document instead.
 
 **Final best config: G_freeze_freqwords** - `VAEBM_EMBEDDER=thenlper/gte-large
 VAEBM_UNITS=1024 VAEBM_DIM_EMB="" VAEBM_ALPHA=0.0 VAEBM_FREEZE_EMB=1
@@ -529,3 +584,39 @@ architecture class (frozen single-embedding + KMeans, K=50, top-N=15
 under the ecrtm_hicot-adjacent local protocol used here) for these 3
 specific datasets, not something a further hyperparameter search within
 this family is likely to close.
+
+## FINAL CORRECTED CONCLUSION (supersedes everything above - see Round 12)
+
+Rounds 1-11 all used `--cv-method local` (gensim, local training
+corpus). Round 12, prompted by the user flagging a real discrepancy
+between their own stated premise and this pass's own local-Cv findings,
+re-ran both the raw embedding+KMeans ceiling and VAE-BM's best recipe
+with real Palmetto/Wikipedia C_V - the metric that actually matches
+HiCOT's protocol - on all 5 target datasets.
+
+**Result: under the correct C_V metric, neither VAE-BM (any
+configuration tried, any of 3 embedders) nor the raw embedding+KMeans
+ceiling it was built to approximate beats HiCOT's K=50 reference on all
+3 metrics (C_V/Purity/NMI) simultaneously, on any of the 5 datasets.**
+Both of this pass's previously-reported full wins (SearchSnippets,
+GoogleNews) do not survive the correct C_V computation - Palmetto C_V is
+systematically lower than local C_V for embedding-based clustering
+methods on 4/5 of these datasets, likely because it reflects genuine
+Wikipedia-derived semantic coherence rather than in-domain word
+co-occurrence, which is measurably harder to satisfy.
+
+What DOES hold up, robustly, across every embedder (gte-large,
+bge-large-en-v1.5, e5-large-v2) and every architectural variant tried:
+Purity and NMI are consistently beatable (or very close) via simple
+embedding+KMeans-family methods on most of these datasets - it is
+specifically HiCOT's C_V that these methods cannot match. Combined with
+Round 9/10/11's own findings (raw embedding+KMeans hits the same walls
+VAE-BM does; "letting the network learn a bit" never beats staying
+frozen; three independent embedders converge on the same numbers), the
+honest, complete answer after this entire research pass is: **HiCOT's
+own C_V numbers on these specific datasets reflect something about their
+neural topic model's own topic-word selection that a frozen or lightly-
+adapted embedding-space clustering approach - VAE-BM or otherwise - does
+not reproduce, at least not at K=50 under this evaluation protocol.**
+This is a negative result worth reporting as-is, not something to keep
+hyperparameter-searching around.
