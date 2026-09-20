@@ -314,6 +314,21 @@ class VaeBmKMeansFit:
         # research knobs, defaults unchanged from prior behavior.
         kl_weight: float = 1.0,
         freeze_embedding_branch: bool = False,
+        # kmeans_seed=None/kmeans_n_init="auto" preserve the exact prior
+        # behavior (the literal `random_state=22` this fit() used
+        # unconditionally before 2026-09-20's parameter audit flagged it
+        # as hardcoded - see docs/vaebm_parameter_audit.md). Passing an
+        # explicit kmeans_seed overrides that literal.
+        kmeans_seed: Optional[int] = None,
+        kmeans_n_init: Union[int, str] = "auto",
+        # L2-normalizes mu before KMeans (Euclidean KMeans over unit-norm
+        # vectors approximates spherical/cosine KMeans - see
+        # docs/vaebm_parameter_audit.md's "Confirmed absent: no cosine/
+        # spherical KMeans" note) and/or the embedding-branch input E
+        # before it ever reaches the encoder. Both default False/off,
+        # unchanged prior behavior.
+        normalize_mu: bool = False,
+        normalize_emb: bool = False,
     ):
         self.voc_size = voc_size
         self.units = units
@@ -325,6 +340,10 @@ class VaeBmKMeansFit:
         self.verbose = verbose
         self.kl_weight = kl_weight
         self.freeze_embedding_branch = freeze_embedding_branch
+        self.kmeans_seed = kmeans_seed
+        self.kmeans_n_init = kmeans_n_init
+        self.normalize_mu = normalize_mu
+        self.normalize_emb = normalize_emb
 
         self.vectorizer: Optional[Union[TfidfVectorizer, CountVectorizer]] = None
         self.model: Optional[VAEBM] = None
@@ -392,6 +411,11 @@ class VaeBmKMeansFit:
         else:
             E = np.asarray(embedder, dtype=np.float32)
             self.embedder = None
+
+        if self.normalize_emb:
+            norms = np.linalg.norm(E, axis=1, keepdims=True)
+            norms[norms == 0.0] = 1.0
+            E = E / norms
 
         self.model = VAEBM(
             units=self.units, voc=X_bow.shape[1], dim=dim, dim_emb=dim_emb, alpha=alpha,
@@ -474,7 +498,12 @@ class VaeBmKMeansFit:
 
         mu, _, _ = self.model.encoder([X_bow, E], training=False)
         Z = mu.numpy()
-        self.kmeans = KMeans(n_clusters=self.n_clusters, random_state=22, n_init="auto")
+        if self.normalize_mu:
+            norms = np.linalg.norm(Z, axis=1, keepdims=True)
+            norms[norms == 0.0] = 1.0
+            Z = Z / norms
+        kmeans_seed = self.kmeans_seed if self.kmeans_seed is not None else 22
+        self.kmeans = KMeans(n_clusters=self.n_clusters, random_state=kmeans_seed, n_init=self.kmeans_n_init)
         self.kmeans.fit(Z)
         return self.kmeans.predict(Z).tolist(), Z
 
@@ -492,9 +521,17 @@ class VaeBmKMeansFit:
         if self.embedder is None:
             raise RuntimeError("Embedder was not initialized.")
         E = self.embedder.encode(texts, batch_size=128, convert_to_numpy=True).astype(np.float32)
+        if self.normalize_emb:
+            norms = np.linalg.norm(E, axis=1, keepdims=True)
+            norms[norms == 0.0] = 1.0
+            E = E / norms
 
         mu, _, _ = self.model.encoder([X_bow, E], training=False)
         Z = mu.numpy()
+        if self.normalize_mu:
+            norms = np.linalg.norm(Z, axis=1, keepdims=True)
+            norms[norms == 0.0] = 1.0
+            Z = Z / norms
         return self.kmeans.predict(Z).tolist(), mu
 
     def top_words_by_freq_exact(self, texts: Sequence[str], top_m: int = 20, static_embeddings=None,

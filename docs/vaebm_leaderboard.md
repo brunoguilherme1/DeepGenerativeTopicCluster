@@ -55,4 +55,74 @@ agnews_short 0.483/0.880/0.386, imdb 0.453/0.923/0.204.
 
 ## Stage C: hicot_* vs plain diagnostic investigation
 
-(in progress - see below)
+Two diagnostic agents traced exact dataset provenance for all 5 pairs.
+Headline finding: the apparent "plain beats HiCOT" results above are
+**not** evidence of a transferable modeling advantage in 4/5 cases -
+they are measurement/provenance artifacts. Only one (IMDB) pointed at a
+real, fixable measurement bug; the rest are just "these are different
+documents than what HiCOT scored."
+
+- **IMDB (the standout case, investigated first)**: plain `imdb` is raw
+  HuggingFace `stanfordnlp/imdb` text - mixed case, full punctuation,
+  stopwords present, and an **unstripped `<br />` HTML tag** (a
+  formatting artifact from the original scrape, present in nearly every
+  review). `hicot_imdb` is HiCOT's own cleaned artifact: lowercased,
+  punctuation/digits stripped, stopwords removed, vocab hard-capped at
+  5,000 content words. Because Palmetto Cv (NPMI-style, scored against a
+  Wikipedia reference corpus) rewards words that co-occur with almost
+  everything, plain imdb's topic words got dominated by function words
+  ("the", "and", "is") and `br` itself - both score artificially high on
+  Cv without reflecting genuine topic quality. **This is a measurement
+  confound, not a real win.** Fix implemented this pass:
+  `VAEBM_EXCLUDE_STOPWORDS=1` (sklearn's English stopword list, applied
+  via a single `counts_k` zeroing operation in
+  `vaebm.py::top_words_by_freq_exact` that transparently covers all
+  three topic-word modes). Round 17 (running) re-tests plain imdb under
+  this fix - the hypothesis is its Cv drops from 0.469 toward the
+  0.33-0.40 band, while hicot_imdb (already stopword-free upstream)
+  stays roughly flat.
+- **20NG**: `hicot_20ng` is HiCOT's own artifact, which does **not**
+  strip email headers/footers/quoted-reply text. `20ng` here uses
+  `fetch_20newsgroups(subset="all", remove=("headers","footers","quotes"))`
+  - a materially cleaner document. Not a fair comparison; header junk
+  words (`subject`, `organization`, `nntp`, `posting`, `host`, `lines`,
+  `writes`, `article`, `edu`) likely inflate hicot_20ng's own topic-word
+  quality in the opposite direction. Follow-up: try
+  `VAEBM_EXTRA_EXCLUDE_WORDS` with that header-junk list specifically on
+  hicot_20ng.
+- **GoogleNews**: `hicot_google_news` is **title-only** (avg 5.75
+  tokens/doc). The plain dataset used through Round 16,
+  `google_news_ts`, is title+snippet (avg 27.95 tokens/doc) - a
+  different, much richer document with **zero exact-text overlap** with
+  hicot's corpus. `google_news_t` (title-only, 5,842/11,019 docs
+  overlapping with hicot_google_news) is the correct plain counterpart
+  and replaces `google_news_ts` starting Round 17.
+- **AGNews**: `agnews_short` (8,000 docs, STC2-style cut) and
+  `hicot_agnews` (12,500 docs, ECRTM cut) are genuinely different
+  subsamples of the source corpus - only 1 document in common.
+  `agnews_short` additionally has **unescaped HTML entity artifacts**
+  (`lt`, `gt`, `quot`, `href`, `aspx` literally appearing as tokens) from
+  an un-decoded scrape, a second, independent source of Cv inflation on
+  top of the subsampling mismatch. Follow-up: `VAEBM_EXTRA_EXCLUDE_WORDS`
+  with that HTML-entity list on agnews_short.
+- **SearchSnippets**: the smallest, most benign difference of the four
+  non-IMDB pairs - both datasets come from the same underlying STC2
+  corpus; HiCOT applies additional vocab pruning and hyphen-splitting.
+  No artifact found here; this pair's cv_local/Palmetto gap (if any)
+  should be treated as a genuine signal, not provenance noise.
+
+**Implication for the search strategy**: only IMDB's plain-vs-hicot gap
+was a real, fixable measurement bug (now patched, pending Round 17
+confirmation). The 20NG/GoogleNews/AGNews plain variants are not valid
+"this property should transfer to hicot_*" evidence on their own -
+they're different documents, not a cleaner view of the same documents.
+Stage C's actual transferable lesson so far is narrower than originally
+hoped: **strip stopwords/junk-tokens from topic-word extraction**, not
+"whatever makes the plain dataset easier."
+
+## Round 17 (running, job 1630): Stage A re-baseline with stopword fix
+
+Re-tests all 10 datasets (vaebm + sbert_kmeans, cv_local + Palmetto) with
+`VAEBM_EXCLUDE_STOPWORDS=1` and the corrected `google_news_t` pairing.
+Results pending - table above still reflects pre-fix Rounds 1-16 numbers
+and should be treated as provisional, especially plain `imdb`'s 0.469.

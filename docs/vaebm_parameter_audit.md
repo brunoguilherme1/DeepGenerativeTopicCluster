@@ -95,8 +95,9 @@ already reads these from `_VAEBM_DEFAULTS` for all 4 models).
 
 ## Confirmed absent (do not go looking for these)
 
-Any cosine/spherical KMeans or custom clustering class; any
-`sklearn.preprocessing.normalize` usage in the vaebm path; any
+Any cosine/spherical KMeans or custom clustering class (`VAEBM_NORMALIZE_MU`,
+implemented this pass, approximates it via L2-normalization + Euclidean
+KMeans - not a true spherical-KMeans implementation); any
 alternative fusion mechanism (concat/attention/gating/learnable alpha -
 the code comment at `vaebm.py`'s alpha blend says "could be made
 learnable" but this was never implemented); `recon_weight`; temperature/

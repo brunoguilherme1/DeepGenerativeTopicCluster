@@ -133,7 +133,9 @@ _VAEBM_DEFAULTS = dict(
     # user-authorized) - matches experiment/scientific_models.py::build_vaebm's
     # own comment.
     epochs=int(os.environ.get("VAEBM_EPOCHS", "50")),
-    batch_size=128,
+    # environment-configurable (VAEBM_BATCH_SIZE, default "128" - unchanged
+    # prior behavior) - 2026-09-20 parameter audit Tier 1.
+    batch_size=int(os.environ.get("VAEBM_BATCH_SIZE", "128")),
     # environment-configurable (VAEBM_LR, default "1e-3") - see
     # experiment/cluster_runner.py::_build_vaebm's own comment.
     lr=float(os.environ.get("VAEBM_LR", "1e-3")),
@@ -168,6 +170,26 @@ _VAEBM_DEFAULTS = dict(
     # get_topics_freq() (2026-09-19 "mimic GTE" research pass).
     top_words_mode=os.environ.get("VAEBM_TOP_WORDS_MODE", "energy"),
     verbose=1,
+)
+
+# NOT part of _VAEBM_DEFAULTS: vaebm_poe/vaebm_dec/vaebm_ckpt's own
+# _build_model branches below spread _VAEBM_DEFAULTS directly into
+# VAEBMPoEAdapter/VAEBMDECAdapter/VAEBMCkptAdapter, none of which accept
+# these four params - adding them to the shared dict would break all
+# three. Applied only to bare "vaebm" (and its registered variants,
+# which share VAEBMAdapter). 2026-09-20 parameter audit Tier 1 -
+# kmeans_seed/kmeans_n_init override the previously-hardcoded KMeans
+# random_state=22 (see models/vaebm.py::VaeBmKMeansFit's own comment);
+# normalize_mu/normalize_emb fill the "no cosine/spherical KMeans" gap
+# that audit flagged as confirmed absent. All default to unchanged prior
+# behavior.
+_VAEBM_ONLY_DEFAULTS = dict(
+    kmeans_seed=(int(os.environ["VAEBM_KMEANS_SEED"]) if os.environ.get("VAEBM_KMEANS_SEED", "").strip() else None),
+    kmeans_n_init=(
+        int(v) if (v := os.environ.get("VAEBM_KMEANS_N_INIT", "auto").strip()).isdigit() else v
+    ),
+    normalize_mu=os.environ.get("VAEBM_NORMALIZE_MU", "0").strip().lower() in ("1", "true", "yes"),
+    normalize_emb=os.environ.get("VAEBM_NORMALIZE_EMB", "0").strip().lower() in ("1", "true", "yes"),
 )
 
 # Experiment-level, never per-variant: every model in a sweep gets the
@@ -306,6 +328,7 @@ def _build_model(model_name: str, k: int, seed: int, voc_size: int):
         from vaebm_benchmark.models.vaebm_adapter import VAEBMAdapter
 
         params = dict(_VAEBM_DEFAULTS)
+        params.update(_VAEBM_ONLY_DEFAULTS)
         params.update(_VAEBM_VARIANT_OVERRIDES.get(model_name, {}))
         return VAEBMAdapter(n_clusters=k, voc_size=voc_size, random_state=seed, **params)
     if model_name == "vaebm_poe":
@@ -328,8 +351,13 @@ def _build_model(model_name: str, k: int, seed: int, voc_size: int):
 
         raw = os.environ.get("VAEBM_DEC_MAX_FIT_SECONDS", "1200").strip().lower()
         max_fit_seconds = None if raw in ("0", "none", "") else float(raw)
+        # environment-configurable (VAEBM_DEC_LAMBDA_C, default "0.1" -
+        # unchanged prior behavior) - weight on the DEC clustering loss
+        # term, see models/vaebm_dec.py's own docstring. 2026-09-20
+        # parameter audit Tier 1.
+        lambda_c = float(os.environ.get("VAEBM_DEC_LAMBDA_C", "0.1"))
         params = dict(_VAEBM_DEFAULTS)
-        return VAEBMDECAdapter(n_clusters=k, voc_size=voc_size, random_state=seed, lambda_c=0.1, max_fit_seconds=max_fit_seconds, **params)
+        return VAEBMDECAdapter(n_clusters=k, voc_size=voc_size, random_state=seed, lambda_c=lambda_c, max_fit_seconds=max_fit_seconds, **params)
     if model_name == "vaebm_ckpt":
         # Fixed-alpha VAE-BM with oracle-checkpoint selection
         # (models/vaebm_ckpt.py) - shares _VAEBM_DEFAULTS' own

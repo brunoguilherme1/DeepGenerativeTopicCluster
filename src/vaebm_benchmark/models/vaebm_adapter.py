@@ -40,6 +40,10 @@ class VAEBMAdapter(ProtocolModelAdapter):
         static_candidate_pool: Optional[int] = None,  # narrows "static" mode's re-ranking pool to the top-N most frequent present words - see vaebm.py::top_words_by_freq_exact's own docstring
         static_hybrid_weight: Optional[float] = None,  # soft frequency+similarity blend instead of a hard filter-then-rank - see vaebm.py::top_words_by_freq_exact's own docstring
         exclude_words: Optional[set] = None,  # stopwords/junk tokens excluded from every topic-word mode - see vaebm.py::top_words_by_freq_exact's own docstring (2026-09-20)
+        kmeans_seed: Optional[int] = None,  # overrides the previously-hardcoded KMeans random_state=22 - see vaebm.py::VaeBmKMeansFit's own comment (2026-09-20)
+        kmeans_n_init="auto",  # see vaebm.py::VaeBmKMeansFit's own comment (2026-09-20)
+        normalize_mu: bool = False,  # L2-normalize mu before KMeans (approximates spherical KMeans) - see vaebm.py::VaeBmKMeansFit's own comment (2026-09-20)
+        normalize_emb: bool = False,  # L2-normalize the embedding-branch input before the encoder - see vaebm.py::VaeBmKMeansFit's own comment (2026-09-20)
     ) -> None:
         self.n_clusters = n_clusters
         self.vectorizer_type = vectorizer_type
@@ -65,6 +69,10 @@ class VAEBMAdapter(ProtocolModelAdapter):
             verbose=verbose,
             kl_weight=kl_weight,
             freeze_embedding_branch=freeze_embedding_branch,
+            kmeans_seed=kmeans_seed,
+            kmeans_n_init=kmeans_n_init,
+            normalize_mu=normalize_mu,
+            normalize_emb=normalize_emb,
         )
         self._train_documents: Optional[list[str]] = None
         self._mu_train: Optional[np.ndarray] = None
