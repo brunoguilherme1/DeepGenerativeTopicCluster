@@ -441,3 +441,34 @@ GloVe/Word2Vec/FastText static-only embeddings and genuinely new
 architectural variants (Stage E proper, e.g. a differently-structured
 fusion or a separate clustering/topic-generation latent space).
 
+## New capability: VAEBM_DOC_EMBEDDER=hicot_glove_avg - static embeddings AS the clustering input
+
+Closes the "GloVe/Word2Vec/FastText" gap above. New
+`experiment/runner.py::_compute_hicot_glove_doc_embeddings()` averages
+each document's own words' HiCOT GloVe vectors (200-dim, already
+downloaded for topic-word ranking, never before used as the actual
+clustering representation) into one per-document vector, then assigns
+it directly to `model.embedder_name` - `models/vaebm.py` required no
+changes, since `VaeBmKMeansFit.fit_predict`'s `embedder` param already
+branches on `isinstance(embedder, str)` vs. a precomputed array (this
+path pre-existed, just was never exercised via the runner before).
+Gated to vaebm-family models only (not `sbert_kmeans`, whose `fit()`
+unconditionally treats `embedder_name` as a model-name string and would
+crash on an array). Verified via unit test (word averaging, unknown-word
+skipping, empty-doc zero-vector) plus an end-to-end construction check.
+
+## Round 25 (next): does a static per-document GloVe average cluster as well as a contextual encoder?
+
+Testing `VAEBM_DOC_EMBEDDER=hicot_glove_avg` across all 5 hicot_*
+datasets. Necessarily paired with `VAEBM_FREEZE_EMB=0` (unfrozen,
+unlike every other round this pass) and `VAEBM_EPOCHS=20` (raised from
+1) - a raw averaged-GloVe vector is a much weaker starting point than a
+pretrained contextual embedding, so freezing the branch at its random
+init would test a random projection of GloVe, not GloVe's own
+document-embedding quality; letting it train is the fair comparison.
+`alpha` stays at 0.0 (Round 24 showed BoW fusion is actively harmful).
+A genuinely new, previously-impossible data point either way: strong
+performance would say static+trained-projection can match a contextual
+encoder for this task; weak performance would confirm contextual
+embeddings are doing real work here, not just convenience.
+
