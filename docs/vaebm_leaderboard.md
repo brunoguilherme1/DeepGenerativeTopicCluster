@@ -361,18 +361,46 @@ appears specific to gte-large+20NG/AGNews, not a universal add-on.**
 **Decision: hicot_imdb's standing best stays BGE+freq+stopword alone**
 (no normalize_mu), Cv 0.362, Δ-0.042 - unchanged from Round 21.
 
-## Round 23 (next): embedder sensitivity for GoogleNews - the worst remaining gap
+## Round 23 (complete, job 1636): E5 doesn't move either stubborn dataset
 
-GoogleNews now has the single worst Cv gap of any dataset (-0.056) and
-has not moved under ANY treatment tried so far (freq, GloVe-hybrid,
-normalize_mu, or BGE - Round 21 already tested BGE on hicot_google_news:
-0.395, ~flat/-0.003, not helpful). Testing `intfloat/e5-large-v2` -
-untried this whole pass - on hicot_google_news AND hicot_20ng (also
-barely moved: -0.052 gap, second-worst). Caveat: E5 models are
-benchmarked WITH "query: "/"passage: " text prefixes for best accuracy;
-this project's embedder.encode() call adds no prefix, so this is a
-lower-bound/ablation test of E5, not its manufacturer-optimal
-configuration - still informative as a genuine new embedding-family
-data point, noted explicitly rather than silently treated as
-apples-to-apples with BGE/GTE's own prefix-free usage (those two don't
-require prefixes for competitive performance, per their own model cards).
+| Dataset | Palmetto Cv (E5) | vs GTE | vs BGE | Purity (E5) | vs GTE | NMI (E5) | vs GTE |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| hicot_google_news | 0.395 | ~flat (-0.003) | **identical to BGE (0.395)** | 0.605 | -0.009 | 0.804 | -0.016 |
+| hicot_20ng | 0.395 | ~flat (-0.002/-0.004) | -0.005 | 0.636 | **-0.028 to -0.040 (worse)** | 0.560 | -0.020 to -0.022 (worse) |
+
+**Three different embedding families (GTE, BGE, E5) now converge tightly
+to Cv~0.395-0.399 for BOTH GoogleNews and 20NG** - strong evidence this
+specific gap is not an embedding-choice problem, unlike IMDB (which WAS
+embedder-sensitive - BGE moved it, Round 21). E5 actively hurts 20NG's
+Purity/NMI with no Cv upside. Embedder swapping is exhausted as a lever
+for these two datasets.
+
+## Major finding: alpha=0 has never actually fused BoW+embedding, in ANY of the 23 rounds so far
+
+Checked the encoder's own fusion math directly
+(`models/vaebm.py::Encoder.call`): `mu = alpha * mu_bow + (1 - alpha) *
+mu_emb`. Every single round in this entire pass (1-23) used
+`VAEBM_ALPHA=0.0` - meaning **`mu = mu_emb` exactly, every time.** The
+BoW/TF-IDF branch is computed (wasted compute) but its contribution to
+`mu` is multiplied by zero and discarded before clustering, in literally
+every experiment run so far. This whole pass has been testing a
+frozen-embedding-encoder-plus-KMeans pipeline wearing a "VAE-BM" label -
+not the genuine BoW+embedding fusion HiCOT/ECRTM's own architecture (and
+this project's own `alpha` default of 0.99, mostly BoW-weighted) was
+designed around. This is a real, previously untested axis - a strong
+candidate for why GoogleNews/20NG are stuck regardless of embedder (an
+embedding-only signal may simply lack whatever vocabulary-frequency
+information Palmetto's Wikipedia-NPMI rewards for these two datasets).
+
+## Round 24 (next): does re-engaging the BoW branch (alpha>0) move the stuck datasets?
+
+Testing `VAEBM_ALPHA=0.5` (genuine 50/50 fusion) with `VAEBM_EPOCHS=20`
+(raised from 1 - the BoW branch's MLP is otherwise near its random
+init and has had no chance to learn anything useful to contribute to
+the blend) on hicot_google_news and hicot_20ng - the two datasets
+embedder-swapping has now conclusively failed to move. `freeze_embedding_branch`
+stays on (only the BoW branch and fusion should train). This is
+Stage-E-adjacent: not a new architectural variant, but re-activating an
+existing, currently-disabled fusion pathway this whole pass has
+inadvertently left switched off.
+
