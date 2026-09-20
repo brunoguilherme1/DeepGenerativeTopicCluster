@@ -288,14 +288,35 @@ stubborn cases - neither has moved beyond the initial stopword fix
 under ANY topic-word-extraction or clustering-geometry tweak tried so
 far (freq vs. GloVe-hybrid, with/without normalize_mu).
 
-## Round 20 (next): does the "short text responds to GloVe-hybrid" pattern extend?
+## Round 20 (complete, job 1633): GloVe-hybrid does NOT extend to GoogleNews/AGNews
 
-search_snippets (short text, ~short snippets) responded positively to
-GloVe-hybrid; IMDB (long-form reviews) responded negatively. GoogleNews
-is title-only (avg 5.75 tokens/doc - even shorter than search_snippets)
-and has never been tried with GloVe-hybrid at all. AGNews (short
-headline+lead) was flagged in Rounds 14-15 as "helped meaningfully" on
-the hard pool-cutoff version, pre-stopword-fix, pre-dates whether that
-held on Palmetto Cv specifically - worth re-testing now that both fixes
-exist. Testing GloVe-hybrid+stopword (no normalize_mu, to isolate the
-effect per Round 19's lesson) on hicot_google_news and hicot_agnews.
+| Dataset | Palmetto Cv (GloVe-hybrid+stopword) | vs. freq+stopword standing best |
+|---|---:|---|
+| hicot_google_news | 0.370 | **worse** (0.398 -> 0.370, -0.028) |
+| hicot_agnews | 0.424 | **worse than normalize_mu recipe** (0.430 -> 0.424) and ~flat vs. plain freq (0.426) |
+
+Both negative. "Short text -> GloVe-hybrid helps" does not hold as a
+general pattern - it is specific to search_snippets for reasons not yet
+understood (possibly search_snippets' own GloVe coverage, or that it's
+the pair with the smallest/most benign hicot/plain provenance gap of
+the 5 - see Stage C). The Rounds 14-15 note that the pool-cutoff version
+"helped meaningfully" on AGNews evidently held only for cv_local, not
+Palmetto Cv - a concrete instance of the "local and Palmetto can move in
+opposite directions" risk the user flagged up front. **GloVe-hybrid
+topic words are now confirmed dataset-specific to search_snippets only.**
+
+This is the 5th consecutive negative/mixed result on topic-word-extraction
+and clustering-geometry tweaks (Round 18's B/C, Round 19's E/F, Round
+20's H). Per the user's "stop clearly unproductive experiments early and
+redirect resources" instruction, pivoting away from this axis.
+
+## Round 21 (next): embedding-family sensitivity - completely unexplored so far
+
+Every round in this entire pass (1-20) has used `thenlper/gte-large`
+exclusively as `VAEBM_EMBEDDER`. The user's directive explicitly requires
+testing BGE, E5, SBERT variants, GloVe/Word2Vec/FastText, and hybrid
+representations - none of that has happened yet. Testing `BAAI/bge-large-en-v1.5`
+(strong MTEB clustering performance, no special query/passage prefix
+needed unlike E5) as a drop-in `VAEBM_EMBEDDER` replacement, same recipe
+as Round 17 (freq+stopword, no normalize_mu/GloVe-hybrid yet - isolate
+the embedder effect first) across all 5 hicot_* datasets.
