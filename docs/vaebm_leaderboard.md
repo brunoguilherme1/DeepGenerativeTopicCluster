@@ -659,3 +659,12 @@ different latent dim, or a clustering-quality-focused architecture
 change) would be needed to move NMI further - noted in the idea backlog
 for a future round, not chased further right now.
 
+## Round 29 (next): lambda_relevance was never tuned - sweep it for the 3 remaining Cv-blocked datasets
+
+lambda=0.5 (Round 26) was a reasonable middle guess, never optimized.
+Three datasets are now short ONLY on Cv (every other metric already
+beats target): hicot_search_snippets (-0.010), hicot_google_news
+(-0.025), hicot_imdb+BGE (-0.025). Sweeping lambda in {0.3, 0.7}
+(bracketing 0.5) on exactly these 3 - if any crosses its Cv target line,
+that's a 3rd (and 4th) full 3/3 dataset.
+
