@@ -392,15 +392,52 @@ candidate for why GoogleNews/20NG are stuck regardless of embedder (an
 embedding-only signal may simply lack whatever vocabulary-frequency
 information Palmetto's Wikipedia-NPMI rewards for these two datasets).
 
-## Round 24 (next): does re-engaging the BoW branch (alpha>0) move the stuck datasets?
+## Round 24 (complete, job 1637): alpha=0.5 is actively harmful, not free upside
 
-Testing `VAEBM_ALPHA=0.5` (genuine 50/50 fusion) with `VAEBM_EPOCHS=20`
-(raised from 1 - the BoW branch's MLP is otherwise near its random
-init and has had no chance to learn anything useful to contribute to
-the blend) on hicot_google_news and hicot_20ng - the two datasets
-embedder-swapping has now conclusively failed to move. `freeze_embedding_branch`
-stays on (only the BoW branch and fusion should train). This is
-Stage-E-adjacent: not a new architectural variant, but re-activating an
-existing, currently-disabled fusion pathway this whole pass has
-inadvertently left switched off.
+| Dataset | Metric | alpha=0 baseline | alpha=0.5, epochs=20 | Δ |
+|---|---|---:|---:|---:|
+| hicot_google_news | Palmetto Cv | 0.398 | 0.404 | +0.006 (marginal improvement) |
+| hicot_google_news | Purity | 0.614 | 0.487 | **-0.127 (collapse)** |
+| hicot_google_news | NMI | 0.820 | 0.640 | **-0.180 (collapse - flips from a big win to a MISS vs. 0.657 target)** |
+| hicot_20ng | Palmetto Cv | 0.397-0.399 | 0.377 | -0.021 (worse) |
+| hicot_20ng | Purity | 0.664-0.676 | 0.444 | **-0.220 to -0.232 (collapse - flips from a win to a big MISS)** |
+| hicot_20ng | NMI | 0.580-0.582 | 0.415 | **-0.167 (collapse - flips from a near-exact match to a big MISS)** |
+
+**Decisive negative result.** Re-engaging the BoW branch at a 50/50
+fusion weight, even after giving it 20 epochs to train (vs. alpha=0's
+1-epoch shortcut), does not add useful signal - it destroys the clean
+semantic clustering geometry the frozen embedding alone provided.
+GoogleNews's Cv nudged up marginally, but at a catastrophic cost to
+Purity/NMI (both metrics FLIP from comfortably beating target to
+missing it). 20NG got strictly worse on every metric. **Conclusion:
+alpha=0 (embedding-only, this whole pass's setting) is not leaving
+value on the table for these two datasets - it is the better choice,
+now that the alternative has actually been tested rather than assumed.**
+This closes the "alpha=0 might be why they're stuck" hypothesis as
+tested-and-rejected, not merely untested. A gentler intermediate value
+(e.g. alpha=0.1-0.2) remains theoretically untested but the magnitude of
+damage at 0.5 (with an already-undertrained BoW branch relative to
+HiCOT's own many-epoch regime) makes it a low-priority follow-up rather
+than an obvious next step.
+
+## Status after 24 rounds: comprehensive summary
+
+**Confirmed decisively**: the stopword-exclusion fix (Round 17) was real
+and retracts the earlier "plain imdb beats HiCOT" claim as a measurement
+artifact. **The single biggest lead**: BGE-large for hicot_imdb (Round
+21) - the only case this whole pass where a learned VAE-BM representation
+exceeds its own raw-embedding ceiling. **Confirmed dead ends** (evidence-
+based, not assumed): hand-curated junk-word exclusion beyond true
+universal stopwords (Round 18); GloVe-hybrid topic words outside
+search_snippets (Rounds 19-20); normalize_mu stacked with any
+topic-word/embedder change beyond its original gte-large+20NG/AGNews
+context (Rounds 19, 22); embedder swapping for GoogleNews/20NG - GTE,
+BGE, E5 all converge to the same Cv (Round 23); alpha>0 BoW fusion
+(Round 24) - actively harmful at 0.5, not merely unhelpful. Still 0/5 on
+beating HiCOT on all 3 metrics simultaneously, but every dataset's Cv
+gap is flat-or-narrower than the Round 16 pre-fix baseline, and the
+search has now touched every major axis in the user's directive except
+GloVe/Word2Vec/FastText static-only embeddings and genuinely new
+architectural variants (Stage E proper, e.g. a differently-structured
+fusion or a separate clustering/topic-generation latent space).
 
