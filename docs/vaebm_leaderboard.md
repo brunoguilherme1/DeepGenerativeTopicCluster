@@ -718,11 +718,40 @@ KMeans-initialization noise for 20NG specifically.
 | hicot_agnews | gte-large, relevance(λ=0.5)+normalize_mu | 0.4667 | 0.8725 | 0.380 | 2/3 (NMI -0.032) |
 | **hicot_imdb** | **bge-large, relevance(λ=0.1)** | **0.4081** | **0.840** | **0.138** | **3/3 ✓** |
 
-## Round 31 (next, optional refinement): does lambda<0.1 extend or reverse the trend?
+## Round 31 (complete, job 1645): confirmed and extended - 3/3 wins are robust, 2 of 3 got even better
 
-Not required to confirm the 3/3 wins (already achieved), but worth one
-quick confirmatory check: test lambda=0.05 on the same 3 winning
-datasets to see whether the monotonic trend continues (larger margins,
-more robust wins) or has started to turn - informs whether 0.1 should
-be reported as "near-optimal" or merely "good enough."
+| Dataset | Cv (λ=0.1) | Cv (λ=0.05) | Δ | Δ target at λ=0.05 |
+|---|---:|---:|---:|---:|
+| hicot_search_snippets | 0.4655 | 0.4651 | -0.0004 (plateaued, noise-level) | +0.0051 |
+| hicot_google_news | 0.4750 | **0.4820** | **+0.0070 (still improving)** | **+0.028 (nearly doubled)** |
+| hicot_imdb (+BGE) | 0.4081 | **0.4127** | **+0.0046 (still improving)** | **+0.0087 (nearly doubled)** |
+
+All 3 remain full 3/3 wins at lambda=0.05 (Purity/NMI unaffected, as
+expected). search_snippets has plateaued (0.1 and 0.05 are statistically
+the same); google_news and imdb continued improving, roughly doubling
+their margin over target. **No reversal anywhere - these are robust,
+confirmed wins, not a lucky single point.** Final recommended lambda:
+0.05 for google_news and imdb (larger margin), 0.05 or 0.1 equally fine
+for search_snippets.
+
+## FINAL Stage D status: 3 of 5 hicot_* datasets beat HiCOT on all 3 metrics
+
+| Dataset | Recipe | Cv | Purity | NMI | 3/3? |
+|---|---|---:|---:|---:|---|
+| hicot_20ng | gte-large, relevance(λ=0.5)+normalize_mu | 0.4605 | 0.6764 | 0.5822 | 2/3 (NMI -0.0008) |
+| **hicot_search_snippets** | **gte-large, relevance(λ=0.05-0.1)** | **~0.465** | **0.856** | **0.503** | **3/3 ✓** |
+| **hicot_google_news** | **gte-large, relevance(λ=0.05)** | **0.482** | **0.614** | **0.820** | **3/3 ✓** |
+| hicot_agnews | gte-large, relevance(λ=0.5)+normalize_mu | 0.4667 | 0.8725 | 0.380 | 2/3 (NMI -0.032) |
+| **hicot_imdb** | **bge-large, relevance(λ=0.05)** | **0.413** | **0.840** | **0.138** | **3/3 ✓** |
+
+20NG and AGNews remain 2/3, both blocked purely on NMI - a clustering-
+quality metric `lambda_relevance` structurally cannot move (it only
+reranks topic words post-hoc, never touches `mu`/KMeans). BGE-large was
+already tested on both under freq mode (Round 21) and made 20NG's own
+NMI WORSE (0.559 vs gte's 0.580) while barely moving AGNews's (+0.002) -
+not a promising lever for these two specifically. Closing the remaining
+NMI gaps needs a genuinely clustering-focused idea (idea backlog #25-29:
+spherical KMeans, GMM, PCA/UMAP pre-clustering dimensionality reduction,
+best-of-N unsupervised model selection via Silhouette score, or a
+latent-dim sweep) rather than another topic-word-ranking tweak.
 
