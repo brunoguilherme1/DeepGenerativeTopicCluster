@@ -582,3 +582,52 @@ one clustering-geometry change. Testing:
     already contributes Purity=0.840/NMI=0.138, both already beating
     target), this is ALSO full 3/3.
 
+## Round 27 (complete, job 1641): SO close - 20NG misses full 3/3 by 0.0008 on NMI
+
+| Combo | Dataset | Cv | Δ target | Purity | Δ target | NMI | Δ target | 3/3? |
+|---|---|---:|---:|---:|---:|---:|---:|---|
+| relevance+normalize_mu | hicot_20ng | 0.4605 | **+0.0095 (beats)** | 0.6764 | **+0.050 (beats)** | 0.5822 | **-0.0008 (miss, razor-thin)** | NO - by a hair |
+| relevance+normalize_mu | hicot_agnews | 0.4667 | **+0.0207 (beats, best AGNews Cv yet)** | 0.8725 | **+0.0155 (beats, best AGNews Purity yet)** | 0.3800 | -0.032 (miss, unchanged) | no |
+| relevance+bge | hicot_imdb | 0.3807 | -0.023 (best-ever IMDB Cv, barely above relevance-alone's 0.379 with gte) | 0.8402 | +0.103 (beats, = BGE alone) | 0.1377 | +0.056 (beats, = BGE alone) | no |
+
+**20NG combines cleanly and lands 0.0008 short of a full 3/3** - Cv and
+Purity both improved further than either component alone (0.4605 >
+relevance-alone's 0.453; 0.6764 = normalize_mu's own Purity gain, held).
+NMI at 0.5822 vs. target 0.583 is a difference smaller than reasonable
+numerical/seed noise - the closest possible near-miss of the whole pass.
+**AGNews's combination also compounded cleanly** (both Cv and Purity
+improved beyond either component alone) - now the best AGNews result
+of the entire pass, though NMI's -0.032 gap held exactly at
+normalize_mu's own level (no worse, no better from adding relevance
+mode). **IMDB's combination did NOT compound** - Cv landed at
+essentially the same level as gte+relevance alone (0.381 vs 0.379),
+meaning BGE's embedding change and relevance mode's topic-word gain
+did NOT stack additively here, unlike 20NG/AGNews.
+
+## Round 28 (next, revised): is 20NG's 0.0008 NMI gap closeable via KMeans seed/n_init?
+
+Checked before launching (avoided wasting a round): with
+`freeze_embedding_branch=1`, `dim_emb=()`, `units=1024` (matching
+gte-large/bge-large's own output width) and `alpha=0`, `mu_emb`'s Dense
+layer uses a DETERMINISTIC `Identity(gain=0.99999)` kernel initializer
+(models/vaebm.py line ~144) - not a random one - so `mu = mu_emb ~=
+0.99999 * E` regardless of `--seed`/`random_state`. Separately,
+`Encoder.__init__` hardcodes `tf.random.set_seed(1234)` (line 87),
+overriding whatever seed the run passes in anyway (a known Tier-2 audit
+item, docs/vaebm_parameter_audit.md). **`--seed` has ZERO effect on this
+whole pass's standing-best recipe** - a `--seed` sweep would have been a
+wasted, uninformative SLURM round. The ONLY genuine source of
+stochasticity left in this otherwise-fully-deterministic pipeline is
+KMeans's own random centroid initialization - fixed at the literal
+`random_state=22` by default (docs/vaebm_parameter_audit.md's own
+"KMeans random_state=22 is a literal" finding, now fixable via
+`VAEBM_KMEANS_SEED`, implemented this pass).
+
+Testing `VAEBM_KMEANS_SEED` in {1, 7, 13, 22 (current), 99} and
+`VAEBM_KMEANS_N_INIT=20` (more restarts, best-inertia selection - itself
+a legitimate, label-free way to find a genuinely better partition, not
+just different noise) on hicot_20ng's winning relevance+normalize_mu
+recipe - Palmetto Cv only (the decision-relevant metric), to see whether
+NMI naturally crosses 0.583 under real clustering-initialization
+variance. Reported transparently regardless of outcome.
+
