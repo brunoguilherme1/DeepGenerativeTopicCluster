@@ -350,11 +350,29 @@ datasets keep gte-large.**
 | hicot_agnews | gte-large, freq+stopword+normalize_mu | 0.430 | -0.016 | 0.872 | +0.015 | 0.380 | -0.032 | no |
 | **hicot_imdb** | **bge-large**, freq+stopword | **0.362** | **-0.042** | **0.840** | **+0.103** | **0.138** | **+0.056** | no |
 
-## Round 22 (next): does normalize_mu compound with BGE for IMDB?
+## Round 22 (complete, job 1635): normalize_mu does NOT compound with BGE either
 
-`normalize_mu` gave clean, Cv-safe Purity/NMI gains on GTE for 20NG/
-AGNews (Round 18's Finding D) but was never tried with BGE. Given
-BGE+IMDB is now the pass's biggest open lead, testing
-`VAEBM_EMBEDDER=BAAI/bge-large-en-v1.5` + `VAEBM_NORMALIZE_MU=1` on
-hicot_imdb - if it compounds cleanly (unlike Round 19's search_snippets
-attempt, which traded Cv away), this could close IMDB's gap further.
+BGE+normalize_mu on hicot_imdb: Cv 0.358 (vs. BGE-alone's 0.362,
+**-0.004 worse**), Purity 0.832 (vs. 0.840, -0.008 worse), NMI 0.135
+(vs. 0.138, -0.003 worse). A third instance of normalize_mu failing to
+compound with a topic-word/embedder change (after Round 19's
+search_snippets GloVe-hybrid attempt) - **normalize_mu's benefit
+appears specific to gte-large+20NG/AGNews, not a universal add-on.**
+**Decision: hicot_imdb's standing best stays BGE+freq+stopword alone**
+(no normalize_mu), Cv 0.362, Δ-0.042 - unchanged from Round 21.
+
+## Round 23 (next): embedder sensitivity for GoogleNews - the worst remaining gap
+
+GoogleNews now has the single worst Cv gap of any dataset (-0.056) and
+has not moved under ANY treatment tried so far (freq, GloVe-hybrid,
+normalize_mu, or BGE - Round 21 already tested BGE on hicot_google_news:
+0.395, ~flat/-0.003, not helpful). Testing `intfloat/e5-large-v2` -
+untried this whole pass - on hicot_google_news AND hicot_20ng (also
+barely moved: -0.052 gap, second-worst). Caveat: E5 models are
+benchmarked WITH "query: "/"passage: " text prefixes for best accuracy;
+this project's embedder.encode() call adds no prefix, so this is a
+lower-bound/ablation test of E5, not its manufacturer-optimal
+configuration - still informative as a genuine new embedding-family
+data point, noted explicitly rather than silently treated as
+apples-to-apples with BGE/GTE's own prefix-free usage (those two don't
+require prefixes for competitive performance, per their own model cards).
