@@ -467,8 +467,49 @@ pretrained contextual embedding, so freezing the branch at its random
 init would test a random projection of GloVe, not GloVe's own
 document-embedding quality; letting it train is the fair comparison.
 `alpha` stays at 0.0 (Round 24 showed BoW fusion is actively harmful).
-A genuinely new, previously-impossible data point either way: strong
-performance would say static+trained-projection can match a contextual
-encoder for this task; weak performance would confirm contextual
-embeddings are doing real work here, not just convenience.
+
+**First attempt (job 1638) crashed 10/10** with `'NoneType' object has
+no attribute 'encode'` - `top_words_by_freq_exact` unconditionally
+called `self.embedder.encode(...)`, but `self.embedder` is `None`
+whenever a precomputed array was used at fit time (confirming the core
+training mechanism itself worked - `[VAE-BM] ... epochs_run=20/20
+final_loss=1084.6454` printed fine; only the topic-word step broke).
+**Fixed** in `models/vaebm.py`: cache the fit-time embedding matrix
+(`self._fit_texts`/`self._E_fit`) and reuse it whenever `self.embedder
+is None` and `texts` matches the cached fit-time documents exactly
+(always true in practice - this method is only ever called with the
+training documents). Raises a clear `RuntimeError` instead of a cryptic
+`AttributeError` if texts genuinely differ. Verified locally (precomputed-array
+fit_predict + top_words_by_freq_exact succeed; a genuine text mismatch
+correctly raises the new clear error) before re-running.
+
+### Round 25 (re-run, job 1639) results: static GloVe loses decisively to every contextual encoder
+
+| Dataset | Cv (GloVe-avg) | vs. standing best | Purity | vs. standing best | NMI | vs. standing best |
+|---|---:|---:|---:|---:|---:|---:|
+| hicot_20ng | 0.388 | -0.011 | 0.416 | **-0.260 (collapse)** | 0.373 | **-0.209 (collapse)** |
+| hicot_search_snippets | 0.422 | -0.028 | 0.712 | -0.144 | 0.381 | -0.122 |
+| hicot_google_news | 0.401 | ~flat (+0.003) | 0.518 | -0.096 | 0.679 | -0.141 |
+| hicot_agnews | 0.423 | ~flat (-0.003 to -0.007) | 0.820 | -0.039 to -0.052 | 0.341 | -0.030 to -0.039 |
+| hicot_imdb | 0.354 | -0.008 | 0.724 | -0.116 | 0.064 | **-0.074 (now BELOW the 0.082 target for the first time)** |
+
+**Decisive, uniform negative result.** Static per-document GloVe
+averages - even given a trainable projection and 20 epochs to learn one
+- lose to every contextual encoder tried this pass (GTE, BGE, E5) on
+nearly every metric, most dramatically Purity/NMI (20NG's collapse is
+the worst clustering-quality result of the entire 25-round pass).
+**This directly answers the round's own question: contextual sentence
+embeddings ARE doing real, substantive work for clustering here, not
+just convenience - a bag-of-static-word-vectors document representation
+is a meaningfully worse starting point for KMeans, regardless of how
+much the projection on top of it is allowed to train.** Closes the
+GloVe/Word2Vec/FastText axis from the user's directive as
+tested-and-rejected for clustering specifically - note this does NOT
+contradict search_snippets' own GloVe-hybrid TOPIC-WORD win (Rounds
+18-19), which uses the same GloVe vectors for a completely different
+purpose (post-hoc word ranking, never touching clustering) - the
+directive's own distinction ("think about where each representation
+makes sense") is empirically confirmed: GloVe helps for topic-word
+ranking on one dataset, but actively hurts as a clustering
+representation everywhere.
 
