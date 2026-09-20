@@ -633,6 +633,69 @@ dominant factor - a vocab difference would be expected to show up as
 embedder-dependent noise, not as a consistent ~0.36-0.38 NMI / ~0.30-0.47
 Cv band regardless of which embedder did the clustering.
 
+## Round 14 - "topic-word generation" pass begins (new user directive, 2026-09-20)
+
+New directive: keep the proven clustering backbone (frozen embedding
+branch, alpha=0, gte-large), focus specifically on improving topic-word
+GENERATION since C_V (not Purity/NMI) is the real remaining blocker
+under real Palmetto C_V. Track BOTH cv_local and Palmetto C_V for every
+experiment going forward. Also test representations beyond
+GTE/BGE/E5 (Word2Vec/GloVe/FastText, combinations).
+
+**Found unused, already-available project assets**:
+`datasets/definitions/hicot_datasets.py::load_hicot_vocab()`/
+`load_hicot_word_embeddings()` - HiCOT's own official vocab.txt
+(5000/4618/3473 words matching ECRTM's Table 9) and 200-dim GloVe
+(matching ECRTM's Appendix B), already downloaded, for exactly these 5
+datasets - explicitly documented as "NOT wired into experiment/
+runner.py automatically." Wired in this pass via two new opt-in env
+vars: `VAEBM_USE_HICOT_VOCAB` (fixes vocabulary) and
+`VAEBM_USE_HICOT_STATIC_EMB` (+ `VAEBM_TOP_WORDS_MODE=static`) - a new
+topic-word extraction mode: per cluster, filter to words that actually
+appear there, then rank by cosine similarity to the cluster's own
+frequency-weighted centroid in GloVe space.
+
+### Round 14 results (20/20 successful) - T ruled out, U shows a clean negative result
+
+| Dataset | Config | cv_local | Palmetto Cv | Purity | NMI |
+|---|---|---:|---:|---:|---:|
+| hicot_20ng | T_hicot_vocab_freq | 0.614 | 0.396 | 0.664 | 0.580 |
+| hicot_20ng | U_hicot_static_glove | 0.404 | 0.363 | 0.664 | 0.580 |
+| hicot_search_snippets | T_hicot_vocab_freq | 0.462 | 0.429 | 0.856 | 0.503 |
+| hicot_search_snippets | U_hicot_static_glove | 0.429 | 0.426 | 0.856 | 0.503 |
+| hicot_google_news | T_hicot_vocab_freq | 0.493 | 0.399 | 0.614 | 0.820 |
+| hicot_google_news | U_hicot_static_glove | 0.474 | 0.378 | 0.614 | 0.820 |
+| hicot_agnews | T_hicot_vocab_freq | 0.632 | 0.421 | 0.859 | 0.371 |
+| hicot_agnews | U_hicot_static_glove | 0.307 | 0.404 | 0.859 | 0.371 |
+| hicot_imdb | T_hicot_vocab_freq | 0.335 | 0.333 | 0.803 | 0.115 |
+| hicot_imdb | U_hicot_static_glove | 0.299 | 0.277 | 0.803 | 0.115 |
+
+**T_hicot_vocab_freq (vocab fix alone): matches Round 7/12's freq-mode
+numbers EXACTLY on every dataset, both cv methods.** VAE-BM's own
+independently-fit TfidfVectorizer vocabulary must converge to (nearly)
+the same word set as HiCOT's official vocab.txt for these datasets -
+**vocabulary fidelity is definitively ruled out as a factor.**
+
+**U_hicot_static_glove (GloVe-centroid re-ranking): underperforms the
+frequency baseline on Palmetto C_V on ALL 5 datasets** - deltas: 20ng
+-0.033, search_snippets -0.003, google_news -0.021, agnews -0.017, imdb
+-0.056. **Clean negative result for this specific implementation.**
+
+**Important methodological finding**: local C_V and Palmetto C_V
+sometimes diverge sharply for this technique - agnews's local C_V
+collapsed from 0.632 to 0.307 (more than half) while its Palmetto C_V
+only dropped a modest 0.017 (0.421->0.404). This confirms the user's own
+instruction to track both was well-founded: local C_V would have looked
+like a much bigger red flag than the metric that actually matters
+suggests.
+
+**Suspected root cause**: re-ranking over EVERY word present in a
+cluster (often hundreds, for TF-IDF-weighted BoW over a 5000-word vocab)
+dilutes relevance - fixed via a new `static_candidate_pool` parameter
+(narrows to the top-N most frequent present words before re-ranking,
+default 40). Round 15 tests this refinement before concluding the whole
+static-embedding-centroid direction doesn't work.
+
 ## FINAL CORRECTED CONCLUSION (supersedes everything above - see Round 12)
 
 Rounds 1-11 all used `--cv-method local` (gensim, local training
