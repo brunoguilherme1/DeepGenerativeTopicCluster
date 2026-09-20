@@ -44,6 +44,9 @@ class VAEBMAdapter(ProtocolModelAdapter):
         kmeans_n_init="auto",  # see vaebm.py::VaeBmKMeansFit's own comment (2026-09-20)
         normalize_mu: bool = False,  # L2-normalize mu before KMeans (approximates spherical KMeans) - see vaebm.py::VaeBmKMeansFit's own comment (2026-09-20)
         normalize_emb: bool = False,  # L2-normalize the embedding-branch input before the encoder - see vaebm.py::VaeBmKMeansFit's own comment (2026-09-20)
+        min_df=None,  # vectorizer vocabulary filtering, data-driven alternative to exclude_words - see vaebm.py::VaeBmKMeansFit's own comment (2026-09-20 idea backlog)
+        max_df=None,  # see vaebm.py::VaeBmKMeansFit's own comment (2026-09-20 idea backlog)
+        lambda_relevance: Optional[float] = None,  # LDAvis-style relevance topic-word mode - see vaebm.py::top_words_by_freq_exact's own docstring (2026-09-20 idea backlog #19)
     ) -> None:
         self.n_clusters = n_clusters
         self.vectorizer_type = vectorizer_type
@@ -57,6 +60,7 @@ class VAEBMAdapter(ProtocolModelAdapter):
         self.static_candidate_pool = static_candidate_pool
         self.static_hybrid_weight = static_hybrid_weight
         self.exclude_words = exclude_words
+        self.lambda_relevance = lambda_relevance
 
         self._pipeline = VaeBmKMeansFit(
             voc_size=voc_size,
@@ -73,6 +77,8 @@ class VAEBMAdapter(ProtocolModelAdapter):
             kmeans_n_init=kmeans_n_init,
             normalize_mu=normalize_mu,
             normalize_emb=normalize_emb,
+            min_df=min_df,
+            max_df=max_df,
         )
         self._train_documents: Optional[list[str]] = None
         self._mu_train: Optional[np.ndarray] = None
@@ -97,7 +103,7 @@ class VAEBMAdapter(ProtocolModelAdapter):
             self._topics_cache = self._pipeline.top_words_by_freq_exact(
                 self._train_documents, top_m=max(top_n, 20), static_embeddings=self.static_embeddings,
                 static_candidate_pool=self.static_candidate_pool, static_hybrid_weight=self.static_hybrid_weight,
-                exclude_words=self.exclude_words,
+                exclude_words=self.exclude_words, lambda_relevance=self.lambda_relevance,
             )
         words = self._topics_cache[self.top_words_mode]
         return [w[:top_n] for w in words]
@@ -107,7 +113,7 @@ class VAEBMAdapter(ProtocolModelAdapter):
             self._topics_cache = self._pipeline.top_words_by_freq_exact(
                 self._train_documents, top_m=max(top_n, 20), static_embeddings=self.static_embeddings,
                 static_candidate_pool=self.static_candidate_pool, static_hybrid_weight=self.static_hybrid_weight,
-                exclude_words=self.exclude_words,
+                exclude_words=self.exclude_words, lambda_relevance=self.lambda_relevance,
             )
         views = {
             "energy": [w[:top_n] for w in self._topics_cache["energy"]],
@@ -115,6 +121,8 @@ class VAEBMAdapter(ProtocolModelAdapter):
         }
         if "static" in self._topics_cache:
             views["static"] = [w[:top_n] for w in self._topics_cache["static"]]
+        if "relevance" in self._topics_cache:
+            views["relevance"] = [w[:top_n] for w in self._topics_cache["relevance"]]
         return views
 
     def get_document_topics(self, documents: list[str]) -> Optional[np.ndarray]:

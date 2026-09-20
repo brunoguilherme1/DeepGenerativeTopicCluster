@@ -183,6 +183,18 @@ _VAEBM_DEFAULTS = dict(
 # normalize_mu/normalize_emb fill the "no cosine/spherical KMeans" gap
 # that audit flagged as confirmed absent. All default to unchanged prior
 # behavior.
+def _parse_df_threshold(raw: str):
+    """min_df/max_df accept EITHER an absolute doc count (int) or a
+    proportion in (0, 1] (float) per sklearn's own vectorizer contract -
+    "5" -> 5 docs, "0.5" -> 50% of docs. Empty string -> None (no
+    filtering, unchanged prior behavior)."""
+    raw = raw.strip()
+    if not raw:
+        return None
+    value = float(raw)
+    return int(value) if value.is_integer() and "." not in raw else value
+
+
 _VAEBM_ONLY_DEFAULTS = dict(
     kmeans_seed=(int(os.environ["VAEBM_KMEANS_SEED"]) if os.environ.get("VAEBM_KMEANS_SEED", "").strip() else None),
     kmeans_n_init=(
@@ -190,6 +202,21 @@ _VAEBM_ONLY_DEFAULTS = dict(
     ),
     normalize_mu=os.environ.get("VAEBM_NORMALIZE_MU", "0").strip().lower() in ("1", "true", "yes"),
     normalize_emb=os.environ.get("VAEBM_NORMALIZE_EMB", "0").strip().lower() in ("1", "true", "yes"),
+    # environment-configurable (VAEBM_MIN_DF/VAEBM_MAX_DF, default unset ->
+    # None -> sklearn's own defaults, unchanged prior behavior) - data-
+    # driven vocabulary filtering, see models/vaebm.py::VaeBmKMeansFit's
+    # own comment (2026-09-20 idea backlog #2, docs/vaebm_idea_backlog.md).
+    min_df=_parse_df_threshold(os.environ.get("VAEBM_MIN_DF", "")),
+    max_df=_parse_df_threshold(os.environ.get("VAEBM_MAX_DF", "")),
+    # environment-configurable (VAEBM_LAMBDA_RELEVANCE, default unset ->
+    # None -> "relevance" mode not computed at all, unchanged prior
+    # behavior) - see models/vaebm.py::top_words_by_freq_exact's own
+    # docstring (2026-09-20 idea backlog #19). Must be paired with
+    # VAEBM_TOP_WORDS_MODE=relevance to actually be SELECTED as the
+    # reported topic-word view - setting only one has no visible effect
+    # (both env vars gate independent things: whether the mode is
+    # computed at all vs. which already-computed mode gets returned).
+    lambda_relevance=(float(os.environ["VAEBM_LAMBDA_RELEVANCE"]) if os.environ.get("VAEBM_LAMBDA_RELEVANCE", "").strip() else None),
 )
 
 # Experiment-level, never per-variant: every model in a sweep gets the

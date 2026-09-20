@@ -329,11 +329,23 @@ class VaeBmKMeansFit:
         # unchanged prior behavior.
         normalize_mu: bool = False,
         normalize_emb: bool = False,
+        # min_df/max_df filter the vectorizer's own vocabulary BEFORE any
+        # word ever becomes a topic-word candidate - a data-driven
+        # alternative to hand-curated exclude_words (2026-09-20 idea
+        # backlog #2, see docs/vaebm_idea_backlog.md). None/None preserves
+        # exact prior behavior (sklearn's own defaults: min_df=1,
+        # max_df=1.0 - no filtering). Only applied when `vocabulary` is
+        # NOT fixed (a caller-supplied vocabulary is used as-is, same as
+        # every other vectorizer_kwargs branch below).
+        min_df: Optional[Union[int, float]] = None,
+        max_df: Optional[Union[int, float]] = None,
     ):
         self.voc_size = voc_size
         self.units = units
         self.n_clusters = n_clusters
         self.random_state = random_state
+        self.min_df = min_df
+        self.max_df = max_df
         self.epochs = epochs
         self.batch_size = batch_size
         self.lr = lr
@@ -394,6 +406,10 @@ class VaeBmKMeansFit:
             vectorizer_kwargs = {"vocabulary": list(vocabulary), "tokenizer": str.split, "lowercase": False, "token_pattern": None}
         else:
             vectorizer_kwargs = {"max_features": self.voc_size}
+            if self.min_df is not None:
+                vectorizer_kwargs["min_df"] = self.min_df
+            if self.max_df is not None:
+                vectorizer_kwargs["max_df"] = self.max_df
         if vectorizer_type == "tfidf":
             self.vectorizer = TfidfVectorizer(norm=None, **vectorizer_kwargs)
             X = self.vectorizer.fit_transform(texts)
@@ -549,7 +565,8 @@ class VaeBmKMeansFit:
     def top_words_by_freq_exact(self, texts: Sequence[str], top_m: int = 20, static_embeddings=None,
                                  static_candidate_pool: Optional[int] = None,
                                  static_hybrid_weight: Optional[float] = None,
-                                 exclude_words: Optional[set] = None):
+                                 exclude_words: Optional[set] = None,
+                                 lambda_relevance: Optional[float] = None):
         """Returns {"energy": [...], "freq": [...], "static": [...] if
         static_embeddings given} - per-cluster top words by decoder energy
         (R/b logits, masked to observed terms), by raw frequency, and (when
@@ -579,7 +596,20 @@ class VaeBmKMeansFit:
         words co-occur with everything) without reflecting genuine topic
         quality - see docs/vaebm_mimic_gte_research_log.md. Never affects
         mu/KMeans clustering - purely a post-hoc topic-word display/ranking
-        choice, same as "energy" vs "freq" already were."""
+        choice, same as "energy" vs "freq" already were.
+
+        `lambda_relevance` (0-1, None=disabled - 2026-09-20 idea backlog
+        #19) adds a "relevance"-mode candidate list using the LDAvis
+        relevance score (Sievert & Shirley 2014): for each word present in
+        a cluster, `relevance = lambda * log(p(w|topic)) + (1 - lambda) *
+        log(p(w|topic) / p(w))`, where p(w|topic) is the word's relative
+        frequency within THIS cluster and p(w) its relative frequency over
+        the WHOLE corpus. lambda=1 reduces to plain within-cluster
+        frequency ranking (same information as "freq" mode); lower lambda
+        increasingly rewards words that are exclusive to this cluster
+        relative to the corpus as a whole (down-weighting words common
+        across many topics), a genuinely different ranking principle than
+        raw frequency or embedding similarity."""
         if self.model is None or self.vectorizer is None or self.kmeans is None:
             raise RuntimeError("model, vectorizer and kmeans must already be fit.")
 
@@ -637,7 +667,16 @@ class VaeBmKMeansFit:
         top_words_energy = []
         top_words_freq = []
         top_words_static = []
+        top_words_relevance = []
         empty_clusters = 0
+
+        counts_global = None
+        if lambda_relevance is not None:
+            counts_global = np.asarray(X_all.sum(axis=0)).ravel()
+            if excluded_mask is not None:
+                counts_global = counts_global.copy()
+                counts_global[excluded_mask] = 0.0
+            global_total = counts_global.sum()
 
         R = self.model.decoder.R.numpy()
         b = self.model.decoder.b.numpy()
@@ -664,6 +703,23 @@ class VaeBmKMeansFit:
                 continue
             top_idx_freq = np.argsort(counts_k)[::-1][:top_m]
             top_words_freq.append(vocab[top_idx_freq].tolist())
+
+            if counts_global is not None:
+                present_idx_rel = np.where(counts_k > 0)[0]
+                if present_idx_rel.size == 0:
+                    top_words_relevance.append([])
+                else:
+                    p_w_topic = counts_k[present_idx_rel] / counts_k.sum()
+                    p_w_corpus = counts_global[present_idx_rel] / global_total
+                    # p_w_corpus > 0 is guaranteed here: counts_global >=
+                    # counts_k elementwise (the cluster is a subset of the
+                    # corpus), so counts_k[w] > 0 implies counts_global[w] > 0.
+                    relevance = (
+                        lambda_relevance * np.log(p_w_topic)
+                        + (1.0 - lambda_relevance) * np.log(p_w_topic / p_w_corpus)
+                    )
+                    order = np.argsort(relevance)[::-1][:top_m]
+                    top_words_relevance.append(vocab[present_idx_rel][order].tolist())
 
             if static_dense is not None:
                 # Relevance filter (only words that actually appear in this
@@ -729,4 +785,6 @@ class VaeBmKMeansFit:
         result = {"energy": top_words_energy, "freq": top_words_freq}
         if static_dense is not None:
             result["static"] = top_words_static
+        if counts_global is not None:
+            result["relevance"] = top_words_relevance
         return result
