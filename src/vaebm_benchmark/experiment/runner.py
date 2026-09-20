@@ -485,6 +485,15 @@ def run_single(
                 if hasattr(model, "static_candidate_pool"):
                     raw_pool = os.environ.get("VAEBM_STATIC_CANDIDATE_POOL", "40").strip()
                     model.static_candidate_pool = int(raw_pool) if raw_pool else None
+                # Round 15 finding: the hard pool cutoff helped some
+                # datasets (search_snippets, agnews) and hurt others
+                # (20ng) non-monotonically - VAEBM_STATIC_HYBRID_WEIGHT
+                # (default unset/None - unchanged prior behavior) replaces
+                # pure similarity ranking with a soft frequency+similarity
+                # blend instead, see top_words_by_freq_exact's own comment.
+                if hasattr(model, "static_hybrid_weight"):
+                    raw_hybrid = os.environ.get("VAEBM_STATIC_HYBRID_WEIGHT", "").strip()
+                    model.static_hybrid_weight = float(raw_hybrid) if raw_hybrid else None
 
         # Environment-gated, opt-in, OFF by default (unchanged prior
         # behavior for every existing result): the topic experiment's own

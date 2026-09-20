@@ -498,7 +498,8 @@ class VaeBmKMeansFit:
         return self.kmeans.predict(Z).tolist(), mu
 
     def top_words_by_freq_exact(self, texts: Sequence[str], top_m: int = 20, static_embeddings=None,
-                                 static_candidate_pool: Optional[int] = None):
+                                 static_candidate_pool: Optional[int] = None,
+                                 static_hybrid_weight: Optional[float] = None):
         """Returns {"energy": [...], "freq": [...], "static": [...] if
         static_embeddings given} - per-cluster top words by decoder energy
         (R/b logits, masked to observed terms), by raw frequency, and (when
@@ -513,9 +514,13 @@ class VaeBmKMeansFit:
         necessary after Round 14 of the research pass below showed
         re-ranking over EVERY present word (often hundreds) diluted
         relevance and underperformed plain frequency ranking on Palmetto
-        C_V across all 5 hicot_* datasets) - a relevance-filtered,
-        coherence-ranked hybrid (2026-09-20 "topic-word generation"
-        research pass, see docs/vaebm_mimic_gte_research_log.md). Never
+        C_V across all 5 hicot_* datasets). If `static_hybrid_weight` is
+        given, replaces the hard "filter then rank by similarity alone"
+        step with a SOFT blend: both frequency and similarity are rank-
+        normalized to [0, 1] over the (optionally pool-filtered) candidate
+        set and combined as `freq_rank + static_hybrid_weight * sim_rank`
+        - Round 15 found the hard pool cutoff helped some datasets and hurt
+        others non-monotonically; this avoids that brittleness. Never
         affects mu/KMeans clustering - purely a post-hoc topic-word
         display/ranking choice, same as "energy" vs "freq" already were."""
         if self.model is None or self.vectorizer is None or self.kmeans is None:
@@ -599,7 +604,23 @@ class VaeBmKMeansFit:
                     else:
                         centroid_unit = centroid / centroid_norm
                         sims = static_unit[present_idx] @ centroid_unit
-                        order = np.argsort(sims)[::-1][:top_m]
+                        if static_hybrid_weight is None:
+                            order = np.argsort(sims)[::-1][:top_m]
+                        else:
+                            # Soft blend instead of a hard filter-then-
+                            # rerank: rank-normalize both frequency and
+                            # similarity to [0, 1] over the SAME candidate
+                            # set (already pool-filtered above, if
+                            # static_candidate_pool was given) and combine
+                            # linearly - avoids the brittleness of a hard
+                            # pool cutoff, which Round 15 found helped some
+                            # datasets and hurt others non-monotonically.
+                            n_present = present_idx.size
+                            denom = max(n_present - 1, 1)
+                            freq_rank = np.argsort(np.argsort(pool_counts)) / denom
+                            sim_rank = np.argsort(np.argsort(sims)) / denom
+                            combined = freq_rank + static_hybrid_weight * sim_rank
+                            order = np.argsort(combined)[::-1][:top_m]
                         top_words_static.append(vocab[present_idx][order].tolist())
 
             logits_k = h_k @ R.T + b
