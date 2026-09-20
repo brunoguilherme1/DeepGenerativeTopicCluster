@@ -497,7 +497,8 @@ class VaeBmKMeansFit:
         Z = mu.numpy()
         return self.kmeans.predict(Z).tolist(), mu
 
-    def top_words_by_freq_exact(self, texts: Sequence[str], top_m: int = 20, static_embeddings=None):
+    def top_words_by_freq_exact(self, texts: Sequence[str], top_m: int = 20, static_embeddings=None,
+                                 static_candidate_pool: Optional[int] = None):
         """Returns {"energy": [...], "freq": [...], "static": [...] if
         static_embeddings given} - per-cluster top words by decoder energy
         (R/b logits, masked to observed terms), by raw frequency, and (when
@@ -506,10 +507,16 @@ class VaeBmKMeansFit:
         via datasets/definitions/hicot_datasets.py::load_hicot_word_embeddings -
         is supplied) by cosine similarity to the cluster's own frequency-
         weighted centroid in that static embedding space, restricted to
-        words that actually appear in the cluster (counts_k > 0) - a
-        relevance-filtered, coherence-ranked hybrid (2026-09-20 "topic-word
-        generation" research pass, see docs/vaebm_mimic_gte_research_log.md).
-        Never affects mu/KMeans clustering - purely a post-hoc topic-word
+        words that actually appear in the cluster (counts_k > 0, or - if
+        `static_candidate_pool` is given - the top `static_candidate_pool`
+        most frequent present words only, a tighter relevance filter found
+        necessary after Round 14 of the research pass below showed
+        re-ranking over EVERY present word (often hundreds) diluted
+        relevance and underperformed plain frequency ranking on Palmetto
+        C_V across all 5 hicot_* datasets) - a relevance-filtered,
+        coherence-ranked hybrid (2026-09-20 "topic-word generation"
+        research pass, see docs/vaebm_mimic_gte_research_log.md). Never
+        affects mu/KMeans clustering - purely a post-hoc topic-word
         display/ranking choice, same as "energy" vs "freq" already were."""
         if self.model is None or self.vectorizer is None or self.kmeans is None:
             raise RuntimeError("model, vectorizer and kmeans must already be fit.")
@@ -571,14 +578,21 @@ class VaeBmKMeansFit:
 
             if static_dense is not None:
                 # Relevance filter (only words that actually appear in this
-                # cluster) + coherence ranking (cosine similarity to the
-                # cluster's own frequency-weighted centroid in static-
-                # embedding space) - see this method's own docstring.
+                # cluster, optionally narrowed to the top
+                # static_candidate_pool most frequent of those) + coherence
+                # ranking (cosine similarity to the cluster's own
+                # frequency-weighted centroid in static-embedding space,
+                # computed over that SAME pool) - see this method's own
+                # docstring.
                 present_idx = np.where(counts_k > 0)[0]
+                if static_candidate_pool is not None and present_idx.size > static_candidate_pool:
+                    pool_order = np.argsort(counts_k[present_idx])[::-1][:static_candidate_pool]
+                    present_idx = present_idx[pool_order]
                 if present_idx.size == 0:
                     top_words_static.append([])
                 else:
-                    centroid = (counts_k[:, None] * static_dense).sum(axis=0) / counts_k.sum()
+                    pool_counts = counts_k[present_idx]
+                    centroid = (pool_counts[:, None] * static_dense[present_idx]).sum(axis=0) / pool_counts.sum()
                     centroid_norm = np.linalg.norm(centroid)
                     if centroid_norm == 0.0:
                         top_words_static.append(vocab[present_idx][:top_m].tolist())

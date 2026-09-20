@@ -37,6 +37,7 @@ class VAEBMAdapter(ProtocolModelAdapter):
         kl_weight: float = 1.0,  # see vaebm.py::VAEBM's own comment - "mimic GTE" research knob
         freeze_embedding_branch: bool = False,  # see vaebm.py::VAEBM's own comment
         static_embeddings=None,  # [voc_size, d] array row-aligned to `vocabulary`'s own word order - see vaebm.py::top_words_by_freq_exact's own docstring (2026-09-20 "topic-word generation" research pass)
+        static_candidate_pool: Optional[int] = None,  # narrows "static" mode's re-ranking pool to the top-N most frequent present words - see vaebm.py::top_words_by_freq_exact's own docstring
     ) -> None:
         self.n_clusters = n_clusters
         self.vectorizer_type = vectorizer_type
@@ -47,6 +48,7 @@ class VAEBMAdapter(ProtocolModelAdapter):
         self.top_words_mode = top_words_mode
         self.vocabulary = vocabulary
         self.static_embeddings = static_embeddings
+        self.static_candidate_pool = static_candidate_pool
 
         self._pipeline = VaeBmKMeansFit(
             voc_size=voc_size,
@@ -81,7 +83,8 @@ class VAEBMAdapter(ProtocolModelAdapter):
     def get_topics(self, top_n: int = 10) -> list[list[str]]:
         if self._topics_cache is None:
             self._topics_cache = self._pipeline.top_words_by_freq_exact(
-                self._train_documents, top_m=max(top_n, 20), static_embeddings=self.static_embeddings
+                self._train_documents, top_m=max(top_n, 20), static_embeddings=self.static_embeddings,
+                static_candidate_pool=self.static_candidate_pool,
             )
         words = self._topics_cache[self.top_words_mode]
         return [w[:top_n] for w in words]
@@ -89,7 +92,8 @@ class VAEBMAdapter(ProtocolModelAdapter):
     def get_topics_both_views(self, top_n: int = 10) -> dict[str, list[list[str]]]:
         if self._topics_cache is None:
             self._topics_cache = self._pipeline.top_words_by_freq_exact(
-                self._train_documents, top_m=max(top_n, 20), static_embeddings=self.static_embeddings
+                self._train_documents, top_m=max(top_n, 20), static_embeddings=self.static_embeddings,
+                static_candidate_pool=self.static_candidate_pool,
             )
         views = {
             "energy": [w[:top_n] for w in self._topics_cache["energy"]],

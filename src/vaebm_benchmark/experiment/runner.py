@@ -477,6 +477,14 @@ def run_single(
             model.vocabulary = load_hicot_vocab(dataset_id)
             if use_hicot_static_emb and hasattr(model, "static_embeddings"):
                 model.static_embeddings = load_hicot_word_embeddings(dataset_id)
+                # Round 14 finding: re-ranking over EVERY word present in a
+                # cluster (often hundreds) diluted relevance and
+                # underperformed plain frequency ranking on every dataset -
+                # narrow to the top-N most frequent present words first
+                # (default 40; VAEBM_STATIC_CANDIDATE_POOL to override).
+                if hasattr(model, "static_candidate_pool"):
+                    raw_pool = os.environ.get("VAEBM_STATIC_CANDIDATE_POOL", "40").strip()
+                    model.static_candidate_pool = int(raw_pool) if raw_pool else None
 
         # Environment-gated, opt-in, OFF by default (unchanged prior
         # behavior for every existing result): the topic experiment's own
