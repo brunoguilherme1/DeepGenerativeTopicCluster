@@ -463,6 +463,47 @@ structural ceiling of frozen-sentence-embedding-based clustering (any
 training strategy, any embedder tested so far) for these 3 specific
 datasets at K=50 under this protocol.
 
+## Round 11 results (THIRD EMBEDDER, e5-large-v2, 6/6 successful)
+
+| Config | Dataset | Cv | Purity | NMI |
+|---|---|---:|---:|---:|
+| P_sbert_kmeans_e5 (raw ceiling) | hicot_20ng | 0.655 | 0.645 | 0.564 |
+| P_sbert_kmeans_e5 (raw ceiling) | hicot_agnews | 0.597 | 0.858 | 0.369 |
+| P_sbert_kmeans_e5 (raw ceiling) | hicot_imdb | 0.325 | 0.765 | 0.089 |
+| Q_vaebm_freqwords_e5 | hicot_20ng | 0.614 | 0.636 | 0.560 |
+| Q_vaebm_freqwords_e5 | hicot_agnews | 0.663 | 0.865 | 0.376 |
+| Q_vaebm_freqwords_e5 | hicot_imdb | 0.336 | 0.766 | 0.091 |
+
+**Third independent confirmation.** Across gte-large, bge-large-en-v1.5,
+and e5-large-v2 - three embedders trained on different data/objectives -
+agnews NMI lands in 0.364-0.376 every time, imdb Cv lands in 0.30-0.39
+every time, 20ng NMI lands in 0.55-0.58 every time, whether raw
+embedding+KMeans or VAE-BM. This is about as strong as evidence gets
+without literally being a mathematical proof: these 3 gaps are a
+property of "cluster a general-purpose sentence embedding at K=50 for
+these specific class structures," independent of which embedder or
+which architecture (raw KMeans vs VAE-BM's own latent) does the
+clustering.
+
+## Round 12 - REAL PALMETTO C_V VALIDATION (checking a user-flagged discrepancy)
+
+The user pointed out a real inconsistency: their own stated premise
+("GTE-large+KMeans can exceed many of these numbers") conflicts with
+Round 9's finding that it doesn't, under local (gensim) C_V. The most
+likely explanation: HiCOT's own reported C_V is Palmetto/Wikipedia-
+based, not local-corpus - every round so far used
+`--cv-method local` (the default, even under `--protocol ecrtm_hicot`).
+Palmetto was found ALREADY installed on FutureLab (`tools/palmetto/` -
+`palmetto.jar` + the ~5.1GB `wiki_data/` Wikipedia coherence index, no
+download needed) - this round re-runs both the raw ceiling
+(sbert_kmeans+gte-large) and the winning VAE-BM recipe with
+`--cv-method palmetto` on all 5 hicot_* datasets. Purity/NMI are
+unaffected by cv_method (confirmed in Round 7) - only C_V can change
+here. Chained after Round 11 (job 1625, depends on 1624). Driver:
+`scripts/run_vaebm_gte_research_round12.py`.
+
+(results filled in as they land)
+
 ## Conclusion of the deep search (Rounds 1-7)
 
 **Final best config: G_freeze_freqwords** - `VAEBM_EMBEDDER=thenlper/gte-large
