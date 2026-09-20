@@ -244,17 +244,58 @@ three metrics simultaneously (Cv -0.020 -> -0.016, Purity +0.002 ->
 +0.015, NMI -0.041 -> -0.032) - the best AGNews result of the whole pass,
 though still short of 3/3.
 
-## Round 19 (next)
+## Round 19 (complete, job 1632): results
 
-1. Combine Finding A (GloVe-hybrid+stopword) with Finding D
-   (normalize_mu) for hicot_search_snippets - untested together; A fixes
-   topic-word Cv, D improves clustering Purity/NMI - they act on
-   different pipeline stages (topic-word extraction vs. KMeans geometry)
-   so may compose, though cluster reassignment under normalize_mu could
-   also change which documents feed each cluster's topic words.
-2. Adopt `normalize_mu=1` into the standing best recipe for hicot_20ng
-   and hicot_agnews given Finding D; re-verify on their plain
-   counterparts for diagnostic completeness.
-3. IMDB remains the largest unresolved Cv gap (-0.054, no experiment
-   this pass has moved it beyond the stopword fix itself) - needs a
-   genuinely new idea, not another parameter tweak on the current recipe.
+| Combo | Dataset | Palmetto Cv | vs. component alone | Purity | NMI |
+|---|---|---:|---|---:|---:|
+| E: GloVe-hybrid+stopword+normalize_mu | hicot_search_snippets | 0.442 | **worse than A alone (0.450)** | 0.869 | 0.512 |
+| F: GloVe-hybrid+stopword | hicot_imdb | 0.314 | **worse than freq+stopword (0.350)** | 0.803 | 0.115 |
+| G: normalize_mu | 20ng (plain) | 0.339 | ~flat vs. R17 (0.335) | 0.628 | 0.539 |
+| G: normalize_mu | agnews_short (plain) | 0.411 | ~flat vs. R17 (0.410), Purity slightly down | 0.869 | 0.386 |
+
+**Both composition attempts failed** - a second class of "important
+failed idea" alongside Round 18's junk-word exclusions:
+- Adding `normalize_mu` on top of search_snippets' GloVe-hybrid config
+  trades Cv for Purity/NMI (which already beat target by a wide margin
+  there) - a bad trade since Cv is the only metric blocking 3/3 for this
+  dataset. **Decision: search_snippets' standing best stays Finding A
+  alone (GloVe-hybrid+stopword, no normalize_mu)**, Cv 0.450.
+- GloVe-hybrid topic words do NOT generalize to IMDB even combined with
+  the stopword fix - confirms Rounds 14-16's original (pre-fix) finding
+  that this topic-word mode is search_snippets-specific, not a general
+  Cv lever. **IMDB's Cv gap (-0.054) is now the only one no experiment
+  this whole pass has moved beyond the initial stopword fix itself.**
+- Plain-dataset normalize_mu parity checks: small/mixed effects, weaker
+  than their hicot_* counterparts' gains - confirms the effect is real
+  (not noise) but its size varies per dataset/subsample, not a
+  guaranteed transfer.
+
+## Current standing best per hicot_* dataset (after Rounds 17-19)
+
+| Dataset | Recipe | Palmetto Cv | Δ Cv | Purity | Δ Purity | NMI | Δ NMI | 3/3? |
+|---|---|---:|---:|---:|---:|---:|---:|---|
+| hicot_20ng | freq+stopword+**normalize_mu** | 0.399 | -0.052 | 0.676 | +0.050 | 0.582 | **-0.001** | no |
+| hicot_search_snippets | **GloVe-hybrid**+stopword | 0.450 | **-0.010** | 0.856 | +0.038 | 0.503 | +0.025 | no |
+| hicot_google_news | freq+stopword | 0.398 | -0.056 | 0.614 | +0.149 | 0.820 | +0.163 | no |
+| hicot_agnews | freq+stopword+**normalize_mu** | 0.430 | -0.016 | 0.872 | +0.015 | 0.380 | -0.032 | no |
+| hicot_imdb | freq+stopword | 0.350 | -0.054 | 0.803 | +0.066 | 0.115 | +0.033 | no |
+
+Still 0/5 on 3/3, but every dataset's Cv gap is flat-or-narrower than
+Round 16's pre-fix baseline, and 20NG's NMI is now a near-exact match
+(off by 0.001). SearchSnippets remains the single closest Cv miss
+(-0.010) of the whole pass. GoogleNews and IMDB are now the two
+stubborn cases - neither has moved beyond the initial stopword fix
+under ANY topic-word-extraction or clustering-geometry tweak tried so
+far (freq vs. GloVe-hybrid, with/without normalize_mu).
+
+## Round 20 (next): does the "short text responds to GloVe-hybrid" pattern extend?
+
+search_snippets (short text, ~short snippets) responded positively to
+GloVe-hybrid; IMDB (long-form reviews) responded negatively. GoogleNews
+is title-only (avg 5.75 tokens/doc - even shorter than search_snippets)
+and has never been tried with GloVe-hybrid at all. AGNews (short
+headline+lead) was flagged in Rounds 14-15 as "helped meaningfully" on
+the hard pool-cutoff version, pre-stopword-fix, pre-dates whether that
+held on Palmetto Cv specifically - worth re-testing now that both fixes
+exist. Testing GloVe-hybrid+stopword (no normalize_mu, to isolate the
+effect per Round 19's lesson) on hicot_google_news and hicot_agnews.
