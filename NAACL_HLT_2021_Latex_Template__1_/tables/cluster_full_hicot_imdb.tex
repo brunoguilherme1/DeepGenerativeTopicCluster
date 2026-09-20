@@ -1,0 +1,23 @@
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Full clustering metrics, IMDB-H. Lower is better for DB only; higher is better for every other metric. \textbf{Bold}/\underline{underline} = best/second-best.}
+\label{tab:cluster-full-hicot_imdb}
+\adjustbox{max width=\columnwidth}{
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
+\midrule
+FASTopic & 0.595 & 0.027 & -- & -- & -- & -- & -- & 0.595 & -- & -- & -- \\
+HiCOT & 0.505 & 0.001 & -- & -- & -- & -- & -- & 0.505 & -- & -- & -- \\
+BERTopic & 0.632$^{\mathrm{LU}}$ & 0.057$^{\mathrm{LU}}$ & -- & -- & -- & -- & -- & 0.632$^{\mathrm{LU}}$ & -- & -- & -- \\
+SBERT-MiniLM & 0.555 & 0.010 & -- & -- & -- & -- & -- & 0.555 & -- & -- & -- \\
+SBERT-GTE & \textbf{0.832} & \textbf{0.355} & -- & -- & -- & -- & -- & \textbf{0.832} & -- & -- & -- \\
+\midrule
+VAE-BM & 0.790 & 0.258 & \underline{0.335} & \underline{0.258} & \underline{0.258} & \underline{0.258} & \underline{0.258} & 0.790 & \textbf{0.079} & \textbf{3.398} & \textbf{4183.82} \\
+\textbf{VAE-BM-PoE} & 0.757 & 0.201 & 0.265 & 0.201 & 0.201 & 0.201 & 0.201 & 0.757 & 0.050 & 4.302 & 2625.90 \\
+VAE-BM-DEC & \underline{0.793} & \underline{0.265} & \textbf{0.344} & \textbf{0.265} & \textbf{0.265} & \textbf{0.265} & \textbf{0.265} & \underline{0.793} & \underline{0.064} & \underline{3.783} & \underline{3409.53} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

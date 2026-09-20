@@ -1,0 +1,33 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{Topic modeling (1/5), $K=50$ and $K=100$ panels. Core baselines and at most two embedding-clustering baselines (SBERT-MiniLM, SBERT-GTE) above the horizontal rule; our proposed family below it, with \textbf{VAE-BM-PoE} bolded for identification. The full 10-encoder sentence-embedding ablation is in Appendix~\ref{sec:appendix-topic-full} (Tables~\ref{tab:topic-appendix-block1}--\ref{tab:topic-appendix-block5}). $C_V$/Pur./NMI/TD; \textbf{bold}=best, \underline{underline}=second-best, computed separately within each dataset+metric (and, for $C_V$ only, separately for the SBERT-family rows, which use Palmetto/Wikipedia $C_V$, versus the VAE-BM-family rows, which use local-corpus $C_V$ - the two are never compared or bolded against each other). -- marks a combination not yet available.}
+\label{tab:topic-block1}
+\adjustbox{max width=\textwidth}{
+\begin{tabular}{lcccccccccccc}
+\toprule
+ & \multicolumn{4}{c}{20NG} & \multicolumn{4}{c}{AGNews} & \multicolumn{4}{c}{IMDB} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(lr){10-13}
+ & $C_V$ & Pur. & NMI & TD & $C_V$ & Pur. & NMI & TD & $C_V$ & Pur. & NMI & TD \\
+\midrule
+\multicolumn{13}{l}{\textit{50 Topics}} \\
+BERTopic & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+SBERT-MiniLM & -- & \underline{0.566} & \underline{0.480} & 0.129 & \underline{0.467} & \underline{0.855} & \underline{0.359} & \underline{0.845} & \textbf{0.453} & \underline{0.654} & \underline{0.036} & \underline{0.036} \\
+SBERT-GTE & \textbf{0.469} & \textbf{0.646} & \textbf{0.548} & \underline{0.131} & \textbf{0.483} & \textbf{0.880} & \textbf{0.386} & \textbf{0.857} & \underline{0.453} & \textbf{0.923} & \textbf{0.204} & \textbf{0.039} \\
+\midrule
+VAE-BM & \textbf{0.455} & 0.503 & 0.444 & 0.108 & -- & -- & -- & -- & -- & -- & -- & -- \\
+\textbf{VAE-BM-PoE} & 0.455 & 0.503 & 0.444 & 0.108 & -- & -- & -- & -- & -- & -- & -- & -- \\
+VAE-BM-DEC & 0.430 & 0.197 & 0.206 & \textbf{0.333} & -- & -- & -- & -- & -- & -- & -- & -- \\
+\midrule
+\multicolumn{13}{l}{\textit{100 Topics}} \\
+BERTopic & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+SBERT-MiniLM & -- & \underline{0.588} & \underline{0.462} & \underline{0.149} & \underline{0.470} & \underline{0.858} & \underline{0.329} & \underline{0.775} & \textbf{0.458} & \underline{0.673} & \underline{0.036} & \textbf{0.031} \\
+SBERT-GTE & \textbf{0.476} & \textbf{0.659} & \textbf{0.514} & \textbf{0.161} & \textbf{0.470} & \textbf{0.877} & \textbf{0.349} & \textbf{0.783} & \underline{0.456} & \textbf{0.920} & \textbf{0.178} & \underline{0.023} \\
+\midrule
+VAE-BM & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\textbf{VAE-BM-PoE} & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+VAE-BM-DEC & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}

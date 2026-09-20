@@ -1,0 +1,21 @@
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Full clustering metrics, SearchSnip.. Lower is better for DB only; higher is better for every other metric. \textbf{Bold}/\underline{underline} = best/second-best.}
+\label{tab:cluster-full-search_snippets}
+\adjustbox{max width=\columnwidth}{
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
+\midrule
+FASTopic & 0.333 & 0.178 & -- & -- & -- & -- & -- & 0.366 & -- & -- & -- \\
+HiCOT & 0.674 & 0.464 & -- & -- & -- & -- & -- & 0.681 & -- & -- & -- \\
+BERTopic & \underline{0.767}$^{\mathrm{LU}}$ & \underline{0.634}$^{\mathrm{LU}}$ & -- & -- & -- & -- & -- & \underline{0.820}$^{\mathrm{LU}}$ & -- & -- & -- \\
+SBERT-MiniLM & 0.745 & 0.598 & -- & -- & -- & -- & -- & 0.802 & -- & -- & -- \\
+SBERT-GTE & \textbf{0.776} & \textbf{0.645} & -- & -- & -- & -- & -- & \textbf{0.836} & -- & -- & -- \\
+\midrule
+VAE-BM & 0.654 & 0.458 & -- & -- & -- & -- & -- & 0.725 & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

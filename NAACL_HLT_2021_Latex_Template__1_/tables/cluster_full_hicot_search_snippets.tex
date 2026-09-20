@@ -1,0 +1,23 @@
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Full clustering metrics, SearchSnip.-H. Lower is better for DB only; higher is better for every other metric. \textbf{Bold}/\underline{underline} = best/second-best.}
+\label{tab:cluster-full-hicot_search_snippets}
+\adjustbox{max width=\columnwidth}{
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
+\midrule
+FASTopic & 0.300 & 0.174 & -- & -- & -- & -- & -- & 0.351 & -- & -- & -- \\
+HiCOT & 0.454 & 0.378 & -- & -- & -- & -- & -- & 0.534 & -- & -- & -- \\
+BERTopic & 0.765$^{\mathrm{LU}}$ & \underline{0.628}$^{\mathrm{LU}}$ & -- & -- & -- & -- & -- & 0.797$^{\mathrm{LU}}$ & -- & -- & -- \\
+SBERT-MiniLM & 0.742 & 0.595 & -- & -- & -- & -- & -- & 0.799 & -- & -- & -- \\
+SBERT-GTE & \underline{0.779} & \textbf{0.644} & -- & -- & -- & -- & -- & \textbf{0.838} & -- & -- & -- \\
+\midrule
+VAE-BM & 0.658 & 0.419 & \underline{0.401} & \underline{0.419} & \underline{0.426} & \underline{0.412} & \underline{0.419} & 0.677 & \underline{0.034} & \underline{4.076} & \underline{227.73} \\
+\textbf{VAE-BM-PoE} & \textbf{0.812} & 0.614 & \textbf{0.612} & \textbf{0.614} & \textbf{0.621} & \textbf{0.608} & \textbf{0.614} & \underline{0.812} & \textbf{0.078} & \textbf{2.716} & \textbf{483.58} \\
+VAE-BM-DEC & 0.537 & 0.323 & 0.287 & 0.322 & 0.327 & 0.318 & 0.323 & 0.590 & 0.025 & 4.831 & 191.44 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

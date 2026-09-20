@@ -1,0 +1,25 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{Classification (Accuracy/F1, --split random), datasets 1 of 6. Core baselines and at most two embedding-clustering baselines (SBERT-MiniLM, SBERT-GTE) above a horizontal rule; our proposed family below it, with \textbf{VAE-BM-PoE} bolded for identification. Single run per cell (no repeated seeds available - std/CI not reported to avoid fabricating uncertainty). -- = not yet available (the 26-dataset VAE-BM-PoE/VAE-BM-DEC sweep was still queued at submission time; only bbc\_news has a single validation datapoint for those two models).}
+\label{tab:classif-block1}
+\adjustbox{max width=\textwidth}{
+\begin{tabular}{lcccccccc}
+\toprule
+ & \multicolumn{2}{c}{BBCNews} & \multicolumn{2}{c}{20NG} & \multicolumn{2}{c}{IMDB} & \multicolumn{2}{c}{AGNews} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}
+ & Acc. & F1 & Acc. & F1 & Acc. & F1 & Acc. & F1 \\
+\midrule
+FASTopic & 0.863 & 0.854 & 0.204 & 0.106 & 0.604 & 0.603 & 0.644 & 0.644 \\
+HiCOT & 0.930 & 0.928 & 0.098 & 0.056 & 0.509 & 0.409 & 0.816 & 0.816 \\
+BERTopic & 0.948 & 0.948 & \underline{0.725} & \underline{0.714} & \underline{0.816} & \underline{0.816} & \underline{0.887} & \underline{0.888} \\
+SBERT-MiniLM & 0.948 & 0.948 & 0.725 & 0.714 & 0.816 & 0.816 & 0.887 & 0.888 \\
+SBERT-GTE & \underline{0.960} & \underline{0.959} & \textbf{0.763} & \textbf{0.748} & \textbf{0.944} & \textbf{0.944} & \textbf{0.906} & \textbf{0.906} \\
+\midrule
+VAE-BM & 0.953 & 0.952 & -- & -- & -- & -- & -- & -- \\
+\textbf{VAE-BM-PoE} & 0.937 & 0.938 & -- & -- & -- & -- & -- & -- \\
+VAE-BM-DEC & \textbf{0.962} & \textbf{0.960} & -- & -- & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}

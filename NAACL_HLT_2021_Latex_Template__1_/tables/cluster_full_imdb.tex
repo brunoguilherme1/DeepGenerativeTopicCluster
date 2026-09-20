@@ -1,0 +1,21 @@
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Full clustering metrics, IMDB. Lower is better for DB only; higher is better for every other metric. \textbf{Bold}/\underline{underline} = best/second-best.}
+\label{tab:cluster-full-imdb}
+\adjustbox{max width=\columnwidth}{
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
+\midrule
+FASTopic & 0.591 & 0.024 & -- & -- & -- & -- & -- & 0.591 & -- & -- & -- \\
+HiCOT & 0.504 & 0.001 & -- & -- & -- & -- & -- & 0.504 & -- & -- & -- \\
+BERTopic & 0.583$^{\mathrm{LU}}$ & 0.020$^{\mathrm{LU}}$ & -- & -- & -- & -- & -- & 0.583$^{\mathrm{LU}}$ & -- & -- & -- \\
+SBERT-MiniLM & 0.565 & 0.013 & -- & -- & -- & -- & -- & 0.565 & -- & -- & -- \\
+SBERT-GTE & \textbf{0.929} & \textbf{0.635} & -- & -- & -- & -- & -- & \textbf{0.929} & -- & -- & -- \\
+\midrule
+VAE-BM & \underline{0.632} & \underline{0.051} & -- & -- & -- & -- & -- & \underline{0.632} & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

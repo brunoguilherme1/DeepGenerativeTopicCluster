@@ -1,0 +1,21 @@
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Full clustering metrics, 20NG. Lower is better for DB only; higher is better for every other metric. \textbf{Bold}/\underline{underline} = best/second-best.}
+\label{tab:cluster-full-20ng}
+\adjustbox{max width=\columnwidth}{
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
+\midrule
+FASTopic & 0.214 & 0.224 & -- & -- & -- & -- & -- & 0.235 & -- & -- & -- \\
+HiCOT & 0.187 & 0.200 & -- & -- & -- & -- & -- & 0.194 & -- & -- & -- \\
+BERTopic & \textbf{0.565}$^{\mathrm{LU}}$ & \underline{0.552}$^{\mathrm{LU}}$ & -- & -- & -- & -- & -- & \underline{0.566}$^{\mathrm{LU}}$ & -- & -- & -- \\
+SBERT-MiniLM & 0.514 & 0.513 & -- & -- & -- & -- & -- & 0.532 & -- & -- & -- \\
+SBERT-GTE & \underline{0.563} & \textbf{0.577} & -- & -- & -- & -- & -- & \textbf{0.581} & -- & -- & -- \\
+\midrule
+VAE-BM & 0.456 & 0.437 & -- & -- & -- & -- & -- & 0.471 & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

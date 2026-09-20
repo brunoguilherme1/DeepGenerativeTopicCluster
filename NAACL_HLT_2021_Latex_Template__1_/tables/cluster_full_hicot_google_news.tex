@@ -1,0 +1,23 @@
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Full clustering metrics, GNews-H. Lower is better for DB only; higher is better for every other metric. \textbf{Bold}/\underline{underline} = best/second-best.}
+\label{tab:cluster-full-hicot_google_news}
+\adjustbox{max width=\columnwidth}{
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
+\midrule
+FASTopic & 0.243 & 0.495 & -- & -- & -- & -- & -- & 0.307 & -- & -- & -- \\
+HiCOT & 0.041 & 0.009 & -- & -- & -- & -- & -- & 0.041 & -- & -- & -- \\
+BERTopic & \textbf{0.784}$^{\mathrm{LU}}$ & \textbf{0.916}$^{\mathrm{LU}}$ & -- & -- & -- & -- & -- & \textbf{0.917}$^{\mathrm{LU}}$ & -- & -- & -- \\
+SBERT-MiniLM & 0.661 & 0.866 & -- & -- & -- & -- & -- & 0.848 & -- & -- & -- \\
+SBERT-GTE & 0.706 & \underline{0.884} & -- & -- & -- & -- & -- & \underline{0.870} & -- & -- & -- \\
+\midrule
+VAE-BM & 0.674 & 0.866 & \underline{0.638} & \textbf{0.840} & \textbf{0.892} & \textbf{0.841} & \textbf{0.866} & 0.855 & \underline{0.149} & \underline{2.172} & 93.43 \\
+\textbf{VAE-BM-PoE} & \underline{0.708} & 0.861 & \textbf{0.649} & \underline{0.834} & \underline{0.882} & \underline{0.840} & \underline{0.861} & 0.834 & \textbf{0.246} & \textbf{1.644} & \textbf{209.58} \\
+VAE-BM-DEC & 0.509 & 0.717 & 0.487 & 0.669 & 0.720 & 0.714 & 0.717 & 0.604 & 0.061 & 2.782 & \underline{96.39} \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

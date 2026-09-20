@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Full clustering metrics, DBLP. Lower is better for DB only; higher is better for every other metric. \textbf{Bold}/\underline{underline} = best/second-best.}
+\label{tab:cluster-full-dblp}
+\adjustbox{max width=\columnwidth}{
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
+\midrule
+FASTopic & 0.411 & 0.079 & -- & -- & -- & -- & -- & 0.476 & -- & -- & -- \\
+HiCOT & 0.290 & 0.006 & -- & -- & -- & -- & -- & 0.394 & -- & -- & -- \\
+BERTopic & 0.559$^{\mathrm{LU}}$ & 0.290$^{\mathrm{LU}}$ & -- & -- & -- & -- & -- & 0.682$^{\mathrm{LU}}$ & -- & -- & -- \\
+SBERT-MiniLM & \underline{0.580} & \underline{0.300} & -- & -- & -- & -- & -- & \underline{0.704} & -- & -- & -- \\
+SBERT-GTE & \textbf{0.607} & \textbf{0.319} & -- & -- & -- & -- & -- & \textbf{0.718} & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

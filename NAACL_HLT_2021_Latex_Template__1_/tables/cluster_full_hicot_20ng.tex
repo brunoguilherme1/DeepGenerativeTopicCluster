@@ -1,0 +1,23 @@
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Full clustering metrics, 20NG-H. Lower is better for DB only; higher is better for every other metric. \textbf{Bold}/\underline{underline} = best/second-best.}
+\label{tab:cluster-full-hicot_20ng}
+\adjustbox{max width=\columnwidth}{
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
+\midrule
+FASTopic & 0.219 & 0.253 & -- & -- & -- & -- & -- & 0.237 & -- & -- & -- \\
+HiCOT & 0.403 & 0.438 & -- & -- & -- & -- & -- & 0.417 & -- & -- & -- \\
+BERTopic & 0.583$^{\mathrm{LU}}$ & \textbf{0.628}$^{\mathrm{LU}}$ & -- & -- & -- & -- & -- & 0.602$^{\mathrm{LU}}$ & -- & -- & -- \\
+SBERT-MiniLM & 0.506 & 0.543 & -- & -- & -- & -- & -- & 0.534 & -- & -- & -- \\
+SBERT-GTE & \underline{0.608} & \underline{0.621} & -- & -- & -- & -- & -- & \underline{0.624} & -- & -- & -- \\
+\midrule
+VAE-BM & 0.549 & 0.571 & \underline{0.410} & \underline{0.570} & \underline{0.566} & \underline{0.577} & \underline{0.571} & 0.578 & \textbf{0.074} & \textbf{2.695} & \textbf{471.36} \\
+\textbf{VAE-BM-PoE} & \textbf{0.624} & 0.601 & \textbf{0.431} & \textbf{0.599} & \textbf{0.594} & \textbf{0.607} & \textbf{0.601} & \textbf{0.637} & \underline{0.059} & \underline{2.890} & \underline{403.60} \\
+VAE-BM-DEC & 0.553 & 0.545 & 0.364 & 0.543 & 0.529 & 0.562 & 0.545 & 0.573 & 0.046 & 3.413 & 331.29 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

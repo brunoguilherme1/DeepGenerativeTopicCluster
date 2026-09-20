@@ -1,0 +1,49 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{Sentence-embedding ablation for topic modeling (4/5), $K=50$ and $K=100$ panels: all 10 SBERT encoder variants, plus BERTopic and our proposed family for context (\textbf{VAE-BM-PoE} bolded). This is the full ablation summarized by the two-baseline main-text Table~\ref{tab:topic-block4}. $C_V$/Pur./NMI/TD; \textbf{bold}=best, \underline{underline}=second-best, computed separately within each dataset+metric (and, for $C_V$ only, separately for the SBERT-family rows, which use Palmetto/Wikipedia $C_V$, versus the VAE-BM-family rows, which use local-corpus $C_V$ - the two are never compared or bolded against each other). -- marks a combination not yet available.}
+\label{tab:topic-appendix-block4}
+\adjustbox{max width=\textwidth}{
+\begin{tabular}{lcccccccccccc}
+\toprule
+ & \multicolumn{4}{c}{Biomed.} & \multicolumn{4}{c}{Tweet} & \multicolumn{4}{c}{GNews-TS} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(lr){10-13}
+ & $C_V$ & Pur. & NMI & TD & $C_V$ & Pur. & NMI & TD & $C_V$ & Pur. & NMI & TD \\
+\midrule
+\multicolumn{13}{l}{\textit{50 Topics}} \\
+BERTopic & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+SBERT-BGE & 0.541 & 0.571 & 0.446 & 0.459 & 0.401 & 0.826 & 0.864 & 0.876 & 0.453 & \underline{0.663} & \underline{0.869} & 0.907 \\
+SBERT-DistilBERT & 0.537 & 0.436 & 0.318 & 0.347 & \textbf{0.408} & 0.729 & 0.762 & 0.844 & 0.455 & 0.604 & 0.789 & 0.888 \\
+SBERT-DistilRoBERTa & 0.548 & 0.539 & 0.414 & \textbf{0.461} & 0.402 & 0.818 & 0.861 & 0.871 & 0.458 & 0.633 & 0.847 & 0.899 \\
+SBERT-E5 & 0.549 & \textbf{0.588} & \textbf{0.467} & 0.452 & 0.399 & 0.828 & 0.861 & 0.879 & 0.459 & 0.661 & 0.868 & 0.912 \\
+SBERT-GTE & 0.546 & \underline{0.572} & \underline{0.449} & \underline{0.460} & 0.405 & \textbf{0.842} & \underline{0.878} & \underline{0.883} & \underline{0.464} & 0.662 & \textbf{0.875} & \textbf{0.916} \\
+SBERT-MiniLM & 0.552 & 0.551 & 0.425 & 0.452 & 0.402 & 0.820 & 0.855 & 0.875 & 0.458 & 0.653 & 0.857 & 0.909 \\
+SBERT-MPNet & \underline{0.553} & 0.524 & 0.406 & 0.452 & 0.398 & \underline{0.839} & \textbf{0.887} & \textbf{0.897} & \textbf{0.465} & 0.630 & 0.860 & \underline{0.913} \\
+SBERT-MS-DistilBERT & 0.528 & 0.472 & 0.354 & 0.387 & \underline{0.406} & 0.779 & 0.798 & 0.839 & 0.453 & 0.624 & 0.816 & 0.896 \\
+SBERT-Paraphrase-MPNet & \textbf{0.557} & 0.499 & 0.383 & 0.429 & 0.397 & 0.811 & 0.848 & 0.867 & 0.455 & 0.630 & 0.841 & 0.903 \\
+SBERT-T5 & 0.533 & 0.520 & 0.398 & 0.385 & 0.405 & 0.810 & 0.849 & 0.863 & 0.458 & \textbf{0.667} & 0.866 & 0.911 \\
+\midrule
+VAE-BM & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\textbf{VAE-BM-PoE} & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+VAE-BM-DEC & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\midrule
+\multicolumn{13}{l}{\textit{100 Topics}} \\
+BERTopic & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+SBERT-BGE & \underline{0.550} & \underline{0.580} & \underline{0.425} & 0.455 & \textbf{0.400} & 0.920 & 0.867 & 0.778 & \textbf{0.453} & 0.845 & 0.919 & 0.813 \\
+SBERT-DistilBERT & 0.542 & 0.457 & 0.315 & 0.379 & -- & 0.841 & 0.796 & 0.763 & 0.449 & 0.787 & 0.864 & 0.802 \\
+SBERT-DistilRoBERTa & 0.547 & 0.540 & 0.394 & \underline{0.456} & -- & 0.915 & 0.859 & 0.760 & 0.451 & 0.827 & 0.907 & 0.805 \\
+SBERT-E5 & 0.546 & \textbf{0.605} & \textbf{0.443} & 0.435 & -- & 0.906 & 0.851 & 0.765 & 0.447 & 0.843 & 0.919 & \underline{0.820} \\
+SBERT-GTE & 0.549 & 0.579 & 0.425 & 0.455 & -- & \textbf{0.927} & \textbf{0.879} & 0.773 & 0.447 & \textbf{0.855} & \textbf{0.925} & 0.818 \\
+SBERT-MiniLM & 0.544 & 0.545 & 0.398 & 0.453 & -- & 0.922 & \underline{0.869} & 0.777 & \underline{0.451} & 0.839 & 0.913 & 0.813 \\
+SBERT-MPNet & \textbf{0.554} & 0.530 & 0.394 & \textbf{0.466} & -- & \underline{0.925} & 0.867 & \textbf{0.786} & 0.449 & \underline{0.849} & \underline{0.921} & \textbf{0.825} \\
+SBERT-MS-DistilBERT & 0.525 & 0.496 & 0.349 & 0.388 & -- & 0.895 & 0.837 & 0.767 & 0.445 & 0.811 & 0.879 & 0.789 \\
+SBERT-Paraphrase-MPNet & 0.545 & 0.517 & 0.371 & 0.437 & -- & 0.890 & 0.844 & 0.758 & 0.445 & 0.834 & 0.903 & 0.813 \\
+SBERT-T5 & 0.531 & 0.534 & 0.381 & 0.390 & \underline{0.399} & 0.914 & 0.862 & \underline{0.779} & 0.446 & 0.833 & 0.909 & 0.815 \\
+\midrule
+VAE-BM & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\textbf{VAE-BM-PoE} & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+VAE-BM-DEC & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}

@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Full clustering metrics, AGNews-F. Lower is better for DB only; higher is better for every other metric. \textbf{Bold}/\underline{underline} = best/second-best.}
+\label{tab:cluster-full-agnews_full}
+\adjustbox{max width=\columnwidth}{
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
+\midrule
+FASTopic & 0.491 & 0.257 & -- & -- & -- & -- & -- & 0.512 & -- & -- & -- \\
+HiCOT & 0.808 & 0.541 & -- & -- & -- & -- & -- & 0.808 & -- & -- & -- \\
+BERTopic & 0.795$^{\mathrm{LU}}$ & 0.592$^{\mathrm{LU}}$ & -- & -- & -- & -- & -- & 0.795$^{\mathrm{LU}}$ & -- & -- & -- \\
+SBERT-MiniLM & \underline{0.838} & \underline{0.598} & -- & -- & -- & -- & -- & \underline{0.838} & -- & -- & -- \\
+SBERT-GTE & \textbf{0.881} & \textbf{0.675} & -- & -- & -- & -- & -- & \textbf{0.881} & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

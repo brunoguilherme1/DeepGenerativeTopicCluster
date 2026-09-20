@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Full clustering metrics, BBCNews. Lower is better for DB only; higher is better for every other metric. \textbf{Bold}/\underline{underline} = best/second-best.}
+\label{tab:cluster-full-bbc_news}
+\adjustbox{max width=\columnwidth}{
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
+\midrule
+FASTopic & 0.704 & 0.560 & -- & -- & -- & -- & -- & 0.731 & -- & -- & -- \\
+HiCOT & 0.924 & 0.786 & -- & -- & -- & -- & -- & 0.924 & -- & -- & -- \\
+BERTopic & 0.924$^{\mathrm{LU}}$ & 0.795$^{\mathrm{LU}}$ & -- & -- & -- & -- & -- & 0.924$^{\mathrm{LU}}$ & -- & -- & -- \\
+SBERT-MiniLM & \underline{0.943} & \underline{0.831} & -- & -- & -- & -- & -- & \underline{0.943} & -- & -- & -- \\
+SBERT-GTE & \textbf{0.961} & \textbf{0.876} & -- & -- & -- & -- & -- & \textbf{0.961} & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

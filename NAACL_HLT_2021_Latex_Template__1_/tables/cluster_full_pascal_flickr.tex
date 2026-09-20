@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Full clustering metrics, Pascal-Fl.. Lower is better for DB only; higher is better for every other metric. \textbf{Bold}/\underline{underline} = best/second-best.}
+\label{tab:cluster-full-pascal_flickr}
+\adjustbox{max width=\columnwidth}{
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
+\midrule
+FASTopic & 0.186 & 0.198 & -- & -- & -- & -- & -- & 0.196 & -- & -- & -- \\
+HiCOT & 0.207 & 0.178 & -- & -- & -- & -- & -- & 0.214 & -- & -- & -- \\
+BERTopic & \textbf{0.398}$^{\mathrm{LU}}$ & \textbf{0.423}$^{\mathrm{LU}}$ & -- & -- & -- & -- & -- & \textbf{0.409}$^{\mathrm{LU}}$ & -- & -- & -- \\
+SBERT-MiniLM & \underline{0.364} & 0.387 & -- & -- & -- & -- & -- & 0.386 & -- & -- & -- \\
+SBERT-GTE & 0.354 & \underline{0.407} & -- & -- & -- & -- & -- & \underline{0.403} & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

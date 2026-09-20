@@ -1,0 +1,21 @@
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Full clustering metrics, GNews-TS. Lower is better for DB only; higher is better for every other metric. \textbf{Bold}/\underline{underline} = best/second-best.}
+\label{tab:cluster-full-google_news_ts}
+\adjustbox{max width=\columnwidth}{
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
+\midrule
+FASTopic & 0.337 & 0.604 & -- & -- & -- & -- & -- & 0.396 & -- & -- & -- \\
+HiCOT & 0.120 & 0.297 & -- & -- & -- & -- & -- & 0.120 & -- & -- & -- \\
+BERTopic & \textbf{0.807}$^{\mathrm{LU}}$ & \textbf{0.942}$^{\mathrm{LU}}$ & -- & -- & -- & -- & -- & \textbf{0.948}$^{\mathrm{LU}}$ & -- & -- & -- \\
+SBERT-MiniLM & 0.708 & 0.911 & -- & -- & -- & -- & -- & 0.907 & -- & -- & -- \\
+SBERT-GTE & \underline{0.745} & \underline{0.926} & -- & -- & -- & -- & -- & \underline{0.921} & -- & -- & -- \\
+\midrule
+VAE-BM & 0.633 & 0.883 & -- & -- & -- & -- & -- & 0.865 & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

@@ -1,0 +1,25 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{Document clustering (ACC/NMI), datasets 4 of 7. Core baselines and at most two embedding-clustering baselines (SBERT-MiniLM, SBERT-GTE) above a horizontal rule; our proposed family below it, with \textbf{VAE-BM-PoE} bolded for identification. $^{\mathrm{LU}}$ marks a value from the labuai environment (only shown when no FutureLab value exists for that model/dataset - the two are never averaged). \textbf{Bold}/\underline{underline} = best/second-best per dataset+metric among the models shown. -- = not yet available (the 26-dataset VAE-BM-PoE/VAE-BM-DEC sweep was still running at submission time). Full 11-metric breakdowns are in Appendix~\ref{sec:appendix-cluster-full}.}
+\label{tab:cluster-block4}
+\adjustbox{max width=\textwidth}{
+\begin{tabular}{lcccccccc}
+\toprule
+ & \multicolumn{2}{c}{Banking77} & \multicolumn{2}{c}{BBCNews} & \multicolumn{2}{c}{Biomed.} & \multicolumn{2}{c}{DBLP} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}
+ & ACC & NMI & ACC & NMI & ACC & NMI & ACC & NMI \\
+\midrule
+FASTopic & 0.205 & 0.470 & 0.704 & 0.560 & 0.266 & 0.203 & 0.411 & 0.079 \\
+HiCOT & 0.035 & 0.060 & 0.924 & 0.786 & 0.309 & 0.264 & 0.290 & 0.006 \\
+BERTopic & 0.612$^{\mathrm{LU}}$ & \underline{0.802}$^{\mathrm{LU}}$ & 0.924$^{\mathrm{LU}}$ & 0.795$^{\mathrm{LU}}$ & 0.453$^{\mathrm{LU}}$ & 0.387$^{\mathrm{LU}}$ & 0.559$^{\mathrm{LU}}$ & 0.290$^{\mathrm{LU}}$ \\
+SBERT-MiniLM & \underline{0.631} & 0.778 & \underline{0.943} & \underline{0.831} & \underline{0.506} & \underline{0.442} & \underline{0.580} & \underline{0.300} \\
+SBERT-GTE & \textbf{0.667} & \textbf{0.813} & \textbf{0.961} & \textbf{0.876} & \textbf{0.508} & \textbf{0.460} & \textbf{0.607} & \textbf{0.319} \\
+\midrule
+VAE-BM & -- & -- & -- & -- & 0.474 & 0.377 & -- & -- \\
+\textbf{VAE-BM-PoE} & -- & -- & -- & -- & -- & -- & -- & -- \\
+VAE-BM-DEC & -- & -- & -- & -- & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}
