@@ -659,12 +659,27 @@ different latent dim, or a clustering-quality-focused architecture
 change) would be needed to move NMI further - noted in the idea backlog
 for a future round, not chased further right now.
 
-## Round 29 (next): lambda_relevance was never tuned - sweep it for the 3 remaining Cv-blocked datasets
+## Round 29 (complete, job 1643): strong, consistent, monotonic trend - LOWER lambda helps more
 
-lambda=0.5 (Round 26) was a reasonable middle guess, never optimized.
-Three datasets are now short ONLY on Cv (every other metric already
-beats target): hicot_search_snippets (-0.010), hicot_google_news
-(-0.025), hicot_imdb+BGE (-0.025). Sweeping lambda in {0.3, 0.7}
-(bracketing 0.5) on exactly these 3 - if any crosses its Cv target line,
-that's a 3rd (and 4th) full 3/3 dataset.
+| Dataset | Cv (λ=0.7) | Cv (λ=0.5) | Cv (λ=0.3) | Δ target at λ=0.3 |
+|---|---:|---:|---:|---:|
+| hicot_search_snippets | 0.4430 | 0.4498 | **0.4537** | -0.0063 (was -0.010) |
+| hicot_google_news | 0.4153 | 0.4290 | **0.4505** | **-0.0035 (was -0.025)** |
+| hicot_imdb (+BGE) | 0.3683 | 0.3807 | **0.3978** | **-0.0062 (was -0.023)** |
+
+**Clean, monotonic pattern across all 3 datasets: lower lambda ->
+higher Cv**, over the whole 0.3-0.7 range tested. Purity/NMI are
+unaffected by lambda (pure topic-word-ranking change) and already beat
+target on all 3 regardless. At lambda=0.3, EVERY ONE of these 3 gaps
+is now under 0.007 - the smallest Cv gaps of the entire pass by a wide
+margin. Given the trend hasn't shown any sign of reversing yet, testing
+even lower lambda (0.1, 0.2) is the highest-value experiment available:
+if any crosses its target line, that dataset achieves a FULL 3/3 -
+and since all 3 datasets show the same trend, multiple simultaneous
+wins are plausible from one more round.
+
+## Round 30 (next): push lambda lower - chasing 3 simultaneous full 3/3 wins
+
+Testing lambda in {0.1, 0.2} on the same 3 datasets (search_snippets,
+google_news, imdb+BGE) - continuing the monotonic trend just observed.
 
