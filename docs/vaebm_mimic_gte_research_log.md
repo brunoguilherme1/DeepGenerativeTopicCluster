@@ -585,6 +585,26 @@ under the ecrtm_hicot-adjacent local protocol used here) for these 3
 specific datasets, not something a further hyperparameter search within
 this family is likely to close.
 
+## Round 13 results (Palmetto Cv, non-hicot datasets, 10/10 successful)
+
+| Config | Dataset | Cv | Purity | NMI |
+|---|---|---:|---:|---:|
+| R_sbert_kmeans_gte (raw ceiling) | 20ng | 0.469 | 0.646 | 0.548 |
+| R_sbert_kmeans_gte (raw ceiling) | search_snippets | 0.464 | 0.863 | 0.507 |
+| R_sbert_kmeans_gte (raw ceiling) | google_news_ts | 0.464 | 0.662 | 0.875 |
+| R_sbert_kmeans_gte (raw ceiling) | agnews_short | 0.483 | 0.880 | 0.386 |
+| R_sbert_kmeans_gte (raw ceiling) | imdb | 0.453 | 0.923 | 0.204 |
+| S_vaebm_freqwords_gte | 20ng | 0.444 | 0.630 | 0.538 |
+| S_vaebm_freqwords_gte | search_snippets | 0.422 | 0.861 | 0.499 |
+| S_vaebm_freqwords_gte | google_news_ts | 0.402 | 0.664 | 0.877 |
+| S_vaebm_freqwords_gte | agnews_short | 0.409 | 0.875 | 0.387 |
+| S_vaebm_freqwords_gte | imdb | 0.469 | 0.917 | 0.203 |
+
+No official HiCOT target exists for these 5 (informational only, same
+caveat as Round 8). Full 10-dataset, correct-metric (Palmetto C_V,
+ecrtm_hicot protocol) coverage is now complete for both the raw ceiling
+and VAE-BM's best recipe.
+
 ## FINAL CORRECTED CONCLUSION (supersedes everything above - see Round 12)
 
 Rounds 1-11 all used `--cv-method local` (gensim, local training
