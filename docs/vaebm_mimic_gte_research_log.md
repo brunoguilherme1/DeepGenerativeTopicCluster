@@ -605,6 +605,34 @@ caveat as Round 8). Full 10-dataset, correct-metric (Palmetto C_V,
 ecrtm_hicot protocol) coverage is now complete for both the raw ceiling
 and VAE-BM's best recipe.
 
+## Checked and ruled out: vocabulary fidelity (not pursued further)
+
+One more possible explanation checked: does `run_experiment.py`'s topic
+experiment use HiCOT's own official vocab.txt, or a vocabulary derived
+independently (TfidfVectorizer, capped at voc_size=5000, from the raw
+dataset texts)? Confirmed: the latter. `datasets/simple_registry.py`'s
+own module docstring is explicit and pre-dates this research pass -
+"deliberately independent of the FASTopic/GloCOM protocol machinery...
+these runners are direct, symmetric model-vs-model comparisons on
+shared corpora, not per-paper faithful reproductions, so they do not
+need per-protocol vocabulary/checksum/split pinning." Only
+`protocols/glocom_protocol.py` and `protocols/fastopic_protocol.py`
+have their own `vocabulary_for()` (injecting the released baseline's
+exact vocab.txt) - no equivalent `ecrtm_hicot_protocol.py` exists, and
+`--protocol ecrtm_hicot`'s own docstring already says as much ("not a
+claim of exact reproduction... metric-level alignment only").
+
+**Not pursued further**: building a dedicated HiCOT vocabulary-fidelity
+protocol (fetching/verifying HiCOT's own released vocab.txt per dataset,
+mirroring glocom_protocol.py/fastopic_protocol.py) is a substantially
+larger undertaking than anything else in this pass, contradicts this
+codebase's own pre-existing, intentional design choice, and the same 3
+gaps reproducing near-identically across 3 independently-trained
+embedders (Round 9/11) already argues against vocabulary being the
+dominant factor - a vocab difference would be expected to show up as
+embedder-dependent noise, not as a consistent ~0.36-0.38 NMI / ~0.30-0.47
+Cv band regardless of which embedder did the clustering.
+
 ## FINAL CORRECTED CONCLUSION (supersedes everything above - see Round 12)
 
 Rounds 1-11 all used `--cv-method local` (gensim, local training
