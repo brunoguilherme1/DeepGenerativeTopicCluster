@@ -533,10 +533,52 @@ New capabilities implemented this pass:
   cross-cluster-ubiquitous word ranks like frequency mode at lambda=0.99
   but is correctly demoted at lambda=0.1.
 
-## Round 26 (next): testing the two new mechanisms
+## Round 26 (complete, job 1640): BREAKTHROUGH - relevance mode wins on all 5 datasets
 
-`relevance` mode (lambda=0.5) and `min_df=2, max_df=0.5` vocabulary
-filtering (kept on freq-mode ranking, to isolate the vocabulary effect
-from the ranking-method effect), both against the same Round 17
-baseline recipe, across all 5 hicot_* datasets.
+| Dataset | Cv (relevance, lambda=0.5) | Δ vs Round 17 baseline | Δ vs target | Purity | NMI |
+|---|---:|---:|---:|---:|---:|
+| hicot_20ng | 0.453 | +0.056 | **+0.002 (BEATS)** | 0.664 (+0.038, beats) | 0.580 (-0.003, near-miss) |
+| hicot_search_snippets | 0.450 | +0.019 | -0.010 | 0.856 (+0.038, beats) | 0.503 (+0.025, beats) |
+| hicot_google_news | 0.429 | +0.031 | -0.025 (was -0.056) | 0.614 (+0.149, beats) | 0.820 (+0.163, beats) |
+| hicot_agnews | 0.458 | +0.032 | **+0.012 (BEATS)** | 0.859 (+0.002, beats) | 0.371 (-0.041, miss) |
+| hicot_imdb | 0.379 | +0.029 | -0.025 (was -0.054, best IMDB Cv yet - beats BGE's 0.362) | 0.803 (+0.066, beats) | 0.115 (+0.033, beats) |
+
+**The single biggest finding of the entire pass.** Cv improved on ALL 5
+datasets simultaneously from one mechanism (idea backlog #19, LDAvis
+relevance scoring, lambda=0.5) - no downsides (Purity/NMI unchanged, as
+expected for a pure topic-word-ranking change). **20NG and AGNews now
+individually BEAT HiCOT's own Cv target for the first time this whole
+pass.** 20NG is one hair (NMI -0.003) from a full 3/3 win; AGNews is
+missing only NMI (-0.041, its worst metric throughout this whole pass).
+
+Notably, `cv_local` moved in the OPPOSITE direction from Palmetto for
+3 of 5 datasets (search_snippets, google_news, agnews all had cv_local
+DECREASE while Palmetto increased) - a live, concrete demonstration of
+exactly the local/Palmetto divergence risk flagged at the start of this
+research pass. Confirms once again: Palmetto is the only metric that
+matters for "beats HiCOT" claims.
+
+`min_df=2, max_df=0.5` vocabulary filtering was a null result - IDENTICAL
+Cv on 3/5 datasets (search_snippets, google_news, agnews - meaning these
+thresholds didn't remove any word that was actually competing for a
+top-word slot) and slightly worse on the other 2 (20ng -0.020, imdb
+-0.012). Not pursuing this exact parameterization further; a bigger
+min_df/smaller max_df might bite harder but is now deprioritized given
+relevance mode's much larger, broader win.
+
+## Round 27 (next): can relevance mode compound with the other proven winners to reach full 3/3?
+
+Highest-priority experiment of the whole pass: relevance mode's Cv gain
+and normalize_mu's Purity/NMI gain (Round 18) act on different pipeline
+stages (topic-word ranking vs. KMeans geometry) and might compose
+cleanly - unlike Round 19's failed GloVe-hybrid+normalize_mu stack, this
+isn't stacking two topic-word changes, just one word-ranking change with
+one clustering-geometry change. Testing:
+  - hicot_20ng: relevance(0.5) + normalize_mu - if NMI reaches >=0.583,
+    this is FULL 3/3, the first of the entire pass.
+  - hicot_agnews: relevance(0.5) + normalize_mu - won't reach 3/3 (NMI
+    gap is too large) but should be the best AGNews result yet.
+  - hicot_imdb: relevance(0.5) + BGE-large - if Cv reaches >=0.404 (BGE
+    already contributes Purity=0.840/NMI=0.138, both already beating
+    target), this is ALSO full 3/3.
 
