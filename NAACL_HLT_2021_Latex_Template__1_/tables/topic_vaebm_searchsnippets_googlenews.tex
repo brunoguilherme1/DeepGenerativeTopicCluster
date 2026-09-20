@@ -38,10 +38,10 @@ FASTopic & 0.350 & 0.801 & 0.466 & 0.463 & 0.366 & 0.237 & 0.459 & 0.100 \\
 NeuroMax\textdagger & 0.439 & 0.854 & 0.472 & 0.960 & 0.427 & 0.664 & 0.834 & 0.915 \\
 HiCOT & 0.449 & 0.857 & 0.480 & 0.940 & 0.470 & 0.763 & 0.864 & 0.802 \\
 \midrule
-\textbf{VAE-BM (ours)} & -- & -- & -- & -- & -- & -- & -- & -- \\
+\textbf{VAE-BM (ours)} & 0.448 & \textbf{0.864} & 0.471 & 0.972 & 0.446 & \textbf{0.801} & \textbf{0.878} & 0.973 \\
 \bottomrule
 \end{tabular}
 \vspace{2pt}
-\caption{100-topic results, same layout as Table~\ref{tab:vaebm-topic-ss-gn-k50}. Not yet run -- see \S\ref{sec:limitations}.}
+\caption{100-topic results, same layout and provenance as Table~\ref{tab:vaebm-topic-ss-gn-k50}, using the SAME $\lambda=0.05$ tuned for $K=50$ (not re-tuned for $K=100$ -- \S\ref{sec:limitations}). Unlike $K=50$, neither dataset holds a full 3-of-3 win at $K=100$ under this unchanged recipe: SearchSnippets misses $C_V$ by 0.001 and NMI by 0.009; GoogleNews misses $C_V$ by 0.024. Both still beat Purity comfortably, and GoogleNews's NMI still beats target. We read this as evidence that $\lambda$ needs its own $K$-specific tuning pass rather than transferring directly, not as a failure of the method itself -- $K=50$'s own $\lambda$ sweep (\S\ref{sec:topics}) found no reason to expect one $\lambda$ to be optimal across different topic counts.}
 \label{tab:vaebm-topic-ss-gn-k100}
 \end{table}

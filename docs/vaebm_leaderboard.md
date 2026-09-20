@@ -755,3 +755,43 @@ spherical KMeans, GMM, PCA/UMAP pre-clustering dimensionality reduction,
 best-of-N unsupervised model selection via Silhouette score, or a
 latent-dim sweep) rather than another topic-word-ranking tweak.
 
+## Round 32/33 (complete, jobs 1646/1647): K=100, same recipe unchanged - only IMDB holds
+
+Ran all 5 official datasets at K=100 with the exact K=50-tuned recipe
+(same lambda, same normalize_mu, same embedder) unchanged - split across
+two concurrent FutureLab SLURM jobs (Round 32: IMDB pair on bge-large;
+Round 33: the other 8 datasets) after labuai's own attempt at the same
+8-dataset workload timed out (2400s) on its very first combo and was
+abandoned - labuai's GTX 1080 Ti cannot complete a K=100 combo in any
+reasonable time (the same combo took ~90-120s on FutureLab's H200 at
+K=50; Round 33's whole 16-combo sweep finished in 30 minutes total on
+FutureLab).
+
+| Dataset | Cv (K=100) | Δ target | Purity | Δ target | NMI | Δ target | 3/3? |
+|---|---:|---:|---:|---:|---:|---:|---|
+| hicot_20ng | 0.443 | +0.019 | 0.691 | +0.039 | 0.546 | -0.022 | 2/3 |
+| hicot_agnews | 0.447 | +0.012 | 0.875 | +0.013 | 0.342 | -0.046 | 2/3 |
+| hicot_search_snippets | 0.448 | -0.001 (razor-thin miss) | 0.864 | +0.007 | 0.471 | -0.009 | 1/3 |
+| hicot_google_news | 0.446 | -0.024 | 0.801 | +0.038 | 0.878 | +0.014 | 2/3 |
+| **hicot_imdb** | **0.402** | **+0.014** | **0.836** | **+0.097** | **0.119** | **+0.048** | **3/3 ✓** |
+
+**Only IMDB keeps its full win at K=100.** SearchSnippets and GoogleNews
+- clean 3/3 wins at K=50 - both regress, missing Cv (by 0.001 and 0.024
+respectively; SearchSnippets also misses NMI by 0.009). 20NG/AGNews's
+NMI gap did not close despite HiCOT's own K=100 NMI targets being lower
+than K=50's (0.583→0.568, 0.412→0.388) - our own NMI dropped too, so
+the gap held. **Most likely explanation: lambda needs its own K=100
+tuning pass** - the K=50 sweep (Rounds 26-31) never established that one
+lambda transfers across topic counts, only that it's optimal at K=50
+specifically. This is reported directly in the paper (not hidden) as a
+transfer-failure finding, and is now the clearest, cheapest remaining
+lever: a fresh lambda sweep at K=100, identical methodology to Rounds
+29-31, on the 4 non-IMDB datasets.
+
+## Round 34 (next): K=100-specific lambda tuning for the 4 regressed datasets
+
+Given Round 33's 16-combo sweep took only 30 minutes total on
+FutureLab's H200, a full lambda sweep ({0.05, 0.1, 0.2, 0.3, 0.5, 0.7})
+at K=100 for hicot_20ng, hicot_agnews, hicot_search_snippets,
+hicot_google_news is cheap and the highest-value next experiment.
+

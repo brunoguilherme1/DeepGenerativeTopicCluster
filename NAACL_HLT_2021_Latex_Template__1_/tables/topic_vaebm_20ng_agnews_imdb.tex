@@ -38,10 +38,10 @@ FASTopic & 0.400 & 0.622 & 0.522 & 0.861 & 0.385 & 0.833 & 0.330 & 0.912 & 0.369
 NeuroMax\textdagger & 0.412 & 0.602 & 0.516 & 0.913 & 0.406 & 0.828 & 0.389 & 0.957 & 0.381 & 0.706 & 0.059 & 0.870 \\
 HiCOT & 0.424 & 0.652 & 0.568 & 0.741 & 0.435 & 0.862 & 0.388 & 0.960 & 0.388 & 0.739 & 0.071 & 0.733 \\
 \midrule
-\textbf{VAE-BM (ours)} & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\textbf{VAE-BM (ours)} & 0.443 & \textbf{0.691} & 0.546 & 0.734 & \textbf{0.447} & \textbf{0.875} & 0.342 & 0.860 & \textbf{0.402} & \textbf{0.836} & \textbf{0.119} & 0.716 \\
 \bottomrule
 \end{tabular}
 \vspace{2pt}
-\caption{100-topic results, same layout as Table~\ref{tab:vaebm-topic-20ng-agnews-imdb-k50}. Our $K=100$ sweep had not yet run at the time this draft was assembled -- cells marked \texttt{--} rather than estimated. See \S\ref{sec:limitations}.}
+\caption{100-topic results, same layout and provenance as Table~\ref{tab:vaebm-topic-20ng-agnews-imdb-k50}, using the SAME $\lambda$/\texttt{normalize\_mu} values tuned for $K=50$ (not re-tuned for $K=100$ -- \S\ref{sec:limitations}). VAE-BM beats HiCOT's Purity on all three and $C_V$ on 20NG/AGNews, but NMI regresses below target on 20NG/AGNews at this $K$ (a $K=50$-tuned recipe applied unchanged, not a $K=100$-specific search); IMDB alone holds a full 3-of-3 win at both $K$ values.}
 \label{tab:vaebm-topic-20ng-agnews-imdb-k100}
 \end{table}
