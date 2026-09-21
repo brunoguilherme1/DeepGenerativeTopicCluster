@@ -49,6 +49,7 @@ SEEDS = [1, 2, 3, 4, 5]
 DATASETS = [
     ("20ng", {"VAEBM_NORMALIZE_MU": "1", "VAEBM_EMBEDDER": "thenlper/gte-large"}),
     ("imdb", {"VAEBM_EMBEDDER": "BAAI/bge-large-en-v1.5"}),
+    ("biomedical", {"VAEBM_EMBEDDER": "thenlper/gte-large"}),
 ]
 
 BASE_ENV = {
@@ -64,18 +65,22 @@ BASE_ENV = {
 
 def main() -> None:
     out_path = REPO_ROOT / "results" / "vaebm_classif_fast_slow_datasets.json"
-    rows = []
+    rows = json.loads(out_path.read_text(encoding="utf-8")) if out_path.exists() else []
+    done_datasets = {r["dataset"] for r in rows}
 
     for dataset_id, overrides in DATASETS:
+        if dataset_id in done_datasets:
+            print(f"[{dataset_id}] already done, skipping", flush=True)
+            continue
         env = dict(BASE_ENV)
         env.update(overrides)
         os.environ.update(env)
 
         from sklearn.metrics import accuracy_score, f1_score
         from sklearn.model_selection import train_test_split
-        from sklearn.svm import LinearSVC
 
         from vaebm_benchmark.datasets.simple_registry import load_dataset, resolve_dataset_id
+        from vaebm_benchmark.experiment.classification_runner import _make_svm
         from vaebm_benchmark.experiment.scientific_models import build_model
         from vaebm_benchmark.utils.seeding import set_all_seeds
         from vaebm_benchmark.utils.gpu_memory import release_accelerator_memory
@@ -110,7 +115,7 @@ def main() -> None:
                     mu, labels, test_size=0.2, random_state=seed,
                 )
 
-            clf = LinearSVC(C=1.0, random_state=seed, max_iter=10000, dual="auto")
+            clf = _make_svm("linear", 1.0, seed)  # same classifier as every other model - see _make_svm's own docstring
             clf.fit(mu_train, train_labels)
             preds = clf.predict(mu_test)
             accuracy = float(accuracy_score(test_labels, preds))

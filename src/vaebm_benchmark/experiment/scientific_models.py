@@ -39,8 +39,8 @@ from __future__ import annotations
 import os
 
 MODEL_NAMES = [
-    "vaebm", "vaebm_poe", "vaebm_dec", "vaebm_ckpt", "fastopic", "lda", "hicot", "sbert_kmeans",
-    "bertopic", "sbert_gte", "sbert_minilm",
+    "vaebm", "vaebm_poe", "vaebm_dec", "vaebm_ckpt", "fastopic", "lda", "glocom", "ecrtm", "s2wtm",
+    "hicot", "sbert_kmeans", "bertopic", "sbert_gte", "sbert_minilm",
 ]
 
 # Shared by build_vaebm/build_vaebm_poe/build_vaebm_dec below -
@@ -194,6 +194,42 @@ def build_glocom(k: int, seed: int, voc_size: int, dataset_id: str = None):
     )
 
 
+def build_ecrtm(k: int, seed: int, voc_size: int, dataset_id: str = None):
+    """Mirrors experiment/cluster_runner.py's own `_build_ecrtm` exactly.
+    ECRTM (Wu et al., ICML 2023) - see models/ecrtm_adapter.py's own
+    docstring for provenance (ported from document-topic-evaluatio-arena,
+    official topmost.ECRTM + topmost.BasicTrainer, not a
+    reimplementation). Stopword removal unconditional, same as
+    build_glocom above."""
+    from vaebm_benchmark.models.ecrtm_adapter import ECRTMAdapter
+
+    return ECRTMAdapter(
+        num_topics=k,
+        vocab_size_cap=voc_size,
+        epochs=20,
+        learning_rate=0.002,
+        batch_size=200,
+        seed=seed,
+    )
+
+
+def build_s2wtm(k: int, seed: int, voc_size: int, dataset_id: str = None):
+    """Mirrors experiment/cluster_runner.py's own `_build_s2wtm` exactly.
+    S2WTM (Adhya & Sanyal, Findings of ACL 2025) - see
+    models/s2wtm_adapter.py's own docstring for provenance. Stopword
+    removal unconditional, same as build_glocom/build_ecrtm above."""
+    from vaebm_benchmark.models.s2wtm_adapter import S2WTMAdapter
+
+    return S2WTMAdapter(
+        num_topics=k,
+        vocab_size_cap=voc_size,
+        epochs=20,
+        learning_rate=0.002,
+        batch_size=200,
+        seed=seed,
+    )
+
+
 def build_hicot(k: int, seed: int, voc_size: int, dataset_id: str = None, max_fit_seconds: float = None):
     from vaebm_benchmark.models.hicot_adapter import HiCOTAdapter
 
@@ -281,6 +317,8 @@ MODEL_BUILDERS = {
     "fastopic": build_fastopic,
     "lda": build_lda,
     "glocom": build_glocom,
+    "ecrtm": build_ecrtm,
+    "s2wtm": build_s2wtm,
     "hicot": build_hicot,
     "sbert_kmeans": build_sbert_kmeans,
     "bertopic": build_bertopic,
@@ -316,7 +354,7 @@ SBERT_KMEANS_VARIANT_NAMES = ("sbert_kmeans", "sbert_gte", "sbert_bge", "sbert_m
 def representation_source_for_model(model_name: str) -> str:
     if model_name in ("vaebm", "vaebm_poe", "vaebm_dec", "vaebm_ckpt"):
         return "mu"
-    if model_name in ("fastopic", "lda", "hicot", "glocom"):
+    if model_name in ("fastopic", "lda", "hicot", "glocom", "ecrtm", "s2wtm"):
         return "theta"
     if model_name == "bertopic" or model_name in SBERT_KMEANS_VARIANT_NAMES:
         return "embeddings"
@@ -337,7 +375,7 @@ def representation_source_for_model(model_name: str) -> str:
 def assignment_source_for_model(model_name: str) -> str:
     if model_name in ("vaebm", "vaebm_poe", "vaebm_dec", "vaebm_ckpt"):
         return "kmeans_on_latent_mu"
-    if model_name in ("fastopic", "lda", "hicot", "glocom"):
+    if model_name in ("fastopic", "lda", "hicot", "glocom", "ecrtm", "s2wtm"):
         return "argmax_theta"
     if model_name == "bertopic" or model_name in SBERT_KMEANS_VARIANT_NAMES:
         return "kmeans_on_embeddings"

@@ -298,6 +298,32 @@ def _build_lda(k: int, seed: int, voc_size: int):
     return build_lda(k, seed, voc_size)
 
 
+def _build_ecrtm(k: int, seed: int, voc_size: int):
+    from vaebm_benchmark.models.ecrtm_adapter import ECRTMAdapter
+
+    return ECRTMAdapter(
+        num_topics=k,
+        vocab_size_cap=voc_size,
+        epochs=20,  # reduced from the paper's 200 - same generic cross-dataset smoke default as _build_fastopic/_build_glocom above, not a paper reproduction
+        learning_rate=0.002,
+        batch_size=200,
+        seed=seed,
+    )
+
+
+def _build_s2wtm(k: int, seed: int, voc_size: int):
+    from vaebm_benchmark.models.s2wtm_adapter import S2WTMAdapter
+
+    return S2WTMAdapter(
+        num_topics=k,
+        vocab_size_cap=voc_size,
+        epochs=20,  # same generic smoke default as the other topmost-family builders above
+        learning_rate=0.002,
+        batch_size=200,
+        seed=seed,
+    )
+
+
 def _build_hicot(k: int, seed: int, voc_size: int):
     """Generic (not protocol-pinned) path - self-fits its own vocabulary/
     word-embedding init, same reasoning as _build_fastopic/_build_glocom
@@ -358,6 +384,8 @@ CLUSTER_MODEL_BUILDERS = {
     "fastopic": _build_fastopic,
     "glocom": _build_glocom,
     "lda": _build_lda,
+    "ecrtm": _build_ecrtm,
+    "s2wtm": _build_s2wtm,
     "hicot": _build_hicot,
     "sbert_kmeans": _build_sbert_kmeans,
     "sbert_gte": _build_sbert_variant("thenlper/gte-large"),
