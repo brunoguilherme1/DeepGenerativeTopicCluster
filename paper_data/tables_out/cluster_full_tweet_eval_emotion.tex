@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Full clustering metrics, TwEval-Emo. Lower is better for DB only; higher is better for every other metric. \textbf{Bold}/\underline{underline} = best/second-best.}
+\label{tab:cluster-full-tweet_eval_emotion}
+\adjustbox{max width=\columnwidth}{
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
+\midrule
+FASTopic & \underline{0.393} & 0.047 & -- & -- & -- & -- & -- & 0.465 & -- & -- & -- \\
+HiCOT & 0.284 & 0.005 & -- & -- & -- & -- & -- & 0.419 & -- & -- & -- \\
+BERTopic & 0.377$^{\mathrm{LU}}$ & 0.073$^{\mathrm{LU}}$ & -- & -- & -- & -- & -- & \underline{0.471}$^{\mathrm{LU}}$ & -- & -- & -- \\
+SBERT-MiniLM & 0.380 & \underline{0.075} & -- & -- & -- & -- & -- & 0.471 & -- & -- & -- \\
+SBERT-GTE & \textbf{0.454} & \textbf{0.173} & -- & -- & -- & -- & -- & \textbf{0.605} & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

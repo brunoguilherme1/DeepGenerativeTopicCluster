@@ -1,0 +1,914 @@
+{
+  "sbert_gte|20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 108.23,
+    "acc": 0.5625066327072058,
+    "nmi": 0.5766576347520947,
+    "purity": 0.5808129045951396,
+    "timestamp": "2026-09-14 12:16:14"
+  },
+  "sbert_gte|imdb": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 294.574,
+    "acc": 0.92914,
+    "nmi": 0.6346224844625981,
+    "purity": 0.92914,
+    "timestamp": "2026-09-14 12:21:11"
+  },
+  "sbert_gte|agnews_short": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 18.866,
+    "acc": 0.882125,
+    "nmi": 0.6760719771899755,
+    "purity": 0.882125,
+    "timestamp": "2026-09-14 12:21:31"
+  },
+  "sbert_gte|search_snippets": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 26.399,
+    "acc": 0.7760129659643435,
+    "nmi": 0.6453889444309644,
+    "purity": 0.836061588330632,
+    "timestamp": "2026-09-14 12:22:00"
+  },
+  "sbert_gte|stack_overflow": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 36.554,
+    "acc": 0.8457,
+    "nmi": 0.8240545285292654,
+    "purity": 0.8457,
+    "timestamp": "2026-09-14 12:22:38"
+  },
+  "sbert_gte|biomedical": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 41.631,
+    "acc": 0.50815,
+    "nmi": 0.45977539756720914,
+    "purity": 0.5168,
+    "timestamp": "2026-09-14 12:23:22"
+  },
+  "sbert_gte|google_news_ts": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 34.554,
+    "acc": 0.7453416149068323,
+    "nmi": 0.9264068760302554,
+    "purity": 0.9205148978305878,
+    "timestamp": "2026-09-14 12:23:58"
+  },
+  "sbert_gte|google_news_t": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 33.676,
+    "acc": 0.7138998919697516,
+    "nmi": 0.8840669557585321,
+    "purity": 0.8729744328411956,
+    "timestamp": "2026-09-14 12:24:34"
+  },
+  "sbert_gte|google_news_s": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 33.785,
+    "acc": 0.6983255311487216,
+    "nmi": 0.8937167479988576,
+    "purity": 0.8836874324810947,
+    "timestamp": "2026-09-14 12:25:10"
+  },
+  "sbert_gte|tweet": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 14.728,
+    "acc": 0.6395631067961165,
+    "nmi": 0.8805792757751667,
+    "purity": 0.9219255663430421,
+    "timestamp": "2026-09-14 12:25:26"
+  },
+  "sbert_gte|hicot_20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 64.154,
+    "acc": 0.6075559800488167,
+    "nmi": 0.6208468380743198,
+    "purity": 0.6243765255226573,
+    "timestamp": "2026-09-14 12:26:32"
+  },
+  "sbert_gte|hicot_imdb": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 150.268,
+    "acc": 0.83236,
+    "nmi": 0.35522657860156526,
+    "purity": 0.83236,
+    "timestamp": "2026-09-14 12:29:04"
+  },
+  "sbert_gte|hicot_agnews": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 24.22,
+    "acc": 0.86,
+    "nmi": 0.6325714250177191,
+    "purity": 0.86,
+    "timestamp": "2026-09-14 12:29:31"
+  },
+  "sbert_gte|hicot_search_snippets": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 24.05,
+    "acc": 0.77867252318204,
+    "nmi": 0.6436482007765226,
+    "purity": 0.8375630388807548,
+    "timestamp": "2026-09-14 12:29:57"
+  },
+  "sbert_gte|hicot_google_news": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 32.572,
+    "acc": 0.7059624285325347,
+    "nmi": 0.8842310230302832,
+    "purity": 0.8703149106089482,
+    "timestamp": "2026-09-14 12:30:31"
+  },
+  "sbert_gte|agnews_full": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 531.965,
+    "acc": 0.8805407523510972,
+    "nmi": 0.6747577103310406,
+    "purity": 0.8805407523510972,
+    "timestamp": "2026-09-14 12:39:25"
+  },
+  "sbert_gte|banking77": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 39.886,
+    "acc": 0.666615655367664,
+    "nmi": 0.8131230009551556,
+    "purity": 0.7045680618256944,
+    "timestamp": "2026-09-14 12:40:07"
+  },
+  "sbert_gte|bbc_news": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 18.005,
+    "acc": 0.9608988764044943,
+    "nmi": 0.8758521329274334,
+    "purity": 0.9608988764044943,
+    "timestamp": "2026-09-14 12:40:27"
+  },
+  "sbert_gte|dblp": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 109.58,
+    "acc": 0.606502426962176,
+    "nmi": 0.3189463600304593,
+    "purity": 0.7179961534939097,
+    "timestamp": "2026-09-14 12:42:18"
+  },
+  "hicot|20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1251.574,
+    "acc": 0.1868831582298631,
+    "nmi": 0.199842990581109,
+    "purity": 0.19436485195797518,
+    "timestamp": "2026-09-14 20:14:34"
+  },
+  "hicot|imdb": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1401.33,
+    "acc": 0.5045,
+    "nmi": 0.000659203917164257,
+    "purity": 0.5045,
+    "timestamp": "2026-09-14 20:37:57"
+  },
+  "hicot|agnews_short": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1239.409,
+    "acc": 0.803,
+    "nmi": 0.5405549188024018,
+    "purity": 0.803,
+    "timestamp": "2026-09-14 20:58:39"
+  },
+  "hicot|search_snippets": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1223.612,
+    "acc": 0.6741491085899514,
+    "nmi": 0.46446194939581636,
+    "purity": 0.6805510534846029,
+    "timestamp": "2026-09-14 21:19:04"
+  },
+  "hicot|stack_overflow": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1266.002,
+    "acc": 0.43045,
+    "nmi": 0.3917943706306218,
+    "purity": 0.43965,
+    "timestamp": "2026-09-14 21:40:12"
+  },
+  "hicot|biomedical": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1226.276,
+    "acc": 0.30885,
+    "nmi": 0.2640431216303924,
+    "purity": 0.31595,
+    "timestamp": "2026-09-14 22:00:40"
+  },
+  "hicot|google_news_ts": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1255.608,
+    "acc": 0.12017283283823926,
+    "nmi": 0.2974025171772716,
+    "purity": 0.1203528670447385,
+    "timestamp": "2026-09-14 22:21:37"
+  },
+  "hicot|google_news_t": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1252.51,
+    "acc": 0.0397911415196255,
+    "nmi": 0.007225052270917131,
+    "purity": 0.0397911415196255,
+    "timestamp": "2026-09-14 22:42:32"
+  },
+  "hicot|google_news_s": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1252.907,
+    "acc": 0.04330212459488657,
+    "nmi": 0.018885551854385358,
+    "purity": 0.04330212459488657,
+    "timestamp": "2026-09-14 23:03:26"
+  },
+  "hicot|tweet": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 608.887,
+    "acc": 0.16059870550161812,
+    "nmi": 0.15203275056745957,
+    "purity": 0.16828478964401294,
+    "timestamp": "2026-09-14 23:13:37"
+  },
+  "hicot|hicot_20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1251.742,
+    "acc": 0.40257879656160456,
+    "nmi": 0.4381191228266116,
+    "purity": 0.41706462909901304,
+    "timestamp": "2026-09-14 23:34:30"
+  },
+  "hicot|hicot_imdb": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1306.08,
+    "acc": 0.50486,
+    "nmi": 0.0007783975579259021,
+    "purity": 0.50486,
+    "timestamp": "2026-09-14 23:56:18"
+  },
+  "hicot|hicot_agnews": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1227.051,
+    "acc": 0.81488,
+    "nmi": 0.5488471867462392,
+    "purity": 0.81488,
+    "timestamp": "2026-09-15 00:16:47"
+  },
+  "hicot|hicot_search_snippets": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1245.371,
+    "acc": 0.45412396290873597,
+    "nmi": 0.3778462670244813,
+    "purity": 0.5343256873271515,
+    "timestamp": "2026-09-15 00:37:34"
+  },
+  "hicot|hicot_google_news": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1228.889,
+    "acc": 0.04129231327706689,
+    "nmi": 0.008506636631451398,
+    "purity": 0.04129231327706689,
+    "timestamp": "2026-09-15 00:58:05"
+  },
+  "hicot|agnews_full": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1751.845,
+    "acc": 0.8083228840125392,
+    "nmi": 0.5412512752886955,
+    "purity": 0.8083228840125392,
+    "timestamp": "2026-09-15 01:27:18"
+  },
+  "hicot|banking77": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1224.617,
+    "acc": 0.03535083020889127,
+    "nmi": 0.060254590198402735,
+    "purity": 0.035427347157395365,
+    "timestamp": "2026-09-15 01:47:44"
+  },
+  "hicot|bbc_news": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 525.564,
+    "acc": 0.9235955056179775,
+    "nmi": 0.7859755046047232,
+    "purity": 0.9235955056179775,
+    "timestamp": "2026-09-15 01:56:32"
+  },
+  "hicot|dblp": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1396.913,
+    "acc": 0.29011814268705927,
+    "nmi": 0.006322486195451563,
+    "purity": 0.39435845773422473,
+    "timestamp": "2026-09-15 02:19:50"
+  },
+  "hicot|dbpedia_14": {
+    "status": "error",
+    "attempts": 1,
+    "error": "timeout after 1800s",
+    "timestamp": "2026-09-15 02:49:51"
+  },
+  "hicot|m10": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1214.922,
+    "acc": 0.2594853381208857,
+    "nmi": 0.11368519568411534,
+    "purity": 0.27875523638539795,
+    "timestamp": "2026-09-15 03:10:07"
+  },
+  "hicot|pascal_flickr": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1091.861,
+    "acc": 0.20728175424079437,
+    "nmi": 0.17782838992469552,
+    "purity": 0.21431526685974348,
+    "timestamp": "2026-09-15 03:28:21"
+  },
+  "hicot|tweet_eval_emotion": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1177.498,
+    "acc": 0.2842438638163104,
+    "nmi": 0.005006916135274518,
+    "purity": 0.4192399049881235,
+    "timestamp": "2026-09-15 03:48:00"
+  },
+  "hicot|tweet_eval_sentiment": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1323.449,
+    "acc": 0.41943938963922606,
+    "nmi": 0.023144011041895483,
+    "purity": 0.4772867660561946,
+    "timestamp": "2026-09-15 04:10:06"
+  },
+  "hicot|yahoo_answers_topics": {
+    "status": "error",
+    "attempts": 1,
+    "error": "timeout after 1800s",
+    "timestamp": "2026-09-15 04:40:06"
+  },
+  "hicot|20ng_s2wtm": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1260.109,
+    "acc": 0.33705316083144277,
+    "nmi": 0.35889214059703817,
+    "purity": 0.3509105401925317,
+    "timestamp": "2026-09-15 05:01:08"
+  },
+  "sbert_gte|dbpedia_14": {
+    "status": "error",
+    "attempts": 1,
+    "error": "timeout after 1800s",
+    "timestamp": "2026-09-15 05:31:09"
+  },
+  "sbert_gte|m10": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 18.508,
+    "acc": 0.701017354877319,
+    "nmi": 0.5549209809350052,
+    "purity": 0.7295032914422501,
+    "timestamp": "2026-09-15 05:31:29"
+  },
+  "sbert_gte|pascal_flickr": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 15.677,
+    "acc": 0.35436491518411256,
+    "nmi": 0.4068531480347854,
+    "purity": 0.4031857674803475,
+    "timestamp": "2026-09-15 05:31:46"
+  },
+  "sbert_gte|tweet_eval_emotion": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 16.274,
+    "acc": 0.45407759303246237,
+    "nmi": 0.17335543344506676,
+    "purity": 0.6045130641330166,
+    "timestamp": "2026-09-15 05:32:04"
+  },
+  "sbert_gte|tweet_eval_sentiment": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 128.157,
+    "acc": 0.4287049867276582,
+    "nmi": 0.03556150729283052,
+    "purity": 0.49007495951518387,
+    "timestamp": "2026-09-15 05:34:14"
+  },
+  "sbert_gte|yahoo_answers_topics": {
+    "status": "error",
+    "attempts": 1,
+    "error": "timeout after 1800s",
+    "timestamp": "2026-09-15 06:04:15"
+  },
+  "sbert_gte|20ng_s2wtm": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 44.402,
+    "acc": 0.5068367159237231,
+    "nmi": 0.4873883305105819,
+    "purity": 0.5194677785271936,
+    "timestamp": "2026-09-15 06:05:01"
+  },
+  "sbert_minilm|20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 51.516,
+    "acc": 0.5142735859068237,
+    "nmi": 0.5128067942637942,
+    "purity": 0.5316247479571262,
+    "timestamp": "2026-09-15 06:05:55"
+  },
+  "sbert_minilm|imdb": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 159.462,
+    "acc": 0.56536,
+    "nmi": 0.012611488799517049,
+    "purity": 0.56536,
+    "timestamp": "2026-09-15 06:08:36"
+  },
+  "sbert_minilm|agnews_short": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 15.646,
+    "acc": 0.781625,
+    "nmi": 0.5716384662177412,
+    "purity": 0.781625,
+    "timestamp": "2026-09-15 06:08:53"
+  },
+  "sbert_minilm|search_snippets": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 19.344,
+    "acc": 0.7452998379254457,
+    "nmi": 0.5976536195318259,
+    "purity": 0.8017828200972448,
+    "timestamp": "2026-09-15 06:09:14"
+  },
+  "sbert_minilm|stack_overflow": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 25.332,
+    "acc": 0.7217,
+    "nmi": 0.701450134428061,
+    "purity": 0.72625,
+    "timestamp": "2026-09-15 06:09:41"
+  },
+  "sbert_minilm|biomedical": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 26.932,
+    "acc": 0.5058,
+    "nmi": 0.4418975240472423,
+    "purity": 0.5218,
+    "timestamp": "2026-09-15 06:10:10"
+  },
+  "sbert_minilm|google_news_ts": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 28.367,
+    "acc": 0.7080745341614907,
+    "nmi": 0.9112382591157075,
+    "purity": 0.9071923665496444,
+    "timestamp": "2026-09-15 06:10:40"
+  },
+  "sbert_minilm|google_news_t": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 25.651,
+    "acc": 0.6671768095066619,
+    "nmi": 0.8586909911267218,
+    "purity": 0.8439863161685272,
+    "timestamp": "2026-09-15 06:11:08"
+  },
+  "sbert_minilm|google_news_s": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 27.526,
+    "acc": 0.6859020525747209,
+    "nmi": 0.8771629754067194,
+    "purity": 0.860010803024847,
+    "timestamp": "2026-09-15 06:11:37"
+  },
+  "sbert_minilm|tweet": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 13.185,
+    "acc": 0.6476537216828478,
+    "nmi": 0.8746446174116007,
+    "purity": 0.9118122977346278,
+    "timestamp": "2026-09-15 06:11:52"
+  },
+  "sbert_minilm|hicot_20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 39.822,
+    "acc": 0.5055714740528494,
+    "nmi": 0.5426708101018867,
+    "purity": 0.5336410909476812,
+    "timestamp": "2026-09-15 06:12:33"
+  },
+  "sbert_minilm|hicot_imdb": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 101.972,
+    "acc": 0.5555,
+    "nmi": 0.010127043655719793,
+    "purity": 0.5555,
+    "timestamp": "2026-09-15 06:14:17"
+  },
+  "sbert_minilm|hicot_agnews": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 18.047,
+    "acc": 0.76936,
+    "nmi": 0.537252990964379,
+    "purity": 0.76936,
+    "timestamp": "2026-09-15 06:14:37"
+  },
+  "sbert_minilm|hicot_search_snippets": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 18.084,
+    "acc": 0.7421506425898813,
+    "nmi": 0.5952649126599752,
+    "purity": 0.7985196030584025,
+    "timestamp": "2026-09-15 06:14:57"
+  },
+  "sbert_minilm|hicot_google_news": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 24.844,
+    "acc": 0.6605862600961975,
+    "nmi": 0.8659640882476349,
+    "purity": 0.8482620927488883,
+    "timestamp": "2026-09-15 06:15:23"
+  },
+  "sbert_minilm|agnews_full": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 298.531,
+    "acc": 0.8383307210031348,
+    "nmi": 0.5975315968548168,
+    "purity": 0.8383307210031348,
+    "timestamp": "2026-09-15 06:20:24"
+  },
+  "sbert_minilm|banking77": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 23.682,
+    "acc": 0.6308057234677481,
+    "nmi": 0.7780902873732557,
+    "purity": 0.660953401178361,
+    "timestamp": "2026-09-15 06:20:49"
+  },
+  "sbert_minilm|bbc_news": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 13.957,
+    "acc": 0.9429213483146067,
+    "nmi": 0.8310048240276751,
+    "purity": 0.9429213483146067,
+    "timestamp": "2026-09-15 06:21:05"
+  },
+  "sbert_minilm|dblp": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 64.513,
+    "acc": 0.5803645022437952,
+    "nmi": 0.300277641836561,
+    "purity": 0.7040754647861526,
+    "timestamp": "2026-09-15 06:22:11"
+  },
+  "sbert_minilm|dbpedia_14": {
+    "status": "error",
+    "attempts": 1,
+    "error": "timeout after 1800s",
+    "timestamp": "2026-09-15 06:52:11"
+  },
+  "sbert_minilm|m10": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 14.503,
+    "acc": 0.6803111909036506,
+    "nmi": 0.5285903319571404,
+    "purity": 0.7143028126870138,
+    "timestamp": "2026-09-15 06:52:28"
+  },
+  "sbert_minilm|pascal_flickr": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 13.28,
+    "acc": 0.36367397600330986,
+    "nmi": 0.38704748572363695,
+    "purity": 0.38601572196938355,
+    "timestamp": "2026-09-15 06:52:43"
+  },
+  "sbert_minilm|tweet_eval_emotion": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 13.458,
+    "acc": 0.38004750593824227,
+    "nmi": 0.07502631226039239,
+    "purity": 0.47050673000791765,
+    "timestamp": "2026-09-15 06:52:58"
+  },
+  "sbert_minilm|tweet_eval_sentiment": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 84.203,
+    "acc": 0.4640478138199302,
+    "nmi": 0.06811903491774136,
+    "purity": 0.49982470491994857,
+    "timestamp": "2026-09-15 06:54:24"
+  },
+  "sbert_minilm|yahoo_answers_topics": {
+    "status": "error",
+    "attempts": 1,
+    "error": "timeout after 1800s",
+    "timestamp": "2026-09-15 07:24:24"
+  },
+  "sbert_minilm|20ng_s2wtm": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 29.5,
+    "acc": 0.36366423447176405,
+    "nmi": 0.38121831907882553,
+    "purity": 0.3851247777300877,
+    "timestamp": "2026-09-15 07:24:56"
+  },
+  "fastopic|20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 51.128,
+    "acc": 0.21431603523294068,
+    "nmi": 0.2244460426805402,
+    "purity": 0.2352753900031837,
+    "timestamp": "2026-09-15 07:25:49"
+  },
+  "fastopic|imdb": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 164.449,
+    "acc": 0.59058,
+    "nmi": 0.02382864218646417,
+    "purity": 0.59058,
+    "timestamp": "2026-09-15 07:28:35"
+  },
+  "fastopic|agnews_short": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 15.038,
+    "acc": 0.429625,
+    "nmi": 0.23605200737758697,
+    "purity": 0.484875,
+    "timestamp": "2026-09-15 07:28:52"
+  },
+  "fastopic|search_snippets": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 17.769,
+    "acc": 0.3331442463533225,
+    "nmi": 0.1781112757003949,
+    "purity": 0.36564019448946516,
+    "timestamp": "2026-09-15 07:29:11"
+  },
+  "fastopic|stack_overflow": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 20.103,
+    "acc": 0.25475,
+    "nmi": 0.2397680001473198,
+    "purity": 0.2693,
+    "timestamp": "2026-09-15 07:29:33"
+  },
+  "fastopic|biomedical": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 21.785,
+    "acc": 0.2657,
+    "nmi": 0.20336954076755556,
+    "purity": 0.2694,
+    "timestamp": "2026-09-15 07:29:57"
+  },
+  "fastopic|google_news_ts": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 17.883,
+    "acc": 0.33747412008281574,
+    "nmi": 0.6040607848192109,
+    "purity": 0.3958052029885678,
+    "timestamp": "2026-09-15 07:30:16"
+  },
+  "fastopic|google_news_t": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 14.64,
+    "acc": 0.23316528628015845,
+    "nmi": 0.48454882682691813,
+    "purity": 0.29231184731724885,
+    "timestamp": "2026-09-15 07:30:33"
+  },
+  "fastopic|google_news_s": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 16.84,
+    "acc": 0.3222902412675549,
+    "nmi": 0.5640616467840507,
+    "purity": 0.35424918977313646,
+    "timestamp": "2026-09-15 07:30:51"
+  },
+  "fastopic|tweet": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 10.83,
+    "acc": 0.47694174757281554,
+    "nmi": 0.6371413724107189,
+    "purity": 0.5586569579288025,
+    "timestamp": "2026-09-15 07:31:04"
+  },
+  "fastopic|hicot_20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 38.497,
+    "acc": 0.21893239944815876,
+    "nmi": 0.25307206165037816,
+    "purity": 0.23729173299373874,
+    "timestamp": "2026-09-15 07:31:44"
+  },
+  "fastopic|hicot_imdb": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 95.252,
+    "acc": 0.59452,
+    "nmi": 0.02661308929885378,
+    "purity": 0.59452,
+    "timestamp": "2026-09-15 07:33:21"
+  },
+  "fastopic|hicot_agnews": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 16.921,
+    "acc": 0.4628,
+    "nmi": 0.25281779057426235,
+    "purity": 0.50936,
+    "timestamp": "2026-09-15 07:33:40"
+  },
+  "fastopic|hicot_search_snippets": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 16.544,
+    "acc": 0.2999023914104441,
+    "nmi": 0.17434567448534727,
+    "purity": 0.3509842199446885,
+    "timestamp": "2026-09-15 07:33:59"
+  },
+  "fastopic|hicot_google_news": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 14.316,
+    "acc": 0.24321626281876757,
+    "nmi": 0.4952780432521422,
+    "purity": 0.30737816498774845,
+    "timestamp": "2026-09-15 07:34:15"
+  },
+  "fastopic|agnews_full": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 218.719,
+    "acc": 0.49059561128526646,
+    "nmi": 0.25680417372089315,
+    "purity": 0.5119670846394985,
+    "timestamp": "2026-09-15 07:37:55"
+  },
+  "fastopic|banking77": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 15.953,
+    "acc": 0.20521845588797918,
+    "nmi": 0.46989214250073985,
+    "purity": 0.22518937944754763,
+    "timestamp": "2026-09-15 07:38:13"
+  },
+  "fastopic|bbc_news": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 13.945,
+    "acc": 0.7042696629213483,
+    "nmi": 0.5599561271674579,
+    "purity": 0.7307865168539326,
+    "timestamp": "2026-09-15 07:38:29"
+  },
+  "fastopic|dblp": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 48.779,
+    "acc": 0.4110449674878652,
+    "nmi": 0.07920039487264258,
+    "purity": 0.4759043868486125,
+    "timestamp": "2026-09-15 07:39:19"
+  },
+  "fastopic|dbpedia_14": {
+    "status": "error",
+    "attempts": 1,
+    "error": "CUDA out of memory. Tried to allocate 11.74 GiB. GPU 0 has a total capacity of 69.75 GiB of which 6.96 GiB is free. Including non-PyTorch memory, this process has 62.76 GiB memory in use. Of the allocated memory 61.70 GiB is allocated by PyTorch, and 845.58 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/d",
+    "timestamp": "2026-09-15 07:45:34"
+  },
+  "fastopic|m10": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 12.835,
+    "acc": 0.29994015559545184,
+    "nmi": 0.18102357687215553,
+    "purity": 0.31765409934171157,
+    "timestamp": "2026-09-15 07:45:48"
+  },
+  "fastopic|pascal_flickr": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 11.689,
+    "acc": 0.18618121638394705,
+    "nmi": 0.19773053295217086,
+    "purity": 0.1956971452213488,
+    "timestamp": "2026-09-15 07:46:02"
+  },
+  "fastopic|tweet_eval_emotion": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 12.617,
+    "acc": 0.3929136975455265,
+    "nmi": 0.04731841667269309,
+    "purity": 0.4645684877276326,
+    "timestamp": "2026-09-15 07:46:16"
+  },
+  "fastopic|tweet_eval_sentiment": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 68.695,
+    "acc": 0.4281540593332109,
+    "nmi": 0.0428386482453191,
+    "purity": 0.4864354997579258,
+    "timestamp": "2026-09-15 07:47:26"
+  },
+  "fastopic|yahoo_answers_topics": {
+    "status": "error",
+    "attempts": 1,
+    "error": "CUDA out of memory. Tried to allocate 27.20 GiB. GPU 0 has a total capacity of 69.75 GiB of which 6.58 GiB is free. Including non-PyTorch memory, this process has 63.14 GiB memory in use. Of the allocated memory 61.12 GiB is allocated by PyTorch, and 1.79 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/doc",
+    "timestamp": "2026-09-15 08:09:24"
+  },
+  "fastopic|20ng_s2wtm": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 23.574,
+    "acc": 0.19676252375988718,
+    "nmi": 0.19530769168569312,
+    "purity": 0.21117174566190447,
+    "timestamp": "2026-09-15 08:09:49"
+  }
+}

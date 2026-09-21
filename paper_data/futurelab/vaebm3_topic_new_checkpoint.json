@@ -1,0 +1,14 @@
+{
+  "vaebm|hicot_20ng|50": {
+    "status": "error",
+    "attempts": 1,
+    "error": "CUDA out of memory. Tried to allocate 192.00 MiB. GPU 0 has a total capacity of 69.75 GiB of which 34.56 MiB is free. Process 2466992 has 68.05 GiB memory in use. Including non-PyTorch memory, this process has 67.62 GiB memory in use. Process 2466993 has 2.06 GiB memory in use. Of the allocated memory 407.40 MiB is allocated by PyTorch, and 16.60 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to",
+    "timestamp": "2026-09-16 21:28:05"
+  },
+  "vaebm|hicot_20ng|100": {
+    "status": "error",
+    "attempts": 1,
+    "error": "CUDA out of memory. Tried to allocate 192.00 MiB. GPU 0 has a total capacity of 69.75 GiB of which 104.56 MiB is free. Including non-PyTorch memory, this process has 68.41 GiB memory in use. Process 2474368 has 68.05 GiB memory in use. Process 2474871 has 1.21 GiB memory in use. Of the allocated memory 504.34 MiB is allocated by PyTorch, and 207.66 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True ",
+    "timestamp": "2026-09-16 21:30:02"
+  }
+}

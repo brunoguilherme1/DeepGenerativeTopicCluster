@@ -908,10 +908,26 @@ proceed at their expected per-combo speed.
 | m10 | 10 | 0.690 | 0.545 | 0.737 | 86s |
 | pascal_flickr | 20 | 0.354 | 0.399 | 0.394 | 77s |
 
-11/12 succeeded on the first pass; `imdb` timed out (was competing
-with the since-killed orphaned processes) and is being retried
-directly (bypassing the 40-min sweep-driver timeout) now that the
-contention is gone.
+11/12 succeeded on the first pass; `imdb` timed out on its first
+attempt (competing with the since-killed orphaned processes) and was
+retried directly (bypassing the driver's 2400s cap - bge-large's own
+50k-document embed genuinely needs ~50 min): Acc=0.941, NMI=0.676,
+Purity=0.941, runtime=3001s. **12/12 complete.**
+
+**Head-to-head vs. FASTopic/HiCOT (the two baselines the task calls
+for unconditionally) across these 12 datasets, computed
+programmatically from `paper_data/results_manifest.json`: VAE-BM wins
+ACC on 12/12 and NMI on 12/12 against BOTH.** Against stronger
+embedding-clustering baselines the picture is mixed, exactly as the
+architecture predicts (VAE-BM's own mu IS essentially the same
+gte-large embedding at alpha=0): vs SBERT-GTE, 4/12 ACC and 3/12 NMI;
+vs BERTopic, 6/12 ACC and 9/12 NMI; vs SBERT-MiniLM (weaker embedder),
+8/12 ACC and 11/12 NMI. Integrated into `main.tex` \S\ref{sec:cluster-results}
+and regenerated via `scripts/build_paper_results.py` +
+`scripts/build_paper_tables.py` (old MiniLM-era "vaebm" cluster rows
+excluded via `model_filter`, replaced by this locked-architecture
+ingestion; vaebm_poe/vaebm_dec rows untouched, still the old ablation
+data).
 
 ### Classification results (K=n_classes, 5 seeds, random 80/20 split)
 

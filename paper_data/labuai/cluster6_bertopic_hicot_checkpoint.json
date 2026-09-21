@@ -1,0 +1,446 @@
+{
+  "bertopic|search_snippets": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 108.632,
+    "acc": 0.767260940032415,
+    "nmi": 0.6342021195969049,
+    "purity": 0.8196920583468396,
+    "timestamp": "2026-09-14 22:36:59"
+  },
+  "bertopic|agnews_short": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 108.811,
+    "acc": 0.84175,
+    "nmi": 0.6282879125252258,
+    "purity": 0.84175,
+    "timestamp": "2026-09-14 22:36:59"
+  },
+  "bertopic|google_news_t": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 114.825,
+    "acc": 0.7592725963269715,
+    "nmi": 0.9082290356903311,
+    "purity": 0.9083543392149802,
+    "timestamp": "2026-09-14 22:37:06"
+  },
+  "bertopic|google_news_ts": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 133.487,
+    "acc": 0.8074534161490683,
+    "nmi": 0.941901149838877,
+    "purity": 0.94824016563147,
+    "timestamp": "2026-09-14 22:37:26"
+  },
+  "bertopic|stack_overflow": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 148.559,
+    "acc": 0.7625,
+    "nmi": 0.7108970378078255,
+    "purity": 0.7625,
+    "timestamp": "2026-09-14 22:37:39"
+  },
+  "bertopic|biomedical": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 166.781,
+    "acc": 0.453,
+    "nmi": 0.3872997904965802,
+    "purity": 0.46705,
+    "timestamp": "2026-09-14 22:37:55"
+  },
+  "bertopic|tweet": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 82.787,
+    "acc": 0.6039644012944984,
+    "nmi": 0.8757274911934188,
+    "purity": 0.9235436893203883,
+    "timestamp": "2026-09-14 22:38:33"
+  },
+  "bertopic|20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 224.101,
+    "acc": 0.564576037355407,
+    "nmi": 0.552256098886117,
+    "purity": 0.5656372705083307,
+    "timestamp": "2026-09-14 22:38:53"
+  },
+  "bertopic|google_news_s": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 131.529,
+    "acc": 0.7899711919337414,
+    "nmi": 0.9137928329690582,
+    "purity": 0.9130356499819949,
+    "timestamp": "2026-09-14 22:39:15"
+  },
+  "bertopic|hicot_agnews": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 128.594,
+    "acc": 0.82208,
+    "nmi": 0.5890017865166536,
+    "purity": 0.82208,
+    "timestamp": "2026-09-14 22:39:58"
+  },
+  "bertopic|hicot_search_snippets": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 126.028,
+    "acc": 0.7651700016268098,
+    "nmi": 0.6282434699153181,
+    "purity": 0.7966487717585814,
+    "timestamp": "2026-09-14 22:40:13"
+  },
+  "bertopic|hicot_20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 181.962,
+    "acc": 0.5833598641621565,
+    "nmi": 0.6280213247428039,
+    "purity": 0.6023559375994906,
+    "timestamp": "2026-09-14 22:40:17"
+  },
+  "bertopic|hicot_google_news": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 129.7,
+    "acc": 0.7840094382430347,
+    "nmi": 0.9161834461957575,
+    "purity": 0.9165078500771395,
+    "timestamp": "2026-09-14 22:40:49"
+  },
+  "bertopic|banking77": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 126.992,
+    "acc": 0.6117530032902287,
+    "nmi": 0.8022834705808498,
+    "purity": 0.6407529267732803,
+    "timestamp": "2026-09-14 22:41:28"
+  },
+  "bertopic|bbc_news": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 89.308,
+    "acc": 0.9235955056179775,
+    "nmi": 0.7952113178559705,
+    "purity": 0.9235955056179775,
+    "timestamp": "2026-09-14 22:41:32"
+  },
+  "bertopic|m10": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 172.605,
+    "acc": 0.6427289048473968,
+    "nmi": 0.49371414797791097,
+    "purity": 0.6539796529024536,
+    "timestamp": "2026-09-14 22:44:05"
+  },
+  "bertopic|pascal_flickr": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 172.558,
+    "acc": 0.3980140670252379,
+    "nmi": 0.42267210817100065,
+    "purity": 0.4093918080264791,
+    "timestamp": "2026-09-14 22:44:29"
+  },
+  "bertopic|imdb": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 564.583,
+    "acc": 0.58262,
+    "nmi": 0.019787123662599215,
+    "purity": 0.58262,
+    "timestamp": "2026-09-14 22:44:41"
+  },
+  "bertopic|tweet_eval_emotion": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 185.523,
+    "acc": 0.3772763262074426,
+    "nmi": 0.07315063794559136,
+    "purity": 0.47110055423594616,
+    "timestamp": "2026-09-14 22:44:44"
+  },
+  "bertopic|hicot_imdb": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 457.771,
+    "acc": 0.63152,
+    "nmi": 0.0566465624204201,
+    "purity": 0.63152,
+    "timestamp": "2026-09-14 22:45:09"
+  },
+  "bertopic|20ng_s2wtm": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 155.025,
+    "acc": 0.4650806303268134,
+    "nmi": 0.45266650718675805,
+    "purity": 0.47409405849530933,
+    "timestamp": "2026-09-14 22:47:36"
+  },
+  "bertopic|dblp": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 449.91,
+    "acc": 0.5593003022254786,
+    "nmi": 0.2895736575692208,
+    "purity": 0.6820771132887627,
+    "timestamp": "2026-09-14 22:47:53"
+  },
+  "bertopic|tweet_eval_sentiment": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 529.946,
+    "acc": 0.4562012721414381,
+    "nmi": 0.058332250233876386,
+    "purity": 0.48064241473146463,
+    "timestamp": "2026-09-14 22:54:22"
+  },
+  "bertopic|agnews_full": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1290.162,
+    "acc": 0.7950548589341693,
+    "nmi": 0.5917268910044725,
+    "purity": 0.7950548589341693,
+    "timestamp": "2026-09-14 23:01:55"
+  },
+  "hicot|agnews_short": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 10346.154,
+    "acc": 0.818,
+    "nmi": 0.55983771762207,
+    "purity": 0.818,
+    "timestamp": "2026-09-15 01:40:23"
+  },
+  "hicot|search_snippets": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 18181.889,
+    "acc": 0.6432739059967585,
+    "nmi": 0.46977603951273184,
+    "purity": 0.6836304700162075,
+    "timestamp": "2026-09-15 03:51:08"
+  },
+  "bertopic|dbpedia_14": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 28298.918,
+    "acc": 0.7395079365079366,
+    "nmi": 0.7500987160325401,
+    "purity": 0.767663492063492,
+    "timestamp": "2026-09-15 06:35:13"
+  },
+  "hicot|stack_overflow": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 32524.63,
+    "acc": 0.44835,
+    "nmi": 0.3227254305715086,
+    "purity": 0.45275,
+    "timestamp": "2026-09-15 07:56:40"
+  },
+  "hicot|google_news_ts": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 22823.419,
+    "acc": 0.591052299936988,
+    "nmi": 0.8036316961722209,
+    "purity": 0.6634260509496804,
+    "timestamp": "2026-09-15 08:00:52"
+  },
+  "hicot|biomedical": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 32729.533,
+    "acc": 0.34265,
+    "nmi": 0.2700490842180545,
+    "purity": 0.3496,
+    "timestamp": "2026-09-15 08:07:43"
+  },
+  "hicot|20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 34547.984,
+    "acc": 0.30547596306908625,
+    "nmi": 0.3217039844742361,
+    "purity": 0.31529236973363045,
+    "timestamp": "2026-09-15 08:20:39"
+  },
+  "hicot|tweet": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 4163.328,
+    "acc": 0.10881877022653721,
+    "nmi": 0.06748864716909851,
+    "purity": 0.11084142394822007,
+    "timestamp": "2026-09-15 09:06:10"
+  },
+  "hicot|google_news_t": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 21255.396,
+    "acc": 0.03871083903492978,
+    "nmi": 0.0,
+    "purity": 0.03871083903492978,
+    "timestamp": "2026-09-15 09:45:31"
+  },
+  "hicot|google_news_s": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 15469.867,
+    "acc": 0.5587864602088585,
+    "nmi": 0.7583032615223156,
+    "purity": 0.6115412315448325,
+    "timestamp": "2026-09-15 10:53:08"
+  },
+  "hicot|hicot_agnews": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 17343.633,
+    "acc": 0.8204,
+    "nmi": 0.5556565678292645,
+    "purity": 0.8204,
+    "timestamp": "2026-09-15 13:09:51"
+  },
+  "hicot|hicot_search_snippets": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 18736.576,
+    "acc": 0.5976899300471775,
+    "nmi": 0.4514770411776118,
+    "purity": 0.6402310069952822,
+    "timestamp": "2026-09-15 14:18:31"
+  },
+  "hicot|hicot_google_news": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 16874.504,
+    "acc": 0.0391142571921227,
+    "nmi": 0.0005043688924647953,
+    "purity": 0.0391142571921227,
+    "timestamp": "2026-09-15 14:26:51"
+  },
+  "hicot|bbc_news": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 3668.092,
+    "acc": 0.8197752808988764,
+    "nmi": 0.6629185385564648,
+    "purity": 0.8197752808988764,
+    "timestamp": "2026-09-15 15:19:44"
+  },
+  "hicot|dbpedia_14": {
+    "status": "error",
+    "attempts": 3,
+    "error": "subprocess exited -9: WARNING: All log messages before absl::InitializeLog() is called are written to STDERR\nI0000 00:00:1789496774.048867 1942259 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.\nTo enable the following instructions: AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.\n",
+    "timestamp": "2026-09-15 15:28:28"
+  },
+  "hicot|hicot_20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 27377.33,
+    "acc": 0.4894407301284092,
+    "nmi": 0.5173911678616032,
+    "purity": 0.5057837206834341,
+    "timestamp": "2026-09-15 15:37:29"
+  },
+  "hicot|pascal_flickr": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 7043.089,
+    "acc": 0.18638808440215143,
+    "nmi": 0.17725672264921602,
+    "purity": 0.1994207695490277,
+    "timestamp": "2026-09-15 17:34:58"
+  },
+  "hicot|banking77": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 17512.826,
+    "acc": 0.30713903129543196,
+    "nmi": 0.515825280920954,
+    "purity": 0.31999387864411966,
+    "timestamp": "2026-09-15 18:01:51"
+  },
+  "hicot|m10": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 12485.702,
+    "acc": 0.26977857570317176,
+    "nmi": 0.13386660810892012,
+    "purity": 0.2836624775583483,
+    "timestamp": "2026-09-15 18:56:44"
+  },
+  "hicot|yahoo_answers_topics": {
+    "status": "error",
+    "attempts": 3,
+    "error": "subprocess exited -9: WARNING: All log messages before absl::InitializeLog() is called are written to STDERR\nI0000 00:00:1789510032.935381 1955029 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.\nTo enable the following instructions: AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.\n",
+    "timestamp": "2026-09-15 19:14:30"
+  },
+  "hicot|tweet_eval_emotion": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 6575.204,
+    "acc": 0.3028503562945368,
+    "nmi": 0.009950918089388765,
+    "purity": 0.4192399049881235,
+    "timestamp": "2026-09-15 19:24:52"
+  },
+  "hicot|imdb": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 75180.939,
+    "acc": 0.50124,
+    "nmi": 2.6285368651672628e-05,
+    "purity": 0.50124,
+    "timestamp": "2026-09-15 19:39:34"
+  },
+  "hicot|20ng_s2wtm": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 14764.284,
+    "acc": 0.38598319946042065,
+    "nmi": 0.3912733838498602,
+    "purity": 0.3981237353608437,
+    "timestamp": "2026-09-15 23:20:49"
+  },
+  "hicot|hicot_imdb": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 67704.405,
+    "acc": 0.67694,
+    "nmi": 0.09323301024888864,
+    "purity": 0.67694,
+    "timestamp": "2026-09-16 02:56:49"
+  },
+  "hicot|dblp": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 60668.718,
+    "acc": 0.3821961718106054,
+    "nmi": 0.01793561153944812,
+    "purity": 0.404689074091034,
+    "timestamp": "2026-09-16 07:19:18"
+  },
+  "hicot|tweet_eval_sentiment": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 70057.958,
+    "acc": 0.42304545985742664,
+    "nmi": 0.032984044955518106,
+    "purity": 0.4915941835422962,
+    "timestamp": "2026-09-16 13:29:40"
+  }
+}

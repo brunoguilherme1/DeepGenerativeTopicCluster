@@ -1,0 +1,123 @@
+{
+  "vaebm|20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 110.826,
+    "acc": 0.45633025575718983,
+    "nmi": 0.43709257814046304,
+    "purity": 0.4712405815557678,
+    "training_epochs_completed": null,
+    "checkpoint_selection": "none",
+    "timestamp": "2026-09-16 21:28:08"
+  },
+  "vaebm|imdb": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 188.62,
+    "acc": 0.63188,
+    "nmi": 0.05092618209716219,
+    "purity": 0.63188,
+    "training_epochs_completed": null,
+    "checkpoint_selection": "none",
+    "timestamp": "2026-09-16 21:31:18"
+  },
+  "vaebm|agnews_short": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 87.884,
+    "acc": 0.814125,
+    "nmi": 0.5309927968797716,
+    "purity": 0.814125,
+    "training_epochs_completed": null,
+    "checkpoint_selection": "none",
+    "timestamp": "2026-09-16 21:32:48"
+  },
+  "vaebm|search_snippets": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 94.172,
+    "acc": 0.6542139384116694,
+    "nmi": 0.4580063942722718,
+    "purity": 0.7246353322528363,
+    "training_epochs_completed": null,
+    "checkpoint_selection": "none",
+    "timestamp": "2026-09-16 21:34:25"
+  },
+  "vaebm|stack_overflow": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 96.611,
+    "acc": 0.67635,
+    "nmi": 0.6081273530020341,
+    "purity": 0.69665,
+    "training_epochs_completed": null,
+    "checkpoint_selection": "none",
+    "timestamp": "2026-09-16 21:36:03"
+  },
+  "vaebm|biomedical": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 98.052,
+    "acc": 0.47405,
+    "nmi": 0.37680009879701687,
+    "purity": 0.48065,
+    "training_epochs_completed": null,
+    "checkpoint_selection": "none",
+    "timestamp": "2026-09-16 21:37:44"
+  },
+  "vaebm|google_news_ts": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 95.444,
+    "acc": 0.6328202358448105,
+    "nmi": 0.8826838862572002,
+    "purity": 0.8653344135385723,
+    "training_epochs_completed": null,
+    "checkpoint_selection": "none",
+    "timestamp": "2026-09-16 21:39:21"
+  },
+  "vaebm|google_news_t": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 93.669,
+    "acc": 0.6639359020525747,
+    "nmi": 0.8568273060016293,
+    "purity": 0.8479474252790782,
+    "training_epochs_completed": null,
+    "checkpoint_selection": "none",
+    "timestamp": "2026-09-16 21:40:57"
+  },
+  "vaebm|google_news_s": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 94.765,
+    "acc": 0.6547533309326612,
+    "nmi": 0.8663359387569658,
+    "purity": 0.8630716600648182,
+    "training_epochs_completed": null,
+    "checkpoint_selection": "none",
+    "timestamp": "2026-09-16 21:42:34"
+  },
+  "vaebm|tweet": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 80.754,
+    "acc": 0.6177184466019418,
+    "nmi": 0.8472395835549542,
+    "purity": 0.8758090614886731,
+    "training_epochs_completed": null,
+    "checkpoint_selection": "none",
+    "timestamp": "2026-09-16 21:43:57"
+  },
+  "vaebm|hicot_20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 99.835,
+    "acc": 0.5900456330255757,
+    "nmi": 0.581614844704159,
+    "purity": 0.6070784251300011,
+    "training_epochs_completed": null,
+    "checkpoint_selection": "none",
+    "timestamp": "2026-09-16 21:45:39"
+  }
+}

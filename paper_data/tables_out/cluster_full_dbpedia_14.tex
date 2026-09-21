@@ -1,0 +1,15 @@
+\begin{table}[t]
+\centering
+\scriptsize
+\caption{Full clustering metrics, DBpedia14. Lower is better for DB only; higher is better for every other metric. \textbf{Bold}/\underline{underline} = best/second-best.}
+\label{tab:cluster-full-dbpedia_14}
+\adjustbox{max width=\columnwidth}{
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
+\midrule
+BERTopic & \textbf{0.740}$^{\mathrm{LU}}$ & \textbf{0.750}$^{\mathrm{LU}}$ & -- & -- & -- & -- & -- & \textbf{0.768}$^{\mathrm{LU}}$ & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+}
+\end{table}

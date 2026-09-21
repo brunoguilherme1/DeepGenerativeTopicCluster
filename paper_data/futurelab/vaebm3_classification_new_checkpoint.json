@@ -1,0 +1,26 @@
+{
+  "vaebm|20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 122.739,
+    "k": 20,
+    "accuracy": 0.5769230769230769,
+    "f1": 0.5619317120637607,
+    "num_train_docs": 15076,
+    "num_test_docs": 3770,
+    "split_stratified": true,
+    "timestamp": "2026-09-16 21:28:20"
+  },
+  "vaebm|imdb": {
+    "status": "error",
+    "attempts": 1,
+    "error": "Failed copying input tensor from /job:localhost/replica:0/task:0/device:CPU:0 to /job:localhost/replica:0/task:0/device:GPU:0 in order to run _EagerConst: Dst tensor is not initialized.\nTraceback (most recent call last):\n  File \"/raid/brunoguilherme/DeepGenerativeTopicCluster/src/vaebm_benchmark/experiment/classification_runner.py\", line 236, in run_single_random_split\n    model.fit(train_docs)  # labels never passed to fit()\n    ^^^^^^^^^^^^^^^^^^^^^\n  File \"/raid/brunoguilherme/DeepGenerativeT",
+    "timestamp": "2026-09-16 21:30:00"
+  },
+  "vaebm|agnews_short": {
+    "status": "error",
+    "attempts": 1,
+    "error": "CUDA out of memory. Tried to allocate 86.00 MiB. GPU 0 has a total capacity of 69.75 GiB of which 18.56 MiB is free. Process 2474368 has 68.05 GiB memory in use. Including non-PyTorch memory, this process has 68.16 GiB memory in use. Process 2480813 has 1.53 GiB memory in use. Of the allocated memory 271.74 MiB is allocated by PyTorch, and 86.26 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to ",
+    "timestamp": "2026-09-16 21:31:09"
+  }
+}

@@ -1,0 +1,182 @@
+{
+  "sbert_gte|agnews_short": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 117.841,
+    "acc": 0.881875,
+    "nmi": 0.6756617317363965,
+    "purity": 0.881875,
+    "timestamp": "2026-09-14 21:24:13"
+  },
+  "sbert_gte|search_snippets": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 165.798,
+    "acc": 0.7761750405186386,
+    "nmi": 0.6452584930510272,
+    "purity": 0.836061588330632,
+    "timestamp": "2026-09-14 21:25:01"
+  },
+  "sbert_gte|stack_overflow": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 180.364,
+    "acc": 0.8461,
+    "nmi": 0.8249063685115722,
+    "purity": 0.8461,
+    "timestamp": "2026-09-14 21:27:17"
+  },
+  "sbert_gte|biomedical": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 237.17,
+    "acc": 0.5083,
+    "nmi": 0.4598574654414554,
+    "purity": 0.5166,
+    "timestamp": "2026-09-14 21:29:04"
+  },
+  "sbert_gte|google_news_ts": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 196.994,
+    "acc": 0.7507426411018093,
+    "nmi": 0.9269507633597558,
+    "purity": 0.9199747952110902,
+    "timestamp": "2026-09-14 21:30:39"
+  },
+  "sbert_gte|google_news_t": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 127.777,
+    "acc": 0.6874324810947066,
+    "nmi": 0.8803262545017826,
+    "purity": 0.8662225423118474,
+    "timestamp": "2026-09-14 21:31:16"
+  },
+  "sbert_gte|tweet": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 66.575,
+    "acc": 0.6650485436893204,
+    "nmi": 0.8915974449699009,
+    "purity": 0.9296116504854369,
+    "timestamp": "2026-09-14 21:32:28"
+  },
+  "sbert_gte|google_news_s": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 180.56,
+    "acc": 0.689413035649982,
+    "nmi": 0.892439161279976,
+    "purity": 0.8773856679870363,
+    "timestamp": "2026-09-14 21:33:43"
+  },
+  "sbert_gte|hicot_20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 913.486,
+    "acc": 0.591849729385546,
+    "nmi": 0.6123012135722842,
+    "purity": 0.6057518836888465,
+    "timestamp": "2026-09-14 21:47:44"
+  },
+  "sbert_gte|hicot_agnews": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 124.113,
+    "acc": 0.86008,
+    "nmi": 0.6327932881634238,
+    "purity": 0.86008,
+    "timestamp": "2026-09-14 21:49:52"
+  },
+  "sbert_gte|hicot_search_snippets": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 119.932,
+    "acc": 0.7796486090775988,
+    "nmi": 0.6447218179994142,
+    "purity": 0.838457784285017,
+    "timestamp": "2026-09-14 21:51:54"
+  },
+  "sbert_gte|hicot_google_news": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 121.144,
+    "acc": 0.6892639985479626,
+    "nmi": 0.8796888502531472,
+    "purity": 0.867864597513386,
+    "timestamp": "2026-09-14 21:53:58"
+  },
+  "sbert_gte|hicot_imdb": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 1933.363,
+    "acc": 0.83238,
+    "nmi": 0.3552924503355673,
+    "purity": 0.83238,
+    "timestamp": "2026-09-14 22:05:59"
+  },
+  "sbert_gte|20ng": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 2649.335,
+    "acc": 0.5626127560224982,
+    "nmi": 0.5767766844828609,
+    "purity": 0.5809190279104319,
+    "timestamp": "2026-09-14 22:06:25"
+  },
+  "sbert_gte|banking77": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 139.672,
+    "acc": 0.6757976891881552,
+    "nmi": 0.8125763013005414,
+    "purity": 0.7016604177825388,
+    "timestamp": "2026-09-14 22:08:22"
+  },
+  "sbert_gte|bbc_news": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 144.431,
+    "acc": 0.9608988764044943,
+    "nmi": 0.8758521329274334,
+    "purity": 0.9608988764044943,
+    "timestamp": "2026-09-14 22:08:52"
+  },
+  "sbert_gte|dblp": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 417.362,
+    "acc": 0.6062643099184907,
+    "nmi": 0.3188053091116025,
+    "purity": 0.7179228867112373,
+    "timestamp": "2026-09-14 22:15:22"
+  },
+  "sbert_gte|m10": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 75.476,
+    "acc": 0.7000598444045482,
+    "nmi": 0.5548189310938941,
+    "purity": 0.7297426690604428,
+    "timestamp": "2026-09-14 22:16:41"
+  },
+  "sbert_gte|pascal_flickr": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 48.06,
+    "acc": 0.3549855192387257,
+    "nmi": 0.40711331908558746,
+    "purity": 0.4040132395531651,
+    "timestamp": "2026-09-14 22:17:32"
+  },
+  "sbert_gte|tweet_eval_emotion": {
+    "status": "ok",
+    "attempts": 1,
+    "runtime": 71.938,
+    "acc": 0.45387965162311955,
+    "nmi": 0.1734175423587433,
+    "purity": 0.6045130641330166,
+    "timestamp": "2026-09-14 22:18:47"
+  }
+}
