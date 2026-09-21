@@ -40,7 +40,7 @@ Two recent papers make the tension between these traditions explicit. \citet{zha
 
 A parallel line of neural topic models has absorbed the Zhang/Sia lesson by regularizing or fusing a topic model's own latent space against pretrained embeddings: ECRTM~\citep{wu2023ecrtm} adds an embedding-clustering regularizer to the training objective, FASTopic~\citep{wu2024fastopic} aligns document and topic embeddings via optimal transport, HiCOT~\citep{hicot2025} combines optimal transport with contrastive learning and hierarchical structure, GloCOM~\citep{nguyen2025glocom} injects a global clustering context for short-text topic modeling, and S2WTM~\citep{adhya2025s2wtm} models the latent space on a hypersphere via a sliced-Wasserstein autoencoder. Each commits to one specific fusion mechanism baked into its own architecture.
 
-VAE-BM, the variational-autoencoder-with-Boltzmann-machine-decoder model this paper builds on~\citep{gomes2021mvaebm}, instead exposes the fusion weight as a tunable scalar $\alpha \in [0,1)$: a lexical (TF-IDF) encoder branch and a contextual (sentence-embedding) encoder branch are combined as $\mu_f = \alpha\,\mu_{\text{bow}} + (1-\alpha)\,\mu_{\text{emb}}$. We swept $\alpha$ systematically on HiCOT's five benchmark datasets to find the best operating point. The result reframes the entire project: \emph{any} lexical-branch contribution degrades clustering quality relative to $\alpha=0$ (pure embedding), monotonically, with no reversal even at $\alpha=0.01$. We therefore lock $\alpha=0$ as VAE-BM's final configuration throughout this paper.
+VAE-BM, the variational-autoencoder-with-Boltzmann-machine-decoder model this paper builds on~\citep{gomes2021mvaebm}, combines a lexical (TF-IDF) encoder branch and a contextual (sentence-embedding) encoder branch through a scalar $\alpha \in [0,1)$: $\mu_f = \alpha\,\mu_{\text{bow}} + (1-\alpha)\,\mu_{\text{emb}}$. We swept $\alpha$ systematically on HiCOT's five benchmark datasets to find the best operating point. The result reframes the entire project: \emph{any} lexical-branch contribution degrades clustering quality relative to $\alpha=0$ (pure embedding), monotonically, with no reversal even at $\alpha=0.01$. We therefore lock $\alpha=0$ as VAE-BM's final configuration throughout this paper.
 
 With $\alpha=0$ fixed, the lexical branch's own fusion mechanism becomes irrelevant to the document representation -- so the question that actually determines topic quality is a different one: given a fixed clustering, which words should represent each cluster? The field's default answer, ranking by raw within-cluster frequency, lets words common across \emph{many} clusters dominate every topic's word list, since frequency alone cannot distinguish "frequent because central to this topic" from "frequent because it is common everywhere." We adapt LDAvis's relevance score~\citep{sievert2014ldavis} -- originally a visualization slider for a human to interactively re-rank an already-fixed topic-word list -- into the ranking criterion itself, with its trade-off parameter $\lambda$ tuned once per dataset. This is the paper's central empirical finding: it improves coherence ($C_V$) on every one of HiCOT's five official benchmark datasets, with strictly zero effect on clustering, and is enough on its own to beat HiCOT's own published $C_V$, Purity, and NMI simultaneously on three of five datasets at $K=50$.
 
@@ -148,32 +148,32 @@ Encoder and decoder are then trained jointly by gradient ascent on the ELBO, usi
 \subsection{Encoder}
 \label{sec:encoder}
 
-For document $d$, $\mathbf{x}_b \in \mathbb{R}^{|V|}$ is a TF-IDF bag-of-words vector with a $\log(1+\cdot)$ transform applied to nonzero entries (vocabulary capped at $|V|=5000$ terms unless a dataset supplies its own fixed vocabulary), and $\mathbf{x}_e \in \mathbb{R}^{d_e}$ is a pretrained sentence embedding. Each branch is a 2-layer MLP followed by two linear heads, producing $(\boldsymbol{\mu}_b,\log\boldsymbol{\sigma}_b)$ from $\mathbf{x}_b$ and $(\boldsymbol{\mu}_e,\log\boldsymbol{\sigma}_e)$ from $\mathbf{x}_e$, each in $\mathbb{R}^{H}$ -- this is Equation~\ref{eq:amortized}'s $\operatorname{enc}(\mathbf{x};\phi)$, split across two inputs. The lexical branch defines a Gaussian posterior over the shared latent $\mathbf{z}$:
-\begin{equation}
-q_b(\mathbf{z}\mid\mathbf{x}_b) = \mathcal{N}\!\left(\boldsymbol{\mu}_b,\operatorname{diag}(\boldsymbol{\sigma}_b^2)\right).
-\label{eq:lexical-posterior}
-\end{equation}
-The contextual branch defines an analogous posterior over the same latent:
-\begin{equation}
-q_e(\mathbf{z}\mid\mathbf{x}_e) = \mathcal{N}\!\left(\boldsymbol{\mu}_e,\operatorname{diag}(\boldsymbol{\sigma}_e^2)\right).
-\label{eq:contextual-posterior}
-\end{equation}
+For document $d$, $\mathbf{x}_b \in \mathbb{R}^{|V|}$ is a TF-IDF bag-of-words vector with a $\log(1+\cdot)$ transform applied to nonzero entries (vocabulary capped at $|V|=5000$ terms unless a dataset supplies its own fixed vocabulary), and $\mathbf{x}_e \in \mathbb{R}^{d_e}$ is a pretrained sentence embedding. Each branch is a 2-layer MLP followed by two linear heads producing a mean and a log-variance in $\mathbb{R}^{H}$ -- this is Equation~\ref{eq:amortized}'s $\operatorname{enc}(\mathbf{x};\phi)$, split across two inputs. Writing $g(\cdot)$ for a nonlinear activation and $f_{b,1},f_{b,2},f_{b,\mu},f_{b,\sigma}$ for the lexical branch's four linear layers, the branch computes
+\begin{eqnarray}
+q_b(\mathbf{z}\mid\mathbf{x}_b) &=& \mathcal{N}\!\left(\boldsymbol{\mu}_b,\operatorname{diag}(\boldsymbol{\sigma}_b^2)\right), \label{eq:lexical-posterior}\\
+\boldsymbol{\ell}_b &=& g\big(f_{b,2}(g(f_{b,1}(\mathbf{x}_b)))\big), \nonumber\\
+\boldsymbol{\mu}_b &=& f_{b,\mu}(\boldsymbol{\ell}_b), \nonumber\\
+\log\boldsymbol{\sigma}_b &=& f_{b,\sigma}(\boldsymbol{\ell}_b). \nonumber
+\end{eqnarray}
+The contextual branch has the identical form, with its own layers $f_{e,1},f_{e,2},f_{e,\mu},f_{e,\sigma}$:
+\begin{eqnarray}
+q_e(\mathbf{z}\mid\mathbf{x}_e) &=& \mathcal{N}\!\left(\boldsymbol{\mu}_e,\operatorname{diag}(\boldsymbol{\sigma}_e^2)\right), \label{eq:contextual-posterior}\\
+\boldsymbol{\ell}_e &=& g\big(f_{e,2}(g(f_{e,1}(\mathbf{x}_e)))\big), \nonumber\\
+\boldsymbol{\mu}_e &=& f_{e,\mu}(\boldsymbol{\ell}_e), \nonumber\\
+\log\boldsymbol{\sigma}_e &=& f_{e,\sigma}(\boldsymbol{\ell}_e). \nonumber
+\end{eqnarray}
 
-VAE-BM combines the two branches with a fixed scalar $\alpha\in[0,1)$, taken per-document and per-dimension:
+The two branches combine into a single posterior over $\mathbf{z}$ via a scalar $\alpha\in[0,1)$, taken per-document and per-dimension:
+\begin{eqnarray}
+\boldsymbol{\mu}_f &=& \alpha\,\boldsymbol{\mu}_b + (1-\alpha)\,\boldsymbol{\mu}_e, \label{eq:alpha-fusion}\\
+\boldsymbol{\sigma}_f &=& \alpha\,\boldsymbol{\sigma}_b + (1-\alpha)\,\boldsymbol{\sigma}_e. \label{eq:alpha-fusion-sigma}
+\end{eqnarray}
+A systematic sweep of $\alpha\in\{0, 0.01, 0.1\text{--}0.2, 0.5\}$ on HiCOT's five benchmark datasets found that clustering quality (Purity, NMI) degrades monotonically as $\alpha$ increases from zero, with no reversal at any tested value: $\alpha=0.5$ alone collapses 20NG's Purity from 0.676 to 0.444 and NMI from 0.582 to 0.415, and even $\alpha=0.01$ is uniformly flat-to-worse across all five datasets relative to $\alpha=0$. VAE-BM's final configuration, reported everywhere in this paper as \textbf{VAE-BM (ours)}, sets $\alpha=0$:
 \begin{equation}
-\boldsymbol{\mu}_f = \alpha\,\boldsymbol{\mu}_b + (1-\alpha)\,\boldsymbol{\mu}_e,
-\label{eq:alpha-fusion}
-\end{equation}
-\begin{equation}
-\boldsymbol{\sigma}_f = \alpha\,\boldsymbol{\sigma}_b + (1-\alpha)\,\boldsymbol{\sigma}_e.
-\label{eq:alpha-fusion-sigma}
-\end{equation}
-A systematic sweep of $\alpha\in\{0, 0.01, 0.1\text{--}0.2, 0.5\}$ on HiCOT's five benchmark datasets found that clustering quality (Purity, NMI) degrades monotonically as $\alpha$ increases from zero, with no reversal at any tested value: $\alpha=0.5$ alone collapses 20NG's Purity from 0.676 to 0.444 and NMI from 0.582 to 0.415, and even $\alpha=0.01$ is uniformly flat-to-worse across all five datasets relative to $\alpha=0$. We therefore lock
-\begin{equation}
-\boldsymbol{\mu}_f = \boldsymbol{\mu}_e, \qquad \boldsymbol{\sigma}_f = \boldsymbol{\sigma}_e
+\boldsymbol{\mu}_f = \boldsymbol{\mu}_e, \qquad \boldsymbol{\sigma}_f = \boldsymbol{\sigma}_e.
 \label{eq:final-fusion}
 \end{equation}
-as VAE-BM's final configuration -- the document representation this paper reports everywhere as \textbf{VAE-BM (ours)}. Under Equation~\ref{eq:final-fusion}, the contextual branch's own MLP and output heads are frozen immediately after initialization and that output-layer kernel is initialized to (near-)identity, so $\boldsymbol{\mu}_e$ starts as, and remains throughout training, the pretrained sentence embedding itself, unmodified. Our main-text results use \texttt{thenlper/gte-large} ($d_e=1024$) for four of HiCOT's five benchmark datasets and \texttt{BAAI/bge-large-en-v1.5} ($d_e=1024$) for IMDB -- the only dataset where swapping embedders changed the outcome, improving Purity/NMI/$C_V$ together relative to GTE. Sampling then uses the standard reparameterization,
+At this setting, the contextual branch's own layers ($f_{e,1},f_{e,2},f_{e,\mu},f_{e,\sigma}$) are frozen immediately after initialization, with $f_{e,\mu}$ initialized to (near-)identity, so $\boldsymbol{\mu}_e$ starts as, and remains throughout training, the pretrained sentence embedding itself, unmodified. Our main-text results use \texttt{thenlper/gte-large} ($d_e=1024$) for four of HiCOT's five benchmark datasets and \texttt{BAAI/bge-large-en-v1.5} ($d_e=1024$) for IMDB. Sampling then uses the standard reparameterization,
 \begin{equation}
 \mathbf{z} = \boldsymbol{\mu}_f + \boldsymbol{\sigma}_f \odot \boldsymbol{\epsilon}, \qquad \boldsymbol{\epsilon}\sim\mathcal{N}(\mathbf{0},\mathbf{I}).
 \label{eq:reparam}
