@@ -168,6 +168,17 @@ def _build_vaebm(k: int, seed: int, voc_size: int):
         # code change - mirrors VAEBM_EMBEDDER's own convention.
         alpha=float(os.environ.get("VAEBM_ALPHA", "0.99")),
         top_words_mode="energy",
+        # Environment-configurable (VAEBM_FREEZE_EMB/VAEBM_NORMALIZE_MU,
+        # both default "0"/unset - unchanged prior behavior) - added
+        # 2026-09-21 so the cluster experiment can reuse the exact same
+        # locked architecture the topic experiment's own sweep established
+        # (frozen, identity-initialized embedding branch; optional
+        # spherical-KMeans approximation) rather than only supporting a
+        # trainable embedding branch. See experiment/runner.py's own
+        # VAEBM_FREEZE_EMB/VAEBM_NORMALIZE_MU comments for the full
+        # rationale - mirrored here, not duplicated at length.
+        freeze_embedding_branch=os.environ.get("VAEBM_FREEZE_EMB", "0").strip().lower() in ("1", "true", "yes"),
+        normalize_mu=os.environ.get("VAEBM_NORMALIZE_MU", "0").strip().lower() in ("1", "true", "yes"),
     )
 
 

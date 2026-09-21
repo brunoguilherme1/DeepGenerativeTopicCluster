@@ -86,6 +86,13 @@ def build_vaebm(k: int, seed: int, voc_size: int, dataset_id: str = None):
         # cluster_runner.py::_build_vaebm's own comment.
         alpha=float(os.environ.get("VAEBM_ALPHA", "0.99")),
         top_words_mode="energy",
+        # Environment-configurable (VAEBM_FREEZE_EMB/VAEBM_NORMALIZE_MU,
+        # both default "0"/unset - unchanged prior behavior) - see
+        # cluster_runner.py::_build_vaebm's own comment (2026-09-21, added
+        # so the classification experiment can reuse the exact locked
+        # architecture the topic experiment's own sweep established).
+        freeze_embedding_branch=os.environ.get("VAEBM_FREEZE_EMB", "0").strip().lower() in ("1", "true", "yes"),
+        normalize_mu=os.environ.get("VAEBM_NORMALIZE_MU", "0").strip().lower() in ("1", "true", "yes"),
     )
 
 
