@@ -139,7 +139,19 @@ class HiCOTAdapter(ProtocolModelAdapter):
         torch.manual_seed(self.random_state)
 
         documents = list(documents)
-        vectorizer_kwargs = {"vocabulary": self.vocabulary} if self.vocabulary is not None else {"max_features": self.voc_size}
+        # Stopword removal is NOT a tunable hyperparameter for a baseline -
+        # unlike VAE-BM's own VAEBM_EXCLUDE_STOPWORDS (a knob we may set
+        # either way per dataset), HiCOT must always get a stopword-free
+        # vocabulary, matching its own official hicot_* vocab.txt files
+        # (verified directly, 2026-09-21: HiCOT's own released 20NG vocab
+        # contains zero common stopwords) - self-fit datasets (no explicit
+        # `vocabulary=`, i.e. every plain non-hicot_* dataset in the
+        # cluster/classification experiments) previously had NO stop_words
+        # filter at all, a real asymmetry now fixed unconditionally.
+        vectorizer_kwargs = (
+            {"vocabulary": self.vocabulary} if self.vocabulary is not None
+            else {"max_features": self.voc_size, "stop_words": "english"}
+        )
         self._vectorizer = CountVectorizer(**vectorizer_kwargs)
         X_bow = self._vectorizer.fit_transform(documents).toarray().astype("float32")
         self._vocab = list(self._vectorizer.get_feature_names_out())
