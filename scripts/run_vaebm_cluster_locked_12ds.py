@@ -239,9 +239,17 @@ class Sweep:
         self.log(f"ERROR dataset={dataset} FINAL after {final_attempt} attempt(s), giving up progress={progress_idx}/{self.total}")
 
     def _read_result(self, dataset: str) -> dict | None:
-        if not self.results_json_path.exists():
+        # --experiment cluster writes to <RESULTS_DIR>/cluster/cluster_results.json,
+        # NOT <RESULTS_DIR>/experiment_results.json (that's the topic
+        # experiment's own path) - see scripts/run_experiment.py's own
+        # _run_cluster(). Found 2026-09-21 after this bug burned ~46
+        # minutes of labuai wall-clock time retrying "20ng" 3x with the
+        # generic "no matching result row found" error before being
+        # traced to the wrong path.
+        cluster_results_path = self.run_dir / "cluster" / "cluster_results.json"
+        if not cluster_results_path.exists():
             return None
-        rows = json.loads(self.results_json_path.read_text(encoding="utf-8"))
+        rows = json.loads(cluster_results_path.read_text(encoding="utf-8"))
         for row in reversed(rows):
             if row.get("model") == "vaebm" and row.get("dataset") == dataset:
                 return row

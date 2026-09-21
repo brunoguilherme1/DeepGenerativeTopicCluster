@@ -183,31 +183,31 @@ class Sweep:
                 if proc.returncode != 0:
                     last_error = f"subprocess exited {proc.returncode}: {(proc.stderr or '')[-500:]}"
                 else:
-                    rows = self._read_results(dataset)
-                    ok_rows = [r for r in rows if r.get("status") == "ok"]
-                    if not rows:
-                        last_error = "subprocess exited 0 but no matching result rows found in experiment_results.json"
-                    elif len(ok_rows) < len(SEEDS):
-                        errs = [r for r in rows if r.get("status") != "ok"]
-                        last_error = f"only {len(ok_rows)}/{len(SEEDS)} seeds ok: {(errs[0].get('error') or '')[:400] if errs else ''}"
+                    per_seed_rows = self._read_per_seed_rows(dataset)
+                    agg = self._read_aggregate(dataset)
+                    if agg is None:
+                        last_error = "subprocess exited 0 but no matching row found in classification_aggregated.json"
+                    elif agg.get("seeds_ok", 0) < len(SEEDS):
+                        errs = [r for r in per_seed_rows if r.get("status") != "ok"]
+                        last_error = (f"only {agg.get('seeds_ok', 0)}/{len(SEEDS)} seeds ok: "
+                                      f"{(errs[0].get('error') or '')[:400] if errs else ''}")
                     else:
-                        accs = [r["accuracy"] for r in ok_rows]
-                        f1s = [r["f1"] for r in ok_rows]
-                        mean_acc = sum(accs) / len(accs)
-                        mean_f1 = sum(f1s) / len(f1s)
-                        std_acc = (sum((a - mean_acc) ** 2 for a in accs) / len(accs)) ** 0.5
-                        std_f1 = (sum((f - mean_f1) ** 2 for f in f1s) / len(f1s)) ** 0.5
                         self.checkpoint[key] = {
                             "status": "ok", "attempts": attempt, "runtime": runtime,
-                            "seeds": SEEDS, "accuracy_per_seed": accs, "f1_per_seed": f1s,
-                            "accuracy_mean": mean_acc, "accuracy_std": std_acc,
-                            "f1_mean": mean_f1, "f1_std": std_f1,
+                            "seeds": SEEDS,
+                            "accuracy_per_seed": [r["accuracy"] for r in per_seed_rows if r.get("status") == "ok"],
+                            "f1_per_seed": [r["f1"] for r in per_seed_rows if r.get("status") == "ok"],
+                            "accuracy_mean": agg["accuracy_mean"], "accuracy_std": agg["accuracy_std"],
+                            "accuracy_ci_lower": agg["accuracy_ci_lower"], "accuracy_ci_upper": agg["accuracy_ci_upper"],
+                            "f1_mean": agg["f1_mean"], "f1_std": agg["f1_std"],
+                            "f1_ci_lower": agg["f1_ci_lower"], "f1_ci_upper": agg["f1_ci_upper"],
                             "timestamp": now_iso(),
                         }
                         self.save_checkpoint()
                         self.write_progress()
                         self.log(f"OK dataset={dataset} runtime={runtime:.0f}s "
-                                 f"accuracy={mean_acc:.4f}+/-{std_acc:.4f} f1={mean_f1:.4f}+/-{std_f1:.4f} "
+                                 f"accuracy={agg['accuracy_mean']:.4f}+/-{agg['accuracy_std']:.4f} "
+                                 f"f1={agg['f1_mean']:.4f}+/-{agg['f1_std']:.4f} "
                                  f"progress={progress_idx}/{self.total}")
                         return
             except subprocess.TimeoutExpired:
@@ -236,15 +236,35 @@ class Sweep:
         self.write_progress()
         self.log(f"ERROR dataset={dataset} FINAL after {final_attempt} attempt(s), giving up progress={progress_idx}/{self.total}")
 
-    def _read_results(self, dataset: str) -> list[dict]:
-        if not self.results_json_path.exists():
+    def _read_per_seed_rows(self, dataset: str) -> list[dict]:
+        # --experiment classification writes to
+        # <RESULTS_DIR>/classification/classification_results.json (per-seed
+        # rows) and .../classification_aggregated.json (pre-computed
+        # mean/std/CI across seeds) - NOT <RESULTS_DIR>/experiment_results.json
+        # (that's the topic experiment's own path). See
+        # scripts/run_experiment.py's own _run_classification(). Same class
+        # of bug found and fixed in run_vaebm_cluster_locked_12ds.py's own
+        # _read_result() (2026-09-21) - fixed here proactively before
+        # launching, not discovered the same expensive way twice.
+        path = self.run_dir / "classification" / "classification_results.json"
+        if not path.exists():
             return []
-        rows = json.loads(self.results_json_path.read_text(encoding="utf-8"))
+        rows = json.loads(path.read_text(encoding="utf-8"))
         matches = {}
         for row in rows:
             if row.get("model") == "vaebm" and row.get("dataset") == dataset and row.get("seed") in SEEDS:
                 matches[row["seed"]] = row  # last one per seed wins (resume-safe)
         return list(matches.values())
+
+    def _read_aggregate(self, dataset: str) -> dict | None:
+        path = self.run_dir / "classification" / "classification_aggregated.json"
+        if not path.exists():
+            return None
+        rows = json.loads(path.read_text(encoding="utf-8"))
+        for row in reversed(rows):
+            if row.get("model") == "vaebm" and row.get("dataset") == dataset:
+                return row
+        return None
 
     def run(self) -> None:
         self.log(f"SWEEP_START run_dir={self.run_dir} datasets={[d for d, _ in DATASETS]} seeds={SEEDS} base_env={BASE_ENV}")
