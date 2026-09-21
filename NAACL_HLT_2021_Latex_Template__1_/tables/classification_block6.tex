@@ -1,7 +1,7 @@
 \begin{table*}[t]
 \centering
 \small
-\caption{Classification (Accuracy/F1, --split random), datasets 6 of 6. Core baselines and at most two embedding-clustering baselines (SBERT-MiniLM, SBERT-GTE) above a horizontal rule; our proposed family below it, with \textbf{VAE-BM-PoE} bolded for identification. Single run per cell (no repeated seeds available - std/CI not reported to avoid fabricating uncertainty). -- = not yet available (the 26-dataset VAE-BM-PoE/VAE-BM-DEC sweep was still queued at submission time; only bbc\_news has a single validation datapoint for those two models).}
+\caption{Classification (Accuracy/F1, --split random), datasets 6 of 6. Core baselines and at most two embedding-clustering baselines (SBERT-MiniLM, SBERT-GTE) above a horizontal rule; our proposed family below it, with \textbf{VAE-BM-PoE} bolded for identification. \textbf{VAE-BM}'s own cells are the mean over 5 seeds (std/CI in Appendix~\ref{sec:appendix}'s manifest); every baseline cell (LDA/GloCOM/ECRTM/S2WTM/FASTopic/HiCOT/BERTopic/SBERT-MiniLM/SBERT-GTE) is a single run (seed 42), matching this task's own established single-seed baseline convention. -- = not yet available (the 26-dataset VAE-BM-PoE/VAE-BM-DEC sweep was still queued at submission time; only bbc\_news has a single validation datapoint for those two models).}
 \label{tab:classif-block6}
 \adjustbox{max width=\textwidth}{
 \begin{tabular}{lcccccccc}
@@ -10,12 +10,17 @@
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}
  & Acc. & F1 & Acc. & F1 & Acc. & F1 & Acc. & F1 \\
 \midrule
+LDA & 0.376$^{\mathrm{LU}}$ & 0.368$^{\mathrm{LU}}$ & 0.632$^{\mathrm{LU}}$ & 0.275$^{\mathrm{LU}}$ & -- & -- & -- & -- \\
+GloCOM & 0.625 & 0.592 & 0.184 & 0.036 & -- & -- & -- & -- \\
+ECRTM & 0.377 & 0.348 & 0.137 & 0.015 & -- & -- & -- & -- \\
+S2WTM & 0.384 & 0.378 & 0.244 & 0.020 & -- & -- & -- & -- \\
 FASTopic & 0.609 & 0.589 & 0.093 & 0.002 & 0.447 & 0.204 & 0.505 & 0.363 \\
 HiCOT & 0.259 & 0.235 & 0.123 & 0.013 & 0.419 & 0.148 & 0.459 & 0.210 \\
-BERTopic & \underline{0.885} & \underline{0.886} & \textbf{0.958} & \textbf{0.855} & \underline{0.735} & \underline{0.670} & \underline{0.675} & \underline{0.656} \\
+BERTopic & 0.885 & 0.886 & \textbf{0.958} & \textbf{0.855} & \underline{0.735} & \underline{0.670} & \underline{0.675} & \underline{0.656} \\
 SBERT-MiniLM & 0.885 & 0.886 & 0.958 & 0.855 & 0.735 & 0.670 & 0.675 & 0.656 \\
-SBERT-GTE & \textbf{0.907} & \textbf{0.908} & 0.911 & 0.717 & \textbf{0.765} & \textbf{0.695} & \textbf{0.703} & \textbf{0.693} \\
+SBERT-GTE & \underline{0.907} & \underline{0.908} & 0.911 & 0.717 & \textbf{0.765} & \textbf{0.695} & \textbf{0.703} & \textbf{0.693} \\
 \midrule
+VAE-BM & \textbf{0.916}$^{\mathrm{LU}}$ & \textbf{0.916}$^{\mathrm{LU}}$ & 0.786$^{\mathrm{LU}}$ & 0.443$^{\mathrm{LU}}$ & -- & -- & -- & -- \\
 \textbf{VAE-BM-PoE} & -- & -- & -- & -- & -- & -- & -- & -- \\
 VAE-BM-DEC & -- & -- & -- & -- & -- & -- & -- & -- \\
 \bottomrule

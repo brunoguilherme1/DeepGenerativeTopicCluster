@@ -929,11 +929,103 @@ excluded via `model_filter`, replaced by this locked-architecture
 ingestion; vaebm_poe/vaebm_dec rows untouched, still the old ablation
 data).
 
-### Classification results (K=n_classes, 5 seeds, random 80/20 split)
+### Classification results (K=n_classes, 5 seeds, random 80/20 split) - COMPLETE
 
-Sweep launched 2026-09-20 23:27, in progress. `20ng`'s first attempt
-timed out at 3600s (same orphaned-process contention as above,
-diagnosed and fixed retroactively) and is queued for a manual retry
-once the sweep finishes its first pass over the other 11 datasets.
-Results will be appended here as they complete.
+12/12 datasets complete (mean +/- std over seeds 1-5):
+
+| Dataset | Acc | F1 |
+|---|---:|---:|
+| 20ng | 0.748 +/- 0.009 | 0.734 +/- 0.010 |
+| agnews_short | 0.909 +/- 0.002 | 0.909 +/- 0.002 |
+| google_news_t | 0.882 +/- 0.004 | 0.716 +/- ... (imbalanced-label F1) |
+| imdb | 0.946 +/- 0.001 | 0.946 +/- 0.001 |
+| search_snippets | 0.901 +/- 0.004 | 0.895 +/- 0.004 |
+| bbc_news | 0.966 +/- 0.007 | 0.966 +/- 0.007 |
+| tweet | 0.786 +/- 0.006 | ~0.46 (many singleton classes) |
+| stack_overflow | 0.916 +/- 0.003 | 0.917 +/- 0.003 |
+| biomedical | 0.732 +/- 0.008 | 0.731 +/- 0.008 |
+| banking77 | 0.901 +/- 0.008 | 0.902 +/- 0.008 |
+| m10 | 0.795 +/- 0.007 | 0.760 +/- 0.010 |
+| pascal_flickr | 0.610 +/- 0.016 | 0.598 +/- 0.016 |
+
+**Classifier note**: `SVC(kernel="linear")` -> `LinearSVC` -> `LogisticRegression`,
+in that order, over the course of this run. `LinearSVC` hung on
+`biomedical` specifically (confirmed: real data, not a scale/
+conditioning bug - even capped at max_iter=1000 it processed only 4/20
+one-vs-rest classes in 38 minutes, while a same-shape random-label
+synthetic benchmark converged in seconds). Switched to
+`LogisticRegression` for every model on every dataset uniformly
+("we just need to be fair" - not a fix scoped only to the datasets
+that broke).
+
+**vs FASTopic/HiCOT/LDA/GloCOM/ECRTM/S2WTM: VAE-BM wins Accuracy and F1
+on 12/12 datasets against all six.** Against SBERT-GTE/MiniLM/BERTopic
+(pure embedding baselines), the picture is mixed (4-6/12 wins) -
+expected, since VAE-BM's own mu is essentially that same frozen
+embedding at alpha=0. See `main.tex` \S{sec:results} for the full
+writeup.
+
+**Compute note**: ran across BOTH labuai (4 GPUs) and FutureLab (up to
+5 concurrent slots once its head-node disk-full issue was cleared,
+2026-09-21 - see below) in parallel, with deliberate redundancy on
+several datasets (whichever environment finished first/cleanest was
+kept, duplicates discarded) to maximize throughput once both machines
+were available.
+
+## FutureLab disk-full issue: RESOLVED (2026-09-21)
+
+Root cause found: `df` reported 383G/383G used on the root filesystem
+(`/dev/sda6`), but `du -x --max-depth=1` could only account for ~64G of
+it (53G `/cm`, 6.4G home dir, rest small) - a ~320G gap consistent with
+a deleted-but-still-open file held by some other process, invisible to
+a non-root user (would need `lsof`/root to find - flagged, still
+unexplained, but no longer blocking). Separately, my OWN home directory
+had ~6.3G of safely-deletable cruft (`.cache/pip` 343M, `.cache/
+huggingface` 728M - both regenerable caches unrelated to our own
+scripts' own HF_HOME override - and `.local/lib` 5.2G, a `pip install
+--user` of the `dtea` Arena package + its CUDA/torch dependencies,
+also fully recoverable via `pip install -e .`). Deleting these three
+freed the disk from 44K to 6.3G available - enough for `sbatch` to
+work again (verified with a real GPU job, exit 0). Also found and
+killed several long-abandoned orphaned processes on labuai during this
+same pass (see the Cluster section above) that were independently
+slowing down our OWN sweeps.
+
+## New baselines added to Cluster/Classification (2026-09-21): LDA, GloCOM, ECRTM, S2WTM
+
+Per instruction: FASTopic/HiCOT stay mandatory; these four are
+"could put" additions, included because a genuine, runnable
+implementation was found for each - GloCOM/ECRTM via the official
+TopMost toolkit (already vendored in this repo for GloCOM/FASTopic;
+ECRTM ported from `document-topic-evaluatio-arena`'s own Arena
+framework), S2WTM ported from the Arena's own vendoring of the
+official OCTIS-based repo (with a real stopword-removal gap found and
+fixed during porting - the Arena's own port had none at all).
+
+All 4 x 12 datasets x {cluster, classification} = 96 combos complete.
+Single seed=42 throughout (matching FASTopic/HiCOT/BERTopic/SBERT-
+kmeans's own existing single-seed convention). Ran LDA on labuai;
+GloCOM/ECRTM/S2WTM on FutureLab once its disk issue cleared - FutureLab's
+H200s finished all three in well under an hour combined, vs. labuai's
+GTX 1080 Tis (LDA alone took ~70 min on labuai).
+
+**Result: VAE-BM beats all 4 new baselines (plus FASTopic/HiCOT) on
+Accuracy/NMI on 11-12/12 Cluster datasets and on Accuracy/F1 on 12/12
+Classification datasets.** The lone cluster loss: GloCOM edges VAE-BM
+on `biomedical` (0.467 vs 0.441 ACC) - a real, close, honestly-reported
+loss, not hidden.
+
+Also fixed a real manifest-building bug found while ingesting this:
+`build_paper_results.py`'s dedup key never included `seed`, so 5
+raw per-seed classification rows for the same (model, dataset)
+silently collapsed to whichever seed was ingested last. Added
+`ingest_classification_multiseed_aggregated()` to average across
+seeds before the dedup step - every VAE-BM classification number in
+the paper is now a genuine 5-seed mean, not an arbitrary single seed.
+
+Also found and fixed BERTopic's own stopword gap (same class as
+HiCOT's - no `vectorizer_model=` override at all, library default has
+none) while auditing every adapter for the mandatory-stopword-removal
+policy. FASTopic/LDA/GloCOM/ECRTM were already clean (checked, not
+assumed).
 

@@ -8,13 +8,17 @@
 \toprule
 Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
 \midrule
+LDA & 0.256$^{\mathrm{LU}}$ & 0.264$^{\mathrm{LU}}$ & 0.071$^{\mathrm{LU}}$ & 0.262$^{\mathrm{LU}}$ & 0.229$^{\mathrm{LU}}$ & 0.312$^{\mathrm{LU}}$ & 0.264$^{\mathrm{LU}}$ & 0.265$^{\mathrm{LU}}$ & \underline{0.235}$^{\mathrm{LU}}$ & \underline{1.121}$^{\mathrm{LU}}$ & 1630.48$^{\mathrm{LU}}$ \\
+GloCOM & 0.382 & 0.457 & \underline{0.242} & \underline{0.456} & \underline{0.405} & \underline{0.524} & \underline{0.457} & 0.389 & \textbf{0.445} & \textbf{0.935} & \textbf{15746.34} \\
+ECRTM & 0.250 & 0.294 & 0.107 & 0.291 & 0.259 & 0.339 & 0.294 & 0.260 & 0.062 & 1.634 & 1218.22 \\
+S2WTM & 0.222 & 0.213 & 0.096 & 0.211 & 0.204 & 0.224 & 0.213 & 0.242 & 0.195 & 1.262 & \underline{1996.92} \\
 FASTopic & 0.214 & 0.224 & -- & -- & -- & -- & -- & 0.235 & -- & -- & -- \\
 HiCOT & 0.187 & 0.200 & -- & -- & -- & -- & -- & 0.194 & -- & -- & -- \\
 BERTopic & \textbf{0.565}$^{\mathrm{LU}}$ & 0.552$^{\mathrm{LU}}$ & -- & -- & -- & -- & -- & \underline{0.566}$^{\mathrm{LU}}$ & -- & -- & -- \\
 SBERT-MiniLM & 0.514 & 0.513 & -- & -- & -- & -- & -- & 0.532 & -- & -- & -- \\
 SBERT-GTE & \underline{0.563} & \textbf{0.577} & -- & -- & -- & -- & -- & \textbf{0.581} & -- & -- & -- \\
 \midrule
-VAE-BM & 0.519$^{\mathrm{LU}}$ & \underline{0.557}$^{\mathrm{LU}}$ & \textbf{0.397}$^{\mathrm{LU}}$ & \textbf{0.555}$^{\mathrm{LU}}$ & \textbf{0.549}$^{\mathrm{LU}}$ & \textbf{0.565}$^{\mathrm{LU}}$ & \textbf{0.557}$^{\mathrm{LU}}$ & 0.555$^{\mathrm{LU}}$ & \textbf{0.043}$^{\mathrm{LU}}$ & \textbf{4.402}$^{\mathrm{LU}}$ & \textbf{220.30}$^{\mathrm{LU}}$ \\
+VAE-BM & 0.519$^{\mathrm{LU}}$ & \underline{0.557}$^{\mathrm{LU}}$ & \textbf{0.397}$^{\mathrm{LU}}$ & \textbf{0.555}$^{\mathrm{LU}}$ & \textbf{0.549}$^{\mathrm{LU}}$ & \textbf{0.565}$^{\mathrm{LU}}$ & \textbf{0.557}$^{\mathrm{LU}}$ & 0.555$^{\mathrm{LU}}$ & 0.043$^{\mathrm{LU}}$ & 4.402$^{\mathrm{LU}}$ & 220.30$^{\mathrm{LU}}$ \\
 \bottomrule
 \end{tabular}
 }

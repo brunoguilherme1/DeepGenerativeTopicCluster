@@ -96,6 +96,25 @@ ingest_cluster_final_rows("labuai/vaebm_cluster_locked_20260921.json", "labuai",
                            "vaebm_cluster_locked_20260921 (vaebm locked architecture x 12 plain datasets, gte-large/bge-large)",
                            model_filter={"vaebm"})
 
+# New baselines (2026-09-21, user-authorized): LDA, GloCOM, ECRTM, S2WTM
+# added to the Cluster/Classification comparison, per the task's own
+# "for classification and cluster we need to have fastopic and hicot,
+# every other baseline could put or not" rule - these 4 are the
+# "could put" additions. All run on the SAME 12 plain datasets as
+# VAE-BM's own locked-architecture sweep, K=num_classes, single
+# seed=42 (matching every other baseline's own convention - HiCOT/
+# FASTopic/BERTopic/SBERT-kmeans are all single-seed=42 for cluster
+# already). LDA ran on labuai; GloCOM/ECRTM/S2WTM ran on FutureLab
+# (once its head-node disk-full issue was cleared, 2026-09-21).
+ingest_cluster_final_rows("labuai/lda_locked_cluster_20260921.json", "labuai",
+                           "lda_locked_20260921 (lda x 12 plain datasets)")
+ingest_cluster_final_rows("futurelab_new/glocom_locked_cluster_20260921.json", "futurelab",
+                           "glocom_locked_20260921 (glocom x 12 plain datasets)")
+ingest_cluster_final_rows("futurelab_new/ecrtm_locked_cluster_20260921.json", "futurelab",
+                           "ecrtm_locked_20260921 (ecrtm x 12 plain datasets)")
+ingest_cluster_final_rows("futurelab_new/s2wtm_locked_cluster_20260921.json", "futurelab",
+                           "s2wtm_locked_20260921 (s2wtm x 12 plain datasets)")
+
 # ------------------------------------------------------------ classification --
 
 def ingest_classification_final_rows(fname, environment, sweep, model_filter=None):
@@ -108,6 +127,42 @@ def ingest_classification_final_rows(fname, environment, sweep, model_filter=Non
             metrics, r.get("status"), r.get("error"), fname, environment, sweep,
             r.get("checkpoint_selection", "none"),
             notes=f"split_stratified={r.get('split_stratified')}")
+
+
+def ingest_classification_multiseed_aggregated(fname, environment, sweep, model_filter=None):
+    """Averages multi-seed per-row classification data into ONE row per
+    (model, dataset) before calling add() - found 2026-09-21 that the
+    dedup step below keys on (experiment, model, dataset, k, environment,
+    sweep), NOT seed, so feeding it 5 raw per-seed rows for the same key
+    silently collapses to whichever seed's row happened to be ingested
+    last (a real bug that never manifested before, since every other
+    model ingested here is single-seed). Use this instead of
+    ingest_classification_final_rows() for any file with >1 seed per
+    (model, dataset) - stores accuracy_mean/f1_mean/accuracy_std/f1_std/
+    n_seeds in metrics, so tables report the genuine 5-seed mean, not an
+    arbitrary single seed."""
+    rows = load(fname)
+    if model_filter:
+        rows = [r for r in rows if r["model"] in model_filter]
+    groups: dict[tuple, list] = {}
+    for r in rows:
+        if r.get("status") != "ok":
+            continue
+        groups.setdefault((r["model"], r["dataset"], r.get("k")), []).append(r)
+    for (model, dataset, k), group_rows in groups.items():
+        accs = [r["accuracy"] for r in group_rows]
+        f1s = [r["f1"] for r in group_rows]
+        n = len(accs)
+        mean = lambda xs: sum(xs) / len(xs)
+        std = lambda xs: (sum((x - mean(xs)) ** 2 for x in xs) / len(xs)) ** 0.5 if len(xs) > 1 else 0.0
+        metrics = {
+            "accuracy": mean(accs), "f1": mean(f1s),
+            "accuracy_mean": mean(accs), "accuracy_std": std(accs),
+            "f1_mean": mean(f1s), "f1_std": std(f1s), "n_seeds": n,
+        }
+        add("classification", model, dataset, k, None, metrics, "ok", "", fname, environment, sweep,
+            group_rows[0].get("checkpoint_selection", "none"),
+            notes=f"mean+/-std over {n} seeds ({sorted(r['seed'] for r in group_rows)})")
 
 
 ingest_classification_final_rows("futurelab/classification5_final.json", "futurelab",
@@ -136,9 +191,34 @@ for model, acc, f1 in _VAEBM_CLASSIF_SMOKE:
 # single deterministic seed. Ran on labuai. See
 # scripts/run_vaebm_classification_locked_12ds.py's own docstring.
 if (DATA / "labuai" / "vaebm_classification_locked_20260921.json").exists():
-    ingest_classification_final_rows("labuai/vaebm_classification_locked_20260921.json", "labuai",
-                                      "vaebm_classification_locked_20260921 (vaebm locked architecture x 12 plain datasets, 5 seeds, --split random)",
-                                      model_filter={"vaebm"})
+    ingest_classification_multiseed_aggregated("labuai/vaebm_classification_locked_20260921.json", "labuai",
+                                                "vaebm_classification_locked_20260921 (vaebm locked architecture x 12 plain datasets, 5 seeds, --split random)",
+                                                model_filter={"vaebm"})
+
+# New baselines (2026-09-21) - same 4 as the cluster ingestion above,
+# single seed=42 (matching HiCOT/FASTopic/BERTopic/SBERT-kmeans'
+# existing classification convention, --split random).
+ingest_classification_final_rows("labuai/lda_locked_classification_20260921.json", "labuai",
+                                  "lda_locked_20260921 (lda x 12 plain datasets, --split random)")
+ingest_classification_final_rows("futurelab_new/glocom_locked_classification_20260921.json", "futurelab",
+                                  "glocom_locked_20260921 (glocom x 12 plain datasets, --split random)")
+ingest_classification_final_rows("futurelab_new/ecrtm_locked_classification_20260921.json", "futurelab",
+                                  "ecrtm_locked_20260921 (ecrtm x 12 plain datasets, --split random)")
+ingest_classification_final_rows("futurelab_new/s2wtm_locked_classification_20260921.json", "futurelab",
+                                  "s2wtm_locked_20260921 (s2wtm x 12 plain datasets, --split random)")
+
+# HiCOT classification stopword-fix (2026-09-21): replaces
+# classification5_final.json's own HiCOT rows for these 12 datasets -
+# hicot_adapter.py's self-fit vectorizer had no stop_words filter at
+# all before this fix (see models/hicot_adapter.py's own docstring).
+# Ingested AFTER classification5_final.json above, so "last ok wins"
+# dedup correctly supersedes the un-fixed rows for these 12 datasets
+# specifically (classification5_final.json's other ~14 datasets keep
+# their own HiCOT rows, untouched).
+if (DATA / "futurelab_new" / "hicot_classif_stopword_fix_20260921.json").exists():
+    ingest_classification_final_rows("futurelab_new/hicot_classif_stopword_fix_20260921.json", "futurelab",
+                                      "hicot_classif_stopword_fix_20260921 (hicot x 12 plain datasets, stopword fix, --split random)",
+                                      model_filter={"hicot"})
 
 # ---------------------------------------------------------------- topic --
 

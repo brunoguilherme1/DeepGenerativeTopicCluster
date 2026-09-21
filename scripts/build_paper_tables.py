@@ -42,6 +42,7 @@ manifest.append({
 MODEL_LABEL = {
     "vaebm": "VAE-BM", "vaebm_poe": "VAE-BM-PoE", "vaebm_dec": "VAE-BM-DEC",
     "hicot": "HiCOT", "fastopic": "FASTopic", "bertopic": "BERTopic", "lda": "LDA",
+    "glocom": "GloCOM", "ecrtm": "ECRTM", "s2wtm": "S2WTM",
     "sbert_gte": "SBERT-GTE", "sbert_minilm": "SBERT-MiniLM", "sbert_mpnet": "SBERT-MPNet",
     "sbert_bge": "SBERT-BGE", "sbert_e5": "SBERT-E5", "sbert_t5": "SBERT-T5",
     "sbert_distilbert": "SBERT-DistilBERT", "sbert_distilroberta": "SBERT-DistilRoBERTa",
@@ -269,7 +270,7 @@ for bi, block in enumerate(topic_blocks, start=1):
 # ============================================================= CLUSTER =====
 # Main-paper cluster models: core baselines, then at most two SBERT
 # variants (MiniLM, GTE), then a \midrule, then the proposed family.
-CLUSTER_ALL_MODELS = ["lda", "fastopic", "hicot", "bertopic", "sbert_minilm", "sbert_gte"] + \
+CLUSTER_ALL_MODELS = ["lda", "glocom", "ecrtm", "s2wtm", "fastopic", "hicot", "bertopic", "sbert_minilm", "sbert_gte"] + \
     ["vaebm", "vaebm_poe", "vaebm_dec"]
 CLUSTER_ALL_MODELS = [m for m in CLUSTER_ALL_MODELS if get("cluster", model=m)]
 CLUSTER_DATASET_ORDER = ["hicot_20ng", "hicot_agnews", "hicot_google_news", "hicot_imdb", "hicot_search_snippets",
@@ -412,7 +413,7 @@ for ds in CLUSTER_DATASETS:
 print("Appendix full-metric cluster tables:", len(appendix_lines))
 
 # ======================================================= CLASSIFICATION ====
-CLASSIF_ALL_MODELS = ["lda", "fastopic", "hicot", "bertopic", "sbert_minilm", "sbert_gte"] + \
+CLASSIF_ALL_MODELS = ["lda", "glocom", "ecrtm", "s2wtm", "fastopic", "hicot", "bertopic", "sbert_minilm", "sbert_gte"] + \
     ["vaebm", "vaebm_poe", "vaebm_dec"]
 CLASSIF_ALL_MODELS = [m for m in CLASSIF_ALL_MODELS if get("classification", model=m)]
 CLASSIF_DATASET_ORDER = ["bbc_news", "20ng", "imdb", "agnews_short", "search_snippets"]
@@ -430,7 +431,9 @@ for bi, block in enumerate(classif_blocks, start=1):
         f"Classification (Accuracy/F1, --split random), datasets {bi} of {len(classif_blocks)}. Core baselines and "
         r"at most two embedding-clustering baselines (SBERT-MiniLM, SBERT-GTE) above a horizontal rule; our proposed "
         r"family below it, with \textbf{VAE-BM-PoE} bolded for identification. "
-        "Single run per cell (no repeated seeds available - std/CI not reported to avoid fabricating uncertainty). "
+        r"\textbf{VAE-BM}'s own cells are the mean over 5 seeds (std/CI in Appendix~\ref{sec:appendix}'s manifest); "
+        "every baseline cell (LDA/GloCOM/ECRTM/S2WTM/FASTopic/HiCOT/BERTopic/SBERT-MiniLM/SBERT-GTE) is a single run "
+        "(seed 42), matching this task's own established single-seed baseline convention. "
         "-- = not yet available (the 26-dataset VAE-BM-PoE/VAE-BM-DEC sweep was still queued at submission time; "
         "only bbc\\_news has a single validation datapoint for those two models).",
         f"tab:classif-block{bi}")

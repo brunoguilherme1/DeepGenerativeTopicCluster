@@ -8,13 +8,17 @@
 \toprule
 Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
 \midrule
+LDA & 0.688$^{\mathrm{LU}}$ & 0.106$^{\mathrm{LU}}$ & \underline{0.142}$^{\mathrm{LU}}$ & \underline{0.106}$^{\mathrm{LU}}$ & \underline{0.105}$^{\mathrm{LU}}$ & \underline{0.106}$^{\mathrm{LU}}$ & \underline{0.106}$^{\mathrm{LU}}$ & 0.688$^{\mathrm{LU}}$ & 0.617$^{\mathrm{LU}}$ & 0.517$^{\mathrm{LU}}$ & 141316.51$^{\mathrm{LU}}$ \\
+GloCOM & 0.501 & 0.000 & 0.000 & 0.000 & 0.000 & 0.000 & 0.000 & 0.501 & \underline{0.956} & 0.205 & 555260.15 \\
+ECRTM & 0.500 & 0.000 & -0.000 & -0.000 & 0.000 & 0.000 & 0.000 & 0.500 & \textbf{0.972} & \textbf{0.048} & \underline{1731668.83} \\
+S2WTM & 0.647 & 0.066 & 0.087 & 0.066 & 0.066 & 0.067 & 0.066 & 0.647 & 0.948 & \underline{0.080} & \textbf{1957251.29} \\
 FASTopic & 0.591 & 0.024 & -- & -- & -- & -- & -- & 0.591 & -- & -- & -- \\
 HiCOT & 0.504 & 0.001 & -- & -- & -- & -- & -- & 0.504 & -- & -- & -- \\
 BERTopic & 0.583$^{\mathrm{LU}}$ & 0.020$^{\mathrm{LU}}$ & -- & -- & -- & -- & -- & 0.583$^{\mathrm{LU}}$ & -- & -- & -- \\
 SBERT-MiniLM & 0.565 & 0.013 & -- & -- & -- & -- & -- & 0.565 & -- & -- & -- \\
 SBERT-GTE & \underline{0.929} & \underline{0.635} & -- & -- & -- & -- & -- & \underline{0.929} & -- & -- & -- \\
 \midrule
-VAE-BM & \textbf{0.941}$^{\mathrm{LU}}$ & \textbf{0.676}$^{\mathrm{LU}}$ & \textbf{0.776}$^{\mathrm{LU}}$ & \textbf{0.676}$^{\mathrm{LU}}$ & \textbf{0.675}$^{\mathrm{LU}}$ & \textbf{0.676}$^{\mathrm{LU}}$ & \textbf{0.676}$^{\mathrm{LU}}$ & \textbf{0.941}$^{\mathrm{LU}}$ & \textbf{0.158}$^{\mathrm{LU}}$ & \textbf{2.190}$^{\mathrm{LU}}$ & \textbf{10276.55}$^{\mathrm{LU}}$ \\
+VAE-BM & \textbf{0.941}$^{\mathrm{LU}}$ & \textbf{0.676}$^{\mathrm{LU}}$ & \textbf{0.776}$^{\mathrm{LU}}$ & \textbf{0.676}$^{\mathrm{LU}}$ & \textbf{0.675}$^{\mathrm{LU}}$ & \textbf{0.676}$^{\mathrm{LU}}$ & \textbf{0.676}$^{\mathrm{LU}}$ & \textbf{0.941}$^{\mathrm{LU}}$ & 0.158$^{\mathrm{LU}}$ & 2.190$^{\mathrm{LU}}$ & 10276.55$^{\mathrm{LU}}$ \\
 \bottomrule
 \end{tabular}
 }
