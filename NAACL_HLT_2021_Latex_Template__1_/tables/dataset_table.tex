@@ -1,38 +1,32 @@
 \begin{table}[t]
 \centering
-\scriptsize
-\caption{Datasets used across the topic, cluster, and classification experiments. Document counts and class counts are read from the classification experiment's own train+test split sizes (\S\ref{sec:method}); ordinary and HiCOT-artifact variants of the same corpus are kept as distinct rows throughout this paper.}
+\small
+\caption{Datasets used in this paper. The five HiCOT-artifact datasets (\texttt{hicot\_*}) are used only for the Topic Modeling experiment (\S\ref{sec:topic-results}), matching HiCOT's own official benchmark protocol; the twelve plain datasets below them are used for both Document Clustering and Classification (\S\ref{sec:cluster-results}--\S\ref{sec:classification-results}). Document counts and class counts are read from the classification experiment's own train+test split sizes.}
 \label{tab:datasets}
-\resizebox{\columnwidth}{!}{
 \begin{tabular}{lrrl}
 \toprule
 Dataset & Docs & Classes & Domain \\
 \midrule
+\multicolumn{4}{l}{\textit{Topic Modeling only}} \\
 20NG-H & 18846 & 20 & News/forum (HiCOT artifact) \\
-20NG & 18846 & 20 & News/forum \\
-IMDB-H & 50000 & 2 & Movie reviews (HiCOT artifact) \\
-IMDB & 50000 & 2 & Movie reviews \\
 AGNews-H & 12500 & 4 & News (HiCOT artifact) \\
-AGNews & 8000 & 4 & News \\
-SearchSnip.-H & 12294 & 8 & Web search snippets (HiCOT artifact) \\
-SearchSnip. & 12340 & 8 & Web search snippets (short text) \\
 GNews-H & 11019 & 152 & News (HiCOT artifact, short text) \\
-GNews-TS & 11109 & 152 & News (title+snippet, short text) \\
-GNews-T & 11108 & 152 & News (title only, short text) \\
-GNews-S & 11108 & 152 & News (snippet only, short text) \\
+IMDB-H & 50000 & 2 & Movie reviews (HiCOT artifact) \\
+SearchSnip.-H & 12294 & 8 & Web search (HiCOT artifact) \\
+\midrule
+\multicolumn{4}{l}{\textit{Clustering and Classification}} \\
+20NG & 18846 & 20 & News/forum \\
+AGNews & 8000 & 4 & News \\
+GNews-T & 11108 & 152 & News titles (short text) \\
+IMDB & 50000 & 2 & Movie reviews \\
+SearchSnip. & 12340 & 8 & Web search (short text) \\
+BBCNews & 2225 & 5 & News \\
+Tweet & 2472 & 89 & Tweets (short text) \\
 StackOv. & 20000 & 20 & Q\&A titles (short text) \\
 Biomed. & 20000 & 20 & Biomedical abstracts (short text) \\
-Tweet & 2472 & 89 & Tweets (short text) \\
-AGNews-F & 127600 & 4 & News \\
 Banking77 & 13069 & 77 & Customer-service intents \\
-BBCNews & 2225 & 5 & News \\
-DBLP & 54595 & 4 & Publication titles (short text) \\
 M10 & 8355 & 10 & Publication abstracts (short text) \\
 Pascal-Fl. & 4834 & 20 & Image captions (short text) \\
-TwEval-Emo & 5052 & 4 & Tweets (short text) \\
-TwEval-Sent & 59899 & 3 & Tweets (short text) \\
-20NG-S2WTM & 16309 & 20 & News/forum (S2WTM preprocessing) \\
 \bottomrule
 \end{tabular}
-}
 \end{table}

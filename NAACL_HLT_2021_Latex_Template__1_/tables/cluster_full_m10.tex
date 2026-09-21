@@ -1,25 +1,20 @@
-\begin{table}[t]
+\begin{table*}[t]
 \centering
-\scriptsize
-\caption{Full clustering metrics, M10. Lower is better for DB only; higher is better for every other metric. \textbf{Bold}/\underline{underline} = best/second-best.}
+\small
+\caption{Document clustering, full metric set, M10. Higher is better for every metric except Davies-Bouldin (DB), where lower is better. $^{\mathrm{LU}}$ marks a labuai value (shown only when no FutureLab value exists for that model/dataset). \textbf{Bold}/\underline{underline} = best/second-best per metric.}
 \label{tab:cluster-full-m10}
-\adjustbox{max width=\columnwidth}{
+\adjustbox{max width=\textwidth}{
 \begin{tabular}{lrrrrrrrrrrr}
 \toprule
 Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
 \midrule
 LDA & 0.306$^{\mathrm{LU}}$ & 0.139$^{\mathrm{LU}}$ & 0.109$^{\mathrm{LU}}$ & 0.137$^{\mathrm{LU}}$ & 0.140$^{\mathrm{LU}}$ & 0.137$^{\mathrm{LU}}$ & 0.139$^{\mathrm{LU}}$ & 0.340$^{\mathrm{LU}}$ & \underline{0.240}$^{\mathrm{LU}}$ & 1.188$^{\mathrm{LU}}$ & 1395.30$^{\mathrm{LU}}$ \\
-GloCOM & 0.576 & 0.465 & \underline{0.410} & \underline{0.464} & \underline{0.471} & \underline{0.460} & \underline{0.465} & 0.639 & \textbf{0.580} & \textbf{0.577} & \textbf{5791.97} \\
+GloCOM & \underline{0.576} & \underline{0.465} & \underline{0.410} & \underline{0.464} & \underline{0.471} & \underline{0.460} & \underline{0.465} & \underline{0.639} & \textbf{0.580} & \textbf{0.577} & \textbf{5791.97} \\
 ECRTM & 0.209 & 0.044 & 0.017 & 0.042 & 0.036 & 0.058 & 0.044 & 0.212 & 0.208 & \underline{1.021} & 881.00 \\
 S2WTM & 0.316 & 0.196 & 0.112 & 0.195 & 0.179 & 0.218 & 0.196 & 0.342 & 0.217 & 1.128 & \underline{2091.16} \\
-FASTopic & 0.300 & 0.181 & -- & -- & -- & -- & -- & 0.318 & -- & -- & -- \\
-HiCOT & 0.259 & 0.114 & -- & -- & -- & -- & -- & 0.279 & -- & -- & -- \\
-BERTopic & 0.643$^{\mathrm{LU}}$ & 0.494$^{\mathrm{LU}}$ & -- & -- & -- & -- & -- & 0.654$^{\mathrm{LU}}$ & -- & -- & -- \\
-SBERT-MiniLM & 0.680 & 0.529 & -- & -- & -- & -- & -- & 0.714 & -- & -- & -- \\
-SBERT-GTE & \textbf{0.701} & \textbf{0.555} & -- & -- & -- & -- & -- & \underline{0.730} & -- & -- & -- \\
 \midrule
-VAE-BM & \underline{0.690}$^{\mathrm{LU}}$ & \underline{0.545}$^{\mathrm{LU}}$ & \textbf{0.485}$^{\mathrm{LU}}$ & \textbf{0.544}$^{\mathrm{LU}}$ & \textbf{0.547}$^{\mathrm{LU}}$ & \textbf{0.542}$^{\mathrm{LU}}$ & \textbf{0.545}$^{\mathrm{LU}}$ & \textbf{0.737}$^{\mathrm{LU}}$ & 0.044$^{\mathrm{LU}}$ & 4.083$^{\mathrm{LU}}$ & 157.23$^{\mathrm{LU}}$ \\
+\textbf{VAE-BM (ours)} & \textbf{0.690}$^{\mathrm{LU}}$ & \textbf{0.545}$^{\mathrm{LU}}$ & \textbf{0.485}$^{\mathrm{LU}}$ & \textbf{0.544}$^{\mathrm{LU}}$ & \textbf{0.547}$^{\mathrm{LU}}$ & \textbf{0.542}$^{\mathrm{LU}}$ & \textbf{0.545}$^{\mathrm{LU}}$ & \textbf{0.737}$^{\mathrm{LU}}$ & 0.044$^{\mathrm{LU}}$ & 4.083$^{\mathrm{LU}}$ & 157.23$^{\mathrm{LU}}$ \\
 \bottomrule
 \end{tabular}
 }
-\end{table}
+\end{table*}

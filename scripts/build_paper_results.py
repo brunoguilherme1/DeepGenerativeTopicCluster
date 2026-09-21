@@ -67,20 +67,24 @@ def ingest_cluster_final_rows(fname, environment, sweep, model_filter=None):
             r.get("checkpoint_selection", "none"))
 
 
-ingest_cluster_checkpoint("futurelab/cluster7_checkpoint.json", "futurelab", "cluster7_all_datasets (hicot,sbert_gte,sbert_minilm,fastopic x 26 datasets)")
-# "vaebm" (main config) EXCLUDED from these two old MiniLM-era ingestions
-# (model_filter drops it, vaebm_poe/vaebm_dec still ingested as-is) -
-# 2026-09-21, superseded by the locked-architecture ingestion below per
-# the user's own instruction to lock ONE VAE-BM architecture and re-run
-# cluster/classification under it. vaebm_poe/vaebm_dec were NOT
-# relocked (still ablations against the old MiniLM setup, \S{ablations}),
-# so their old rows stay live.
+# 2026-09-21 (paper rewrite, user-specified): cluster7_checkpoint.json,
+# cluster6_bertopic_hicot_checkpoint.json, and cluster6_sbert_checkpoint.json
+# (the old 26-dataset sweep: hicot/fastopic/bertopic/sbert_gte/sbert_minilm)
+# are NO LONGER ingested here. SBERT+KMeans is not a baseline in this paper
+# at all (removed from every table, main and appendix). fastopic/hicot/
+# bertopic's OWN cluster rows from that old sweep only had ACC/NMI/Purity
+# (3 of the 11 metrics this paper now reports for every cluster baseline);
+# they are superseded below by a fresh run of all three through the exact
+# same 12-locked-dataset, full-11-metric pipeline every other baseline
+# uses (run_baseline_sweep_12ds.py --experiments cluster), so no cluster
+# table needs a "--" for a metric a baseline was simply never asked for.
+#
+# VAE-BM-PoE/VAE-BM-DEC's own 5-HiCOT-dataset ablation rows (still on the
+# older all-MiniLM-L6-v2 embedder, never relocked) are ingested separately,
+# further below, tagged for the Appendix-only ablation table - they do not
+# appear in any main-text table (only ONE VAE-BM competes there).
 ingest_cluster_final_rows("futurelab/vaebm3_hicot_final.json", "futurelab", "vaebm3_hicot (vaebm,vaebm_poe,vaebm_dec x 5 HiCOT datasets, MiniLM)",
                            model_filter={"vaebm_poe", "vaebm_dec"})
-ingest_cluster_checkpoint("futurelab/vaebm3_cluster_new_checkpoint.json", "futurelab", "vaebm3_cluster (vaebm,vaebm_poe,vaebm_dec x 26 datasets, MiniLM) [IN PROGRESS]",
-                           model_filter={"vaebm_poe", "vaebm_dec"})
-ingest_cluster_checkpoint("labuai/cluster6_bertopic_hicot_checkpoint.json", "labuai", "cluster6 (bertopic,hicot x 26 datasets)")
-ingest_cluster_checkpoint("labuai/cluster6_sbert_checkpoint.json", "labuai", "cluster6 earlier run (sbert_gte x ~20 datasets, superseded model set)")
 # Locked architecture (2026-09-21, user-authorized): alpha=0,
 # frozen+identity-init gte-large (bge-large for imdb) embedding branch,
 # epochs=1, normalize_mu for 20ng/agnews_short, K=num_classes, single
@@ -114,6 +118,19 @@ ingest_cluster_final_rows("futurelab_new/ecrtm_locked_cluster_20260921.json", "f
                            "ecrtm_locked_20260921 (ecrtm x 12 plain datasets)")
 ingest_cluster_final_rows("futurelab_new/s2wtm_locked_cluster_20260921.json", "futurelab",
                            "s2wtm_locked_20260921 (s2wtm x 12 plain datasets)")
+
+# Full-11-metric re-run of fastopic/hicot/bertopic's cluster experiment
+# (2026-09-21, paper rewrite): the old 26-dataset sweep only ever computed
+# ACC/NMI/Purity for these three; re-run through the exact same 12-locked-
+# dataset driver (run_baseline_sweep_12ds.py) every new baseline above
+# uses, so every cluster table in the paper has the complete 11-metric
+# battery for every model shown, never a "--" from a metric simply never
+# requested.
+for _mo in ("fastopic", "hicot", "bertopic"):
+    _fname = f"labuai/{_mo}_cluster_fullmetrics_20260921.json"
+    if (DATA / _fname).exists():
+        ingest_cluster_final_rows(_fname, "labuai",
+                                   f"{_mo}_cluster_fullmetrics_20260921 ({_mo} x 12 plain datasets, full 11-metric battery)")
 
 # ------------------------------------------------------------ classification --
 

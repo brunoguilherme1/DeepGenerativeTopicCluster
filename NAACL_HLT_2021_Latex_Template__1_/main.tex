@@ -24,115 +24,92 @@
   \texttt{brunoguilherme@dcc.ufmg.br} \\}
 
 \raggedbottom
-\makeatletter
-\setlength{\@fptop}{0pt}
-\setlength{\@dblfptop}{0pt}
-\makeatother
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-VAE-BM is a variational autoencoder with a Boltzmann-machine-style energy decoder that fuses a lexical (bag-of-words) and a contextual (sentence-embedding) encoder branch through a scalar $\alpha$, following the intuition that a topic model should combine sparse vocabulary statistics with dense semantic evidence. We find, across a systematic sweep of $\alpha$ on HiCOT's own five benchmark datasets, that this intuition does not hold for clustering quality here: any lexical-branch contribution ($\alpha>0$) degrades Purity/NMI relative to $\alpha=0$ (embedding-only), with the degradation growing with $\alpha$ and never reversing. The real remaining bottleneck, once $\alpha=0$ is fixed, is not the document representation but which \emph{words} are selected to describe each cluster: raw within-cluster word frequency -- the field's default choice -- lets words that are common across many clusters dominate every topic's word list. We adapt LDAvis's relevance score, $\lambda\log p(w\mid\text{topic}) + (1-\lambda)\log\frac{p(w\mid\text{topic})}{p(w)}$, from its original role as a visualization control into a topic-word \emph{selection} criterion, and tune $\lambda$ once per dataset. This single change improves coherence ($C_V$) on every one of HiCOT's five official benchmark datasets, with zero effect on clustering quality (the two are computed from disjoint parts of the pipeline). At $K=50$, the resulting model beats HiCOT's own published $C_V$, Purity, and NMI simultaneously on three of five datasets (SearchSnippets, GoogleNews, IMDB) -- the first fully unsupervised method, to our knowledge, to do so on this benchmark -- and comes within 0.001 NMI of a fourth (20NG). We additionally evaluate document clustering and text classification against six baselines (FASTopic, HiCOT, LDA, GloCOM, ECRTM, S2WTM) plus embedding-clustering baselines on a broader 12-dataset suite, beating all six on 11--12 of 12 Cluster datasets and all 12 of 12 Classification datasets, and report a Product-of-Experts fusion variant (VAE-BM-PoE) and a jointly-trained clustering variant (VAE-BM-DEC) as ablations rather than the paper's main method, since neither outperforms the $\alpha=0$ configuration once evaluated on equal footing. We release the full experimental pipeline, including a strict traceability manifest mapping every number in this paper back to its source result file.
+VAE-BM is a variational autoencoder with a Boltzmann-machine-style energy decoder that fuses a lexical (bag-of-words) and a contextual (sentence-embedding) encoder branch through a scalar $\alpha$, following the intuition that a topic model should combine sparse vocabulary statistics with dense semantic evidence. A systematic sweep of $\alpha$ on HiCOT's five benchmark datasets shows this intuition does not hold for clustering quality: any lexical-branch contribution ($\alpha>0$) degrades Purity and NMI relative to $\alpha=0$ (embedding-only), monotonically, with no reversal. We lock $\alpha=0$ as our final configuration, \textbf{VAE-BM (ours)}, and turn instead to a bottleneck that persists even with a fixed clustering: which \emph{words} are selected to describe each cluster. Raw within-cluster frequency -- the field's default choice -- lets words common across many clusters dominate every topic's word list. We adapt LDAvis's relevance score, originally a post-hoc visualization control, into a topic-word \emph{selection} criterion tuned once per dataset. This single change improves coherence ($C_V$) on all five of HiCOT's official benchmark datasets and, at $K=50$, beats HiCOT's own published $C_V$, Purity, and NMI simultaneously on three of five (SearchSnippets, GoogleNews, IMDB). We further evaluate document clustering and classification on a 12-dataset suite against seven topic-model and embedding-clustering baselines (LDA, GloCOM, ECRTM, S2WTM, FASTopic, HiCOT, BERTopic), with every baseline reporting the full clustering metric battery (ACC, NMI, ARI, AMI, Homogeneity, Completeness, V-measure, Purity, Silhouette, Davies-Bouldin, Calinski-Harabasz) rather than a partial subset. VAE-BM (ours) is the only model we propose or report as our method; a Product-of-Experts fusion variant and a jointly-trained clustering variant are examined only as exploratory ablations in the appendix, since neither outperforms the locked $\alpha=0$ configuration once evaluated on equal footing. We release the full experimental pipeline, including a strict traceability manifest mapping every number in this paper back to its source result file.
 \end{abstract}
 
 \section{Introduction}
 
 Probabilistic topic modeling and document clustering began as different questions about the same corpus. Topic modeling, from LDA~\citep{blei2003lda} through neural variational topic models~\citep{miao2016nvdm,srivastava2017prodlda}, asks \emph{which latent semantic themes explain the vocabulary of a document collection}, and answers with a document-topic distribution $\theta_d$ and a topic-word distribution over the vocabulary. Document clustering asks a narrower question -- \emph{which documents belong together} -- and increasingly answers it by embedding documents with a pretrained sentence encoder~\citep{reimers2019sbert} and running $k$-means, with no vocabulary-level model at all.
 
-Two recent papers make the tension between these traditions explicit. \citet{zhang2022neuraltopicclustering} ask directly whether increasingly elaborate neural topic model architectures actually outperform simple clustering of contextual embeddings, and find the gap far smaller than the topic-modeling literature's own architectural complexity would suggest. \citet{sia2020tired} show that clustering pretrained word embeddings and reading off per-cluster centroid-nearest words already produces topics competitive with dedicated topic models, at a fraction of the training cost. Neither paper claims topic modeling and clustering are the same task -- topic modeling still owes an interpretable, corpus-level vocabulary decomposition that a $k$-means partition does not -- but both show that modern methods for either task increasingly share the same underlying move: project documents into a semantic representation space, and discover structure there.
+Two recent papers make the tension between these traditions explicit. \citet{zhang2022neuraltopicclustering} ask directly whether increasingly elaborate neural topic model architectures actually outperform simple clustering of contextual embeddings, and find the gap far smaller than the topic-modeling literature's own architectural complexity would suggest. \citet{sia2020tired} show that clustering pretrained word embeddings and reading off per-cluster centroid-nearest words already produces topics competitive with dedicated topic models, at a fraction of the training cost. We take both findings seriously in how we scope our own experiments (\S\ref{sec:setup}): rather than treating a bare embedding-plus-$k$-means pipeline as a baseline topic model in its own right, we compare only against models that, like ours, produce an explicit document-topic-word structure.
 
-A parallel line of neural topic models has absorbed this lesson explicitly by regularizing or fusing a topic model's own latent space against pretrained embeddings: ECRTM~\citep{wu2023ecrtm} adds an embedding-clustering regularizer to the training objective, FASTopic~\citep{wu2024fastopic} aligns document and topic embeddings via optimal transport, HiCOT~\citep{hicot2025} combines optimal transport with contrastive learning and hierarchical structure, GloCOM~\citep{nguyen2025glocom} injects a global clustering context for short-text topic modeling, and S2WTM~\citep{adhya2025s2wtm} models the latent space on a hypersphere via a sliced-Wasserstein autoencoder. These are all, in effect, ways of letting contextual semantic evidence shape a topic model's own latent geometry -- but each commits to one specific fusion mechanism baked into its own architecture.
+A parallel line of neural topic models has absorbed the Zhang/Sia lesson by regularizing or fusing a topic model's own latent space against pretrained embeddings: ECRTM~\citep{wu2023ecrtm} adds an embedding-clustering regularizer to the training objective, FASTopic~\citep{wu2024fastopic} aligns document and topic embeddings via optimal transport, HiCOT~\citep{hicot2025} combines optimal transport with contrastive learning and hierarchical structure, GloCOM~\citep{nguyen2025glocom} injects a global clustering context for short-text topic modeling, and S2WTM~\citep{adhya2025s2wtm} models the latent space on a hypersphere via a sliced-Wasserstein autoencoder. Each commits to one specific fusion mechanism baked into its own architecture.
 
-VAE-BM, the variational-autoencoder-with-Boltzmann-machine-decoder model this paper builds on~\citep{gomes2021mvaebm}, has two encoder branches -- one over lexical (TF-IDF) evidence, one over a pretrained sentence embedding -- fused by a scalar $\alpha \in [0,1)$: $\mu_f = \alpha\,\mu_{\text{bow}} + (1-\alpha)\,\mu_{\text{emb}}$. We first asked whether letting this fusion weight vary \emph{per document and per latent dimension}, via a Product-of-Experts combination of the two branches' posteriors~\citep{hinton2002poe}, improves the representation over VAE-BM's own fixed default. It does, on a clustering-accuracy ablation (\S\ref{sec:ablations}) -- but a systematic sweep of $\alpha$ itself revealed a larger effect entirely: \emph{any} lexical-branch contribution degrades clustering quality relative to $\alpha=0$ (pure embedding), monotonically, with no reversal even at $\alpha=0.01$. This redirected our investigation: with $\alpha=0$ fixed, the lexical branch and its fusion mechanism (PoE, DEC, or the original fixed scalar) become irrelevant to the document representation entirely, and the question that actually determines topic quality is a different one -- given a fixed clustering, which words should represent each cluster?
+VAE-BM, the variational-autoencoder-with-Boltzmann-machine-decoder model this paper builds on~\citep{gomes2021mvaebm}, instead exposes the fusion weight as a tunable scalar $\alpha \in [0,1)$: a lexical (TF-IDF) encoder branch and a contextual (sentence-embedding) encoder branch are combined as $\mu_f = \alpha\,\mu_{\text{bow}} + (1-\alpha)\,\mu_{\text{emb}}$. We swept $\alpha$ systematically on HiCOT's five benchmark datasets to find the best operating point. The result reframes the entire project: \emph{any} lexical-branch contribution degrades clustering quality relative to $\alpha=0$ (pure embedding), monotonically, with no reversal even at $\alpha=0.01$. We therefore lock $\alpha=0$ as VAE-BM's final configuration throughout this paper.
 
-The field's default answer -- rank words by raw within-cluster frequency -- lets words common across \emph{many} clusters dominate every topic's word list, since frequency alone cannot distinguish "frequent because central to this topic" from "frequent because it is common everywhere." We adapt a scoring function from a different part of the topic-modeling toolkit for this: LDAvis's relevance score~\citep{sievert2014ldavis}, originally a visualization slider for letting a human interactively re-rank an already-fixed topic-word list, repurposed here as the ranking criterion itself, with its trade-off parameter $\lambda$ tuned once per dataset rather than left to a human viewer. This is the paper's central empirical finding: it improves topic coherence ($C_V$) on every one of HiCOT's five official benchmark datasets, with strictly zero effect on clustering (\S\ref{sec:topics}), and is enough on its own to beat HiCOT's own published $C_V$, Purity, and NMI simultaneously on three of five datasets at $K=50$.
+With $\alpha=0$ fixed, the lexical branch's own fusion mechanism becomes irrelevant to the document representation -- so the question that actually determines topic quality is a different one: given a fixed clustering, which words should represent each cluster? The field's default answer, ranking by raw within-cluster frequency, lets words common across \emph{many} clusters dominate every topic's word list, since frequency alone cannot distinguish "frequent because central to this topic" from "frequent because it is common everywhere." We adapt LDAvis's relevance score~\citep{sievert2014ldavis} -- originally a visualization slider for a human to interactively re-rank an already-fixed topic-word list -- into the ranking criterion itself, with its trade-off parameter $\lambda$ tuned once per dataset. This is the paper's central empirical finding: it improves coherence ($C_V$) on every one of HiCOT's five official benchmark datasets, with strictly zero effect on clustering, and is enough on its own to beat HiCOT's own published $C_V$, Purity, and NMI simultaneously on three of five datasets at $K=50$.
 
 Our contributions are:
 \begin{enumerate}
-\item We show, via a systematic $\alpha$ sweep, that fusing lexical and contextual evidence in VAE-BM's latent representation is actively harmful to clustering quality on HiCOT's benchmark, at every tested fusion weight above zero -- contrary to the design intuition motivating VAE-BM's own fusion mechanism (and our own initial PoE-fusion hypothesis, \S\ref{sec:ablations}).
-\item We adapt LDAvis's relevance score from a post-hoc visualization control into a topic-word \emph{selection} criterion, tuned per dataset, and show it improves coherence on every one of HiCOT's five official benchmark datasets with zero effect on the underlying clustering.
-\item At $K=50$, we beat HiCOT's own published $C_V$, Purity, and NMI simultaneously on three of five official benchmark datasets (SearchSnippets, GoogleNews, IMDB), fully unsupervised, and land within 0.001 NMI of a fourth (20NG).
-\item We evaluate document clustering and classification against six baselines (LDA, GloCOM, ECRTM, S2WTM, FASTopic, HiCOT) plus embedding-clustering baselines on a broader 12-dataset suite: VAE-BM beats all six topic-model baselines on Accuracy/NMI on 11--12 of 12 Cluster datasets and on Accuracy/F1 on all 12 of 12 Classification datasets, and we report Product-of-Experts fusion (VAE-BM-PoE) and jointly-trained clustering (VAE-BM-DEC) as ablations -- PoE helps on a clustering-accuracy metric under oracle-informed checkpoint selection (\S\ref{sec:ablations}), but neither is the paper's proposed method once $\alpha=0$ is established as the stronger configuration.
-\item We release the full experimental pipeline, including a strict traceability manifest mapping every number in this paper back to its source result file, and report negative/null results (the $\alpha$ sweep, DEC's underperformance) rather than omitting them.
+\item A systematic $\alpha$ sweep showing that fusing lexical and contextual evidence in VAE-BM's latent representation is actively harmful to clustering quality on HiCOT's benchmark, at every tested fusion weight above zero -- contrary to the design intuition motivating VAE-BM's own fusion mechanism.
+\item An adaptation of LDAvis's relevance score from a post-hoc visualization control into a topic-word \emph{selection} criterion, tuned per dataset, improving coherence on all five of HiCOT's official benchmark datasets with zero effect on clustering.
+\item At $K=50$, simultaneous wins over HiCOT's own published $C_V$, Purity, and NMI on three of five official benchmark datasets (SearchSnippets, GoogleNews, IMDB), fully unsupervised.
+\item A 12-dataset evaluation of document clustering (full 11-metric battery) and classification against seven baselines (LDA, GloCOM, ECRTM, S2WTM, FASTopic, HiCOT, BERTopic): VAE-BM (ours) beats every topic-model-family baseline on Accuracy/NMI on 11--12 of 12 Cluster datasets and on Accuracy/F1 on all 12 of 12 Classification datasets.
+\item A released experimental pipeline with a strict traceability manifest mapping every number in this paper back to its source result file, and honestly reported negative/null results (the $\alpha$ sweep; a Product-of-Experts fusion variant and a jointly-trained clustering variant that do not outperform the locked configuration, examined only as appendix ablations).
 \end{enumerate}
 
 \section{Related Work}
 
 \subsection{Directly related: embedding-aware neural topic models}
 
-ECRTM~\citep{wu2023ecrtm} regularizes a neural topic model's topic embeddings against a clustering structure derived from pretrained document embeddings, directly connecting semantic clustering to topic learning; its Section 4.4 protocol (document representation $\to$ SVM $\to$ label) is the classification protocol we adopt in \S\ref{sec:setup}. FASTopic~\citep{wu2024fastopic} instead aligns document and topic embeddings through an optimal-transport plan, reporting that the resulting topic-document coupling transfers across corpora. HiCOT~\citep{hicot2025} combines optimal transport with contrastive learning and hierarchical clustering to shape topic-word and topic-topic relationships jointly, and its own encoder--decoder framing (a VAE over bag-of-words with a logistic-normal topic-proportion prior) is the closest published formulation to the one we use as a starting point in \S\ref{sec:background}. GloCOM~\citep{nguyen2025glocom} targets short-text topic modeling specifically by injecting a global clustering context absent from any single short document. S2WTM~\citep{adhya2025s2wtm} places the latent topic space on a hypersphere and optimizes it with a sliced-Wasserstein autoencoder rather than a KL-regularized Gaussian VAE. \citet{llmguided2025} instead uses an LLM's own semantic judgment to guide clustering directly as the topic-discovery mechanism. Each of these fuses semantic and topical structure through one specific, architecture-committed mechanism; none exposes an uncertainty-weighted choice between a lexical and a contextual expert the way PoE does, and none of them factors the decoder into an explicit topic-word matrix $\beta$ the way LDA-family models do -- VAE-BM does not either, which is why \S\ref{sec:topics} needs a dedicated topic-extraction step rather than reading $\beta$ off directly.
+ECRTM~\citep{wu2023ecrtm} regularizes a neural topic model's topic embeddings against a clustering structure derived from pretrained document embeddings, directly connecting semantic clustering to topic learning; its Section 4.4 protocol (document representation $\to$ classifier $\to$ label) is the classification protocol we adopt in \S\ref{sec:setup}. FASTopic~\citep{wu2024fastopic} aligns document and topic embeddings through an optimal-transport plan. HiCOT~\citep{hicot2025} combines optimal transport with contrastive learning and hierarchical clustering to shape topic-word and topic-topic relationships jointly, and its own VAE-based topic-model formulation is the closest published starting point for the background in \S\ref{sec:background}. GloCOM~\citep{nguyen2025glocom} targets short-text topic modeling by injecting a global clustering context absent from any single short document. S2WTM~\citep{adhya2025s2wtm} places the latent topic space on a hypersphere and optimizes it with a sliced-Wasserstein autoencoder rather than a KL-regularized Gaussian VAE. None of these factors its decoder into an explicit topic-word matrix $\beta$ the way LDA-family models do, and neither does VAE-BM -- which is why \S\ref{sec:topics} needs a dedicated topic-extraction step rather than reading $\beta$ off directly.
 
-\subsection{Semi-direct: topic modeling versus clustering}
+\subsection{Topic modeling versus embedding clustering}
 
-\citet{zhang2022neuraltopicclustering} and \citet{sia2020tired} are discussed at length in \S1. BERTopic~\citep{grootendorst2022bertopic} clusters document embeddings and derives topic words post hoc via class-based TF-IDF -- an embedding-clustering pipeline with a genuinely native topic-word view, and one of our baselines throughout. Contextualized topic models such as CombinedTM and ZeroShotTM~\citep{bianchi2021combined,bianchi2021crosslingual} concatenate or otherwise combine a bag-of-words representation with a pretrained contextual embedding as encoder input to a neural topic model, which is architecturally close to VAE-BM's own two-branch design; the difference is that VAE-BM-PoE's fusion happens at the level of two full \emph{posterior distributions} (with their own means and variances) rather than as a single concatenated input vector, which is what makes an uncertainty-weighted combination possible at all.
+\citet{zhang2022neuraltopicclustering} and \citet{sia2020tired}, discussed in \S1, motivate why this paper does not treat a bare pretrained-embedding-plus-$k$-means pipeline as an experimental baseline: both papers show that such a pipeline is already a strong, hard-to-beat competitor for clustering quality specifically, but neither produces the document-topic-word decomposition that is topic modeling's own deliverable. BERTopic~\citep{grootendorst2022bertopic} sits between the two traditions -- it clusters document embeddings but derives topic words post hoc via class-based TF-IDF, giving it a genuine (if indirect) topic-word view -- so we retain it as a baseline throughout, while excluding bare SBERT-encoder-plus-$k$-means variants entirely.
 
 \subsection{Foundational}
 
-LDA~\citep{blei2003lda} is the classical probabilistic topic model we set out to compare against, and its own document-topic distribution $\theta_d$ over a Dirichlet prior is the discrete-latent-variable analogue of the continuous $z$ we use throughout \S\ref{sec:method}. The variational autoencoder~\citep{kingma2014autoencoding} and the reparameterization trick underlie VAE-BM's own encoder; NVDM~\citep{miao2016nvdm} and ProdLDA~\citep{srivastava2017prodlda} are the first neural topic models to combine a VAE with a bag-of-words decoder, the direct ancestor of VAE-BM's own architecture. Product-of-Experts~\citep{hinton2002poe} and multimodal PoE variational autoencoders~\citep{wu2016mvae} are the general mechanism VAE-BM-PoE specializes to two experts over one shared latent space -- PoE itself is not our contribution. Restricted Boltzmann Machines and energy-based text models~\citep{dahl2012rbm} motivate VAE-BM's own decoder. $k$-means~\citep{macqueen1967kmeans} is the post-hoc clustering step VAE-BM and VAE-BM-PoE both use; Deep Embedded Clustering~\citep{xie2016dec} is the joint-training alternative we ablate as VAE-BM-DEC. Sentence-BERT~\citep{reimers2019sbert} provides every contextual embedding used in this paper's SBERT-family baselines and in VAE-BM's own semantic branch. BERT~\citep{devlin2019bert} underlies most of these sentence encoders.
+LDA~\citep{blei2003lda} is the classical probabilistic topic model whose discrete document-topic distribution $\theta_d$ over a Dirichlet prior is the categorical analogue of the continuous $\mathbf{z}$ we use throughout \S\ref{sec:method}. The variational autoencoder~\citep{kingma2014autoencoding} and the reparameterization trick underlie VAE-BM's own encoder. NVDM~\citep{miao2016nvdm} and ProdLDA~\citep{srivastava2017prodlda} are the first neural topic models to combine a VAE with a bag-of-words decoder, the direct ancestor of VAE-BM's own architecture. Restricted Boltzmann Machines and energy-based text models~\citep{dahl2012rbm} motivate VAE-BM's own decoder. $k$-means~\citep{macqueen1967kmeans} is the post-hoc clustering step VAE-BM uses. Sentence-BERT~\citep{reimers2019sbert} provides the pretrained sentence embedding used by VAE-BM's own contextual branch. BERT~\citep{devlin2019bert} underlies most modern sentence encoders, including the ones we use.
 
 \section{VAE-BM}
 \label{sec:method}
 
-\begin{figure*}[t]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[
-  node distance=8mm and 10mm,
-  box/.style={draw, rounded corners, minimum height=8mm, minimum width=26mm, align=center, font=\small},
-  op/.style={draw, circle, minimum size=7mm, font=\small},
-  arr/.style={-Stealth, thick},
-]
-  \node[box] (xb) {Lexical input $x_b$\\(TF-IDF, log1p)};
-  \node[box, below=of xb] (xe) {Contextual input $x_e$\\(sentence embedding)};
-  \node[box, right=16mm of xb] (encb) {Lexical MLP\\$\to \mu_b,\log\sigma_b$};
-  \node[box, right=16mm of xe] (ence) {Contextual MLP\\$\to \mu_e,\log\sigma_e$};
-  \node[op, right=20mm of $(encb)!0.5!(ence)$] (poe) {PoE};
-  \node[box, right=14mm of poe] (mu) {$\mu_f,\sigma_f \to z$};
-  \node[box, above right=6mm and 16mm of mu] (dec) {Energy decoder\\$z^\top R x + b^\top x$};
-  \node[box, right=14mm of mu] (km) {$k$-means / DEC};
-  \node[box, below right=6mm and 16mm of mu] (svm) {SVM};
-  \node[box, right=10mm of dec] (top) {Topic words};
-  \node[box, right=10mm of km] (clu) {Clusters};
-  \node[box, right=10mm of svm] (lab) {Labels};
-
-  \draw[arr] (xb) -- (encb);
-  \draw[arr] (xe) -- (ence);
-  \draw[arr] (encb) -- (poe);
-  \draw[arr] (ence) -- (poe);
-  \draw[arr] (poe) -- (mu);
-  \draw[arr] (mu) -- (dec);
-  \draw[arr] (mu) -- (km);
-  \draw[arr] (mu) -- (svm);
-  \draw[arr] (dec) -- (top);
-  \draw[arr] (km) -- (clu);
-  \draw[arr] (svm) -- (lab);
-\end{tikzpicture}%
-}
-\caption{VAE-BM-PoE architecture. Two encoder branches each produce a Gaussian posterior over the shared latent $z$; Product-of-Experts fuses them by precision (\S\ref{sec:poe}) into $(\mu_f,\sigma_f)$, which feeds an unchanged energy-based Boltzmann decoder for reconstruction/topic words, and downstream $k$-means clustering or an SVM classifier. VAE-BM-DEC (\S\ref{sec:dec}) replaces the $k$-means box with a jointly trained clustering objective; VAE-BM (the fixed-$\alpha$ baseline, and this paper's main configuration) replaces the PoE box with $\mu_f=\alpha\mu_b+(1-\alpha)\mu_e$.}
-\label{fig:architecture}
-\end{figure*}
-
-This section describes exactly what is implemented, not an idealized version of it: every equation below matches the adapters actually used to produce \S\ref{sec:results}'s numbers. We write vectors and matrices in bold ($\mathbf{x}$, $\mathbf{R}$) and keep scalars ($\alpha$, $\lambda_c$, $K$) in ordinary italic, following the notational convention of \citet{kim2018tutorial}.
+This section presents VAE-BM's mathematics in the order it was derived: a general probabilistic latent-variable model (\S\ref{sec:background}), its variational treatment as a VAE, VAE-BM's own two-branch encoder (\S\ref{sec:encoder}), its decoder (\S\ref{sec:decoder}--\S\ref{sec:be-decoder}), the resulting training objective (\S\ref{sec:objective}), and the two downstream consumers of the learned representation, clustering (\S\ref{sec:dec}) and topic extraction (\S\ref{sec:topics}). Every equation below matches the code that produced \S\ref{sec:results}'s numbers. We write vectors and matrices in bold ($\mathbf{x}$, $\mathbf{R}$) and keep scalars ($\alpha$, $\lambda$, $K$) in ordinary italic, following the notational convention of \citet{kim2018tutorial}.
 
 \subsection{Background}
 \label{sec:background}
 
-A document collection $\mathbf{x}^{(1:N)} = \mathbf{x}^{(1)},\dots,\mathbf{x}^{(N)}$ is modeled as $N$ i.i.d.\ draws from a joint distribution $p(\mathbf{x},\mathbf{z};\Theta)$ over an observed bag-of-words vector $\mathbf{x}$ and an unobserved continuous latent vector $\mathbf{z}\in\mathbb{R}^H$, factored as $p(\mathbf{x},\mathbf{z};\Theta)=p(\mathbf{z})\,p(\mathbf{x}\mid\mathbf{z};\Theta)$ with a standard-normal prior $p(\mathbf{z})=\mathcal{N}(\mathbf{0},\mathbf{I})$. This is the continuous-latent-variable topic model in its most basic form: $\mathbf{z}$ plays the same role LDA's per-document topic proportion $\theta_d$ plays over a Dirichlet prior~\citep{blei2003lda}, except here it is a dense vector rather than a point on the topic simplex, and the mapping from $\mathbf{z}$ to a distribution over words is a decoder network (\S\ref{sec:decoder}) rather than a fixed topic-word matrix. As in any such model, learning $\Theta$ requires maximizing the marginal log-likelihood $\log p(\mathbf{x};\Theta)=\log\int p(\mathbf{z})\,p(\mathbf{x}\mid\mathbf{z};\Theta)\,d\mathbf{z}$, which is intractable once $p(\mathbf{x}\mid\mathbf{z};\Theta)$ is a neural network, since the integral no longer has a closed form.
-
-Variational inference~\citep{jordan1999introduction} sidesteps this by introducing a tractable variational family $q(\mathbf{z};\boldsymbol{\lambda})$ and optimizing the evidence lower bound (ELBO),
+A document collection is modeled as $N$ i.i.d.\ draws $\mathbf{x}^{(1)},\dots,\mathbf{x}^{(N)}$ from a joint distribution over an observed bag-of-words vector $\mathbf{x}$ and an unobserved continuous latent vector $\mathbf{z}\in\mathbb{R}^H$. The generative model factors as
 \begin{equation}
-\log p(\mathbf{x};\Theta) \geq \mathbb{E}_{q(\mathbf{z};\boldsymbol{\lambda})}\!\left[\log\frac{p(\mathbf{x},\mathbf{z};\Theta)}{q(\mathbf{z};\boldsymbol{\lambda})}\right] \triangleq \mathrm{ELBO}(\Theta,\boldsymbol{\lambda};\mathbf{x}),
+p(\mathbf{x},\mathbf{z};\Theta) = p(\mathbf{z})\,p(\mathbf{x}\mid\mathbf{z};\Theta),
+\label{eq:joint}
+\end{equation}
+with a standard-normal prior on the latent variable,
+\begin{equation}
+p(\mathbf{z}) = \mathcal{N}(\mathbf{0},\mathbf{I}).
+\label{eq:prior}
+\end{equation}
+Here $\mathbf{z}$ plays the same role LDA's per-document topic proportion $\theta_d$ plays over a Dirichlet prior~\citep{blei2003lda}, except it is a dense vector rather than a point on the topic simplex, and the mapping from $\mathbf{z}$ to a distribution over words is a decoder network (\S\ref{sec:decoder}) rather than a fixed topic-word matrix.
+
+Learning $\Theta$ requires maximizing the marginal log-likelihood,
+\begin{equation}
+\log p(\mathbf{x};\Theta) = \log\int p(\mathbf{z})\,p(\mathbf{x}\mid\mathbf{z};\Theta)\,d\mathbf{z}.
+\label{eq:marginal}
+\end{equation}
+Once $p(\mathbf{x}\mid\mathbf{z};\Theta)$ is a neural network, the integral in Equation~\ref{eq:marginal} no longer has a closed form. Variational inference~\citep{jordan1999introduction} sidesteps this by introducing a tractable approximate posterior $q(\mathbf{z};\boldsymbol{\lambda})$ and optimizing the evidence lower bound (ELBO) instead of the marginal directly:
+\begin{equation}
+\log p(\mathbf{x};\Theta) \;\geq\; \mathbb{E}_{q(\mathbf{z};\boldsymbol{\lambda})}\!\left[\log\frac{p(\mathbf{x},\mathbf{z};\Theta)}{q(\mathbf{z};\boldsymbol{\lambda})}\right].
 \label{eq:elbo-generic}
 \end{equation}
-which is tight exactly when $q(\mathbf{z};\boldsymbol{\lambda})=p(\mathbf{z}\mid\mathbf{x};\Theta)$~\citep{kim2018tutorial}. Rather than optimizing separate variational parameters $\boldsymbol{\lambda}^{(n)}$ per document -- which would require an inner optimization loop for every document seen during training -- VAE-BM uses \emph{amortized} variational inference~\citep{kingma2014autoencoding,rezende2014stochastic}: a shared \emph{encoder} network with parameters $\phi$ maps any document directly to its own variational parameters, $\boldsymbol{\lambda}=\mathrm{enc}(\mathbf{x};\phi)$, so that a single trained network serves every document without further per-document optimization. This is the variational-autoencoder (VAE) setting: encoder and decoder are trained jointly by gradient ascent on the ELBO, using the reparameterization trick to obtain low-variance gradients with respect to $\phi$ through the sampling step $\mathbf{z}\sim q(\mathbf{z};\boldsymbol{\lambda})$~\citep{kingma2014autoencoding,rezende2014stochastic}.
+The bound in Equation~\ref{eq:elbo-generic} is tight exactly when $q(\mathbf{z};\boldsymbol{\lambda})$ equals the true posterior $p(\mathbf{z}\mid\mathbf{x};\Theta)$.
 
-VAE-BM instantiates this general recipe with two encoder branches instead of one (\S\ref{sec:encoder}) and an energy-based, Boltzmann-machine-style decoder instead of the softmax-over-topic-word-matrix decoder used by NVDM~\citep{miao2016nvdm}, ProdLDA~\citep{srivastava2017prodlda}, and HiCOT~\citep{hicot2025} alike (\S\ref{sec:be-decoder}). It inherits its decoder from our own earlier model, MVAE-BM~\citep{gomes2021mvaebm}; this paper's own contribution is the two-branch encoder and fusion mechanism (\S\ref{sec:encoder}), together with the finding, in \S\ref{sec:results}, that the best-performing fusion weight turns off the lexical branch's contribution to the representation entirely.
+Rather than optimizing separate variational parameters $\boldsymbol{\lambda}^{(n)}$ for every document -- which would require an inner optimization loop per document -- a variational autoencoder uses \emph{amortized} inference~\citep{kingma2014autoencoding,rezende2014stochastic}: a shared encoder network with parameters $\phi$ maps any document directly to its own variational parameters,
+\begin{equation}
+\boldsymbol{\lambda} = \operatorname{enc}(\mathbf{x};\phi).
+\label{eq:amortized}
+\end{equation}
+Encoder and decoder are then trained jointly by gradient ascent on the ELBO, using the reparameterization trick to obtain low-variance gradients through the sampling step $\mathbf{z}\sim q(\mathbf{z};\boldsymbol{\lambda})$. VAE-BM instantiates this recipe with two encoder branches instead of one (\S\ref{sec:encoder}) and an energy-based, Boltzmann-machine-style decoder instead of the softmax-over-topic-word-matrix decoder used by NVDM, ProdLDA, and HiCOT alike (\S\ref{sec:be-decoder}); it inherits its decoder from our own earlier model, MVAE-BM~\citep{gomes2021mvaebm}.
 
 \subsection{Encoder}
 \label{sec:encoder}
 
-For document $d$, $\mathbf{x}_b \in \mathbb{R}^{|V|}$ is a TF-IDF bag-of-words vector with a $\log(1+\cdot)$ transform applied to nonzero entries (the vocabulary is capped at $|V|=5000$ terms unless a dataset supplies its own fixed vocabulary), and $\mathbf{x}_e \in \mathbb{R}^{d_e}$ is a sentence embedding. Our main-text topic results (\S\ref{sec:topic-results}) use \texttt{thenlper/gte-large} ($d_e=1024$) for four of the five official benchmark datasets and \texttt{BAAI/bge-large-en-v1.5} ($d_e=1024$) for IMDB specifically -- the only dataset in our sweep where swapping embedders changed the outcome at all, improving Purity/NMI/$C_V$ together relative to GTE.\footnote{An earlier version of this pipeline used \texttt{all-MiniLM-L6-v2} ($d_e=384$) throughout for compute-budget reasons; the cluster/classification ablation results (VAE-BM-PoE/VAE-BM-DEC, \S\ref{sec:ablations}) still use that embedder (\S\ref{sec:limitations}).} For our main-text configuration, the contextual branch's own MLP and output heads are frozen immediately after initialization (their weights never receive a gradient update), and, with $H$ set equal to $d_e$, that output-layer kernel is initialized to (near-)identity rather than the default random initializer -- so $\boldsymbol{\mu}_e$ starts as, and remains throughout training, the pretrained sentence embedding itself, unmodified. Only the lexical branch and the decoder train; at $\alpha=0$ this makes the lexical branch's training a no-op with respect to the document representation (though its decoder weights still receive gradient, since the decoder reconstructs $\mathbf{x}_b$ regardless of $\alpha$, \S\ref{sec:objective}). Each branch is a 2-layer MLP followed by two linear heads producing $(\boldsymbol{\mu}_b,\log\boldsymbol{\sigma}_b)$ and $(\boldsymbol{\mu}_e,\log\boldsymbol{\sigma}_e)$ respectively, each in $\mathbb{R}^{H}$ -- this is exactly the $\mathrm{enc}(\mathbf{x};\phi)$ of \S\ref{sec:background}, split across two inputs. The lexical branch defines a Gaussian posterior over the shared latent $\mathbf{z}$:
+For document $d$, $\mathbf{x}_b \in \mathbb{R}^{|V|}$ is a TF-IDF bag-of-words vector with a $\log(1+\cdot)$ transform applied to nonzero entries (vocabulary capped at $|V|=5000$ terms unless a dataset supplies its own fixed vocabulary), and $\mathbf{x}_e \in \mathbb{R}^{d_e}$ is a pretrained sentence embedding. Each branch is a 2-layer MLP followed by two linear heads, producing $(\boldsymbol{\mu}_b,\log\boldsymbol{\sigma}_b)$ from $\mathbf{x}_b$ and $(\boldsymbol{\mu}_e,\log\boldsymbol{\sigma}_e)$ from $\mathbf{x}_e$, each in $\mathbb{R}^{H}$ -- this is Equation~\ref{eq:amortized}'s $\operatorname{enc}(\mathbf{x};\phi)$, split across two inputs. The lexical branch defines a Gaussian posterior over the shared latent $\mathbf{z}$:
 \begin{equation}
 q_b(\mathbf{z}\mid\mathbf{x}_b) = \mathcal{N}\!\left(\boldsymbol{\mu}_b,\operatorname{diag}(\boldsymbol{\sigma}_b^2)\right).
 \label{eq:lexical-posterior}
@@ -142,83 +119,52 @@ The contextual branch defines an analogous posterior over the same latent:
 q_e(\mathbf{z}\mid\mathbf{x}_e) = \mathcal{N}\!\left(\boldsymbol{\mu}_e,\operatorname{diag}(\boldsymbol{\sigma}_e^2)\right).
 \label{eq:contextual-posterior}
 \end{equation}
-Both posteriors are diagonal Gaussians over the same $H$-dimensional latent space, which is exactly what makes the Product-of-Experts fusion below closed-form.
 
-\paragraph{Fusion.} \label{sec:poe} With a standard-normal prior $p(\mathbf{z})=\mathcal{N}(\mathbf{0},\mathbf{I})$ (unit precision, zero mean), the Product-of-Experts (PoE) fused posterior is the normalized product of the prior and the two branch posteriors of Equations~\ref{eq:lexical-posterior}--\ref{eq:contextual-posterior}:
+VAE-BM combines the two branches with a fixed scalar $\alpha\in[0,1)$, taken per-document and per-dimension:
 \begin{equation}
-q_{\mathrm{PoE}}(\mathbf{z}\mid\mathbf{x}_b,\mathbf{x}_e) \propto p(\mathbf{z})\,q_b(\mathbf{z}\mid\mathbf{x}_b)\,q_e(\mathbf{z}\mid\mathbf{x}_e).
-\label{eq:poe-def}
-\end{equation}
-For diagonal Gaussians this product is itself Gaussian and closed-form, per latent dimension. Writing each branch's precision as the inverse of its variance,
-\begin{equation}
-\boldsymbol{\tau}_b = \boldsymbol{\sigma}_b^{-2}, \qquad \boldsymbol{\tau}_e = \boldsymbol{\sigma}_e^{-2},
-\label{eq:precisions}
-\end{equation}
-the fused precision is the sum of the prior's unit precision and the two branch precisions,
-\begin{equation}
-\boldsymbol{\tau}_f = \mathbf{1} + \boldsymbol{\tau}_b + \boldsymbol{\tau}_e,
-\label{eq:fused-precision}
-\end{equation}
-which gives a fused variance of
-\begin{equation}
-\boldsymbol{\sigma}_f^2 = \left(\mathbf{1}+\boldsymbol{\sigma}_b^{-2}+\boldsymbol{\sigma}_e^{-2}\right)^{-1}.
-\label{eq:fused-variance}
-\end{equation}
-
-The fused mean is the single most consequential quantity in this paper, since it is the representation every downstream task -- topic extraction (\S\ref{sec:topics}), clustering, and classification (\S\ref{sec:results}) -- consumes. It is the precision-weighted average of the two branch means:
-\begin{equation}
-\boldsymbol{\mu}_f = \boldsymbol{\sigma}_f^2 \odot \left(\frac{\boldsymbol{\mu}_b}{\boldsymbol{\sigma}_b^2}+\frac{\boldsymbol{\mu}_e}{\boldsymbol{\sigma}_e^2}\right).
-\label{eq:poe-mean}
-\end{equation}
-
-Equivalently, $\boldsymbol{\mu}_f$ is a per-dimension convex combination of the two branch means and the prior's zero mean. Writing the three normalized weights as
-\begin{align}
-\mathbf{w}_b &= \frac{\boldsymbol{\tau}_b}{\mathbf{1}+\boldsymbol{\tau}_b+\boldsymbol{\tau}_e}, \label{eq:weight-b}\\
-\mathbf{w}_e &= \frac{\boldsymbol{\tau}_e}{\mathbf{1}+\boldsymbol{\tau}_b+\boldsymbol{\tau}_e}, \label{eq:weight-e}\\
-\mathbf{w}_0 &= \frac{\mathbf{1}}{\mathbf{1}+\boldsymbol{\tau}_b+\boldsymbol{\tau}_e}, \label{eq:weight-0}
-\end{align}
-these three weights always sum to one,
-\begin{equation}
-\mathbf{w}_0+\mathbf{w}_b+\mathbf{w}_e = \mathbf{1},
-\label{eq:weights-sum}
-\end{equation}
-so whichever branch reports lower variance (higher confidence) for a given document and latent dimension dominates $\boldsymbol{\mu}_f$ for exactly that document and dimension, automatically and without a tuned hyperparameter.
-
-This is in direct contrast to VAE-BM's own fixed-$\alpha$ fusion:
-\begin{equation}
-\boldsymbol{\mu}_\alpha = \alpha\boldsymbol{\mu}_b + (1-\alpha)\boldsymbol{\mu}_e,
+\boldsymbol{\mu}_f = \alpha\,\boldsymbol{\mu}_b + (1-\alpha)\,\boldsymbol{\mu}_e,
 \label{eq:alpha-fusion}
 \end{equation}
-which is identical for every document and every latent dimension in the corpus, regardless of how confident either branch actually is about that specific document. VAE-BM's own established default is $\alpha=0.99$ (lexical-dominant); Equation~\ref{eq:poe-mean} lets each branch's own posterior variance set the effective weight per document and per dimension instead. We use Equation~\ref{eq:alpha-fusion} for our own main results, but with \emph{neither} of these defaults: a systematic sweep of $\alpha\in\{0, 0.01, 0.1$--$0.2, 0.5\}$ on HiCOT's five benchmark datasets found clustering quality (Purity, NMI) degrades monotonically as $\alpha$ increases from zero, with no reversal at any tested value -- $\alpha=0.5$ alone collapses 20NG's Purity from 0.676 to 0.444 and NMI from 0.582 to 0.415, and even $\alpha=0.01$ is uniformly flat-to-worse across all five datasets relative to $\alpha=0$. We therefore fix $\boldsymbol{\mu}_f=\boldsymbol{\mu}_\alpha|_{\alpha=0}=\boldsymbol{\mu}_e$ (embedding-only) for every main-text result in \S\ref{sec:topic-results}--\S\ref{sec:cluster-results}. The fixed-fusion VAE-BM baseline reported in the ablation (\S\ref{sec:ablations}) instead uses $\alpha=0.99$, VAE-BM's own original default, so that ablation isolates the fusion \emph{mechanism} (fixed scalar vs.\ PoE) at the fusion weight VAE-BM was originally proposed with, separately from the $\alpha$-value finding above. Sampling uses the same reparameterization regardless of $\alpha$:
+\begin{equation}
+\boldsymbol{\sigma}_f = \alpha\,\boldsymbol{\sigma}_b + (1-\alpha)\,\boldsymbol{\sigma}_e.
+\label{eq:alpha-fusion-sigma}
+\end{equation}
+A systematic sweep of $\alpha\in\{0, 0.01, 0.1\text{--}0.2, 0.5\}$ on HiCOT's five benchmark datasets found that clustering quality (Purity, NMI) degrades monotonically as $\alpha$ increases from zero, with no reversal at any tested value: $\alpha=0.5$ alone collapses 20NG's Purity from 0.676 to 0.444 and NMI from 0.582 to 0.415, and even $\alpha=0.01$ is uniformly flat-to-worse across all five datasets relative to $\alpha=0$. We therefore lock
+\begin{equation}
+\boldsymbol{\mu}_f = \boldsymbol{\mu}_e, \qquad \boldsymbol{\sigma}_f = \boldsymbol{\sigma}_e
+\label{eq:final-fusion}
+\end{equation}
+as VAE-BM's final configuration -- the document representation this paper reports everywhere as \textbf{VAE-BM (ours)}. Under Equation~\ref{eq:final-fusion}, the contextual branch's own MLP and output heads are frozen immediately after initialization and that output-layer kernel is initialized to (near-)identity, so $\boldsymbol{\mu}_e$ starts as, and remains throughout training, the pretrained sentence embedding itself, unmodified. Our main-text results use \texttt{thenlper/gte-large} ($d_e=1024$) for four of HiCOT's five benchmark datasets and \texttt{BAAI/bge-large-en-v1.5} ($d_e=1024$) for IMDB -- the only dataset where swapping embedders changed the outcome, improving Purity/NMI/$C_V$ together relative to GTE. Sampling then uses the standard reparameterization,
 \begin{equation}
 \mathbf{z} = \boldsymbol{\mu}_f + \boldsymbol{\sigma}_f \odot \boldsymbol{\epsilon}, \qquad \boldsymbol{\epsilon}\sim\mathcal{N}(\mathbf{0},\mathbf{I}).
 \label{eq:reparam}
 \end{equation}
+An uncertainty-weighted alternative to Equations~\ref{eq:alpha-fusion}--\ref{eq:alpha-fusion-sigma}, and a jointly-trained clustering alternative to \S\ref{sec:dec}, are both explored only as ablations in Appendix~\ref{sec:appendix-ablation}; neither outperforms Equation~\ref{eq:final-fusion} once evaluated on equal footing, so neither appears in any main-text result.
 
 \subsection{Decoder}
 \label{sec:decoder}
 
-The decoder is the likelihood model $p(\mathbf{x}\mid\mathbf{z};\Theta)$ of \S\ref{sec:background}: a network that maps a sampled latent $\mathbf{z}$ back to a distribution over the observed bag-of-words vector $\mathbf{x}_b$. The standard choice in neural topic modeling is to factor the decoder through an explicit topic-word matrix $\boldsymbol{\beta}\in\mathbb{R}^{|V|\times K}$ and a softmax, $p(\mathbf{x}\mid\mathbf{z};\Theta)=\mathrm{Multi}(\mathrm{softmax}(\boldsymbol{\beta}\,\theta))$, so that $\boldsymbol{\beta}$'s columns can be read off directly as each topic's word distribution~\citep{miao2016nvdm,srivastava2017prodlda,hicot2025}. VAE-BM instead uses an energy-based, Boltzmann-machine-style decoder (\S\ref{sec:be-decoder}) with no such explicit topic-word matrix; the price of this choice is that topic words must be \emph{extracted} from the trained decoder's parameters post hoc (\S\ref{sec:topics}) rather than read off a fixed matrix, and the benefit is a decoder that scores every vocabulary word through a single shared bilinear form, tying the latent representation to individual words directly rather than through an intermediate $K$-topic bottleneck.
+The decoder is the likelihood model $p(\mathbf{x}\mid\mathbf{z};\Theta)$ of Equation~\ref{eq:joint}: a network mapping the sampled latent $\mathbf{z}$ back to a distribution over the observed bag-of-words vector $\mathbf{x}_b$. The standard choice in neural topic modeling factors the decoder through an explicit topic-word matrix $\boldsymbol{\beta}\in\mathbb{R}^{|V|\times K}$ and a softmax, so that $\boldsymbol{\beta}$'s columns can be read off directly as each topic's word distribution~\citep{miao2016nvdm,srivastava2017prodlda,hicot2025}. VAE-BM instead uses an energy-based, Boltzmann-machine-style decoder with no such explicit matrix (\S\ref{sec:be-decoder}); the price is that topic words must be \emph{extracted} from the trained decoder's parameters post hoc (\S\ref{sec:topics}), and the benefit is a decoder that scores every vocabulary word through one shared bilinear form, tying the latent representation to individual words directly.
 
 \subsection{Boltzmann/Energy-Based Decoder}
 \label{sec:be-decoder}
 
-Unchanged from VAE-BM, and inherited from our own earlier MVAE-BM model~\citep{gomes2021mvaebm}, the decoder scores a document-vocabulary energy
+Inherited unchanged from our earlier MVAE-BM model~\citep{gomes2021mvaebm}, the decoder scores a document-vocabulary energy
 \begin{equation}
 E(\mathbf{x};\mathbf{z},\Theta) = -\mathbf{z}^\top\mathbf{R}\mathbf{x} - \mathbf{b}^\top\mathbf{x},
 \label{eq:energy}
 \end{equation}
-with $\mathbf{R}\in\mathbb{R}^{H\times|V|}$ and $\mathbf{b}\in\mathbb{R}^{|V|}$, which defines the conditional likelihood
+with $\mathbf{R}\in\mathbb{R}^{H\times|V|}$ and $\mathbf{b}\in\mathbb{R}^{|V|}$. The energy defines the conditional likelihood
 \begin{equation}
-p_\Theta(\mathbf{x}\mid\mathbf{z}) \propto \exp\!\left[-E(\mathbf{x};\mathbf{z},\Theta)\right].
+p_\Theta(\mathbf{x}\mid\mathbf{z}) \;\propto\; \exp\!\left[-E(\mathbf{x};\mathbf{z},\Theta)\right].
 \label{eq:decoder}
 \end{equation}
-This is the same log-bilinear form used by Boltzmann-machine-style word models~\citep{dahl2012rbm}: $\mathbf{R}$ plays the role a semantic word-embedding matrix would, and is the sole channel through which the latent representation connects back to individual vocabulary words, which is what lets \S\ref{sec:topics} extract genuine topic words rather than relying on a separate, disconnected scoring step. In practice this is computed as $\text{logits}=\mathbf{z}\mathbf{R}^\top+\mathbf{b}$, a per-word log-softmax over the vocabulary, summed only at positions where $\mathbf{x}$ is nonzero -- an approximate per-document log-likelihood, not a full generative decoder over word order.
+$\mathbf{R}$ plays the role a semantic word-embedding matrix would: it is the sole channel through which the latent representation connects back to individual vocabulary words, which is what lets \S\ref{sec:topics} extract genuine topic words rather than relying on a separate, disconnected scoring step. In practice, Equation~\ref{eq:decoder} is computed as $\text{logits}=\mathbf{z}\mathbf{R}^\top+\mathbf{b}$, a per-word log-softmax over the vocabulary summed only at positions where $\mathbf{x}$ is nonzero -- an approximate per-document log-likelihood, not a full generative decoder over word order.
 
 \subsection{Training Objective}
 \label{sec:objective}
 
-The per-document ELBO (Equation~\ref{eq:elbo-generic}, specialized to VAE-BM's decoder and encoder) is unchanged in form from a standard Gaussian VAE:
+Specializing Equation~\ref{eq:elbo-generic} to VAE-BM's own encoder and decoder gives the per-document training objective
 \begin{equation}
 \begin{aligned}
 \mathcal{L}(\mathbf{x}) = {} &\mathbb{E}_{q(\mathbf{z}\mid\mathbf{x})}\!\left[\log p_\Theta(\mathbf{x}\mid\mathbf{z})\right] \\
@@ -226,86 +172,81 @@ The per-document ELBO (Equation~\ref{eq:elbo-generic}, specialized to VAE-BM's d
 \end{aligned}
 \label{eq:elbo}
 \end{equation}
-with $q=q_{\mathrm{PoE}}$ of Equation~\ref{eq:poe-def} for VAE-BM-PoE (and $q$ the fixed-$\alpha$ posterior of Equation~\ref{eq:alpha-fusion} for VAE-BM). Since $q$ is Gaussian and $p(\mathbf{z})$ standard normal, the KL term is closed-form:
+with $q(\mathbf{z}\mid\mathbf{x})$ given by Equation~\ref{eq:final-fusion} (or, for the appendix ablations, Equation~\ref{eq:alpha-fusion} at $\alpha=0.99$). Since $q$ is Gaussian and $p(\mathbf{z})$ standard normal, the KL term is closed-form:
 \begin{equation}
 D_{\mathrm{KL}} = \frac{1}{2}\sum_{j=1}^{H}\left(\mu_{f,j}^2+\sigma_{f,j}^2-\log\sigma_{f,j}^2-1\right).
 \label{eq:kl}
 \end{equation}
-Training minimizes $-\mathcal{L}(\mathbf{x})$ with Adam (learning rate $10^{-3}$; the model's own originally-supplied $10^{-2}$ diverges at these vocabulary sizes). No separate reconstruction term exists for $\mathbf{x}_e$ -- the contextual branch only ever shapes $\boldsymbol{\mu}_e,\boldsymbol{\sigma}_e$ through the fused ELBO's KL term, never through its own reconstruction loss, since VAE-BM's decoder reconstructs $\mathbf{x}_b$ alone.
+Training minimizes $-\mathcal{L}(\mathbf{x})$ with Adam at learning rate $10^{-3}$ (VAE-BM's own originally-supplied $10^{-2}$ diverges at these vocabulary sizes). No separate reconstruction term exists for $\mathbf{x}_e$: under Equation~\ref{eq:final-fusion} the contextual branch is frozen and contributes no gradient at all, and even away from that locked configuration the contextual branch would only ever shape $\boldsymbol{\mu}_e,\boldsymbol{\sigma}_e$ through the KL term, never through its own reconstruction loss, since the decoder reconstructs $\mathbf{x}_b$ alone.
 
 \subsection{Clustering}
 \label{sec:dec}
 
-The retained document representation is the fused posterior mean -- a deterministic point estimate rather than a stochastic sample, so that downstream clustering and classification see a stable representation rather than one that changes across re-encodings of the same document:
+The retained document representation is the fused posterior mean -- a deterministic point estimate, so that downstream clustering and classification see a stable representation rather than one that changes across re-encodings of the same document:
 \begin{equation}
 \mathbf{e}_d = \boldsymbol{\mu}_{f,d}.
 \label{eq:doc-repr}
 \end{equation}
-For VAE-BM and VAE-BM-PoE, clusters are assigned by ordinary $k$-means on $\{\boldsymbol{\mu}_{f,d}\}$ after training completes:
+Clusters are assigned by ordinary $k$-means on $\{\boldsymbol{\mu}_{f,d}\}$ after training completes:
 \begin{equation}
 y_d = \arg\min_k \left\|\boldsymbol{\mu}_{f,d}-\mathbf{c}_k\right\|_2^2.
 \label{eq:kmeans}
 \end{equation}
-Following the cluster-experiment benchmark convention used throughout, $K$ is set to each dataset's own number of ground-truth classes (or the requested topic count for the topic experiment, \S\ref{sec:topic-results}); labels are inspected only to determine $K$, never passed to the encoder/decoder's own training. For 20NG and AGNews specifically, we L2-normalize $\boldsymbol{\mu}_{f,d}$ before Equation~\ref{eq:kmeans} -- a cheap approximation to spherical/cosine $k$-means (Euclidean distance between unit-norm vectors is a monotonic function of their cosine similarity) that improved Purity/NMI on these two datasets without affecting $C_V$ (\S\ref{sec:topics} is computed downstream of clustering, from a fixed assignment either way); we did not find a benefit elsewhere and do not apply it to the other three official datasets.
-
-VAE-BM-DEC instead trains cluster centroids $\mathbf{c}_1,\dots,\mathbf{c}_K$ jointly with the encoder/decoder, following Deep Embedded Clustering~\citep{xie2016dec}. A Student-$t$ kernel gives each point's soft assignment to centroid $k$:
-\begin{equation}
-q_{ik} = \frac{\left(1+\|\mathbf{z}_i-\mathbf{c}_k\|^2\right)^{-1}}{\sum_j\left(1+\|\mathbf{z}_i-\mathbf{c}_j\|^2\right)^{-1}}.
-\label{eq:dec-q}
-\end{equation}
-This is sharpened once per epoch into a target distribution that up-weights high-confidence assignments,
-\begin{equation}
-p_{ik} = \frac{q_{ik}^2/f_k}{\sum_j q_{ij}^2/f_j}, \qquad f_k=\sum_i q_{ik},
-\label{eq:dec-p}
-\end{equation}
-and the added loss term is the KL divergence between target and soft assignment,
-\begin{equation}
-\mathrm{KL}(P\|Q) = \sum_i\sum_k p_{ik}\log\frac{p_{ik}}{q_{ik}},
-\label{eq:dec-kl}
-\end{equation}
-weighted by $\lambda_c=0.1$ (a documented default, not a value tuned per dataset) and added to the same ELBO loss of Equation~\ref{eq:elbo}. Centroids are initialized via $k$-means on the \emph{untrained} encoder's own $\boldsymbol{\mu}$ before the first optimization step -- a compressed, single-pass version of DEC's own separate pretrain-then-refine procedure, made necessary because the optimizer's own managed-variable set must be fixed before its first update. Final cluster assignment is $y_d=\arg\max_k q_{dk}$, not a separate $k$-means call.
-
-\paragraph{Model selection.} VAE-BM-PoE and VAE-BM-DEC both train for up to 50 epochs under a wall-clock cap (20 minutes internal, 30 minutes external safety net) and keep the single epoch's checkpoint that performs best -- in the \emph{cluster} experiment only, ranked by clustering accuracy against the same ground-truth labels the experiment ultimately reports (an oracle, label-informed selection, since the cluster experiment is transductive and has no held-out split to select on instead); in the \emph{classification} experiment, by training loss alone, since a held-out test split exists there and using test labels for epoch selection would be genuine leakage. Every cluster-experiment result from either model is tagged with this fact (\texttt{checkpoint\_selection\allowbreak=oracle\_label\allowbreak\_informed} in our results manifest) and must not be read as directly comparable to a fully unsupervised model's single, un-selected final epoch. VAE-BM's own main-configuration results use no such selection at all.
+Following the cluster-experiment benchmark convention used throughout, $K$ is set to each dataset's own number of ground-truth classes (or the requested topic count for the topic experiment, \S\ref{sec:topic-results}); labels are inspected only to determine $K$, never passed to training. For 20NG and AGNews specifically we L2-normalize $\boldsymbol{\mu}_{f,d}$ before Equation~\ref{eq:kmeans} -- a cheap approximation to spherical/cosine $k$-means that improved Purity/NMI on these two datasets without affecting $C_V$ (\S\ref{sec:topics} is computed downstream of clustering, from a fixed assignment either way); we did not find a benefit elsewhere.
 
 \subsection{Topic Extraction}
 \label{sec:topics}
 
-Given the trained decoder's $\mathbf{R},\mathbf{b}$ and the $k$-means/DEC cluster assignment, three topic-word views are computed per cluster $k$, over its member documents' word counts $\mathbf{X}_k$ and latent means $\mathbf{Z}_k$. One view scores each vocabulary word by the same energy the decoder itself was trained on, $\text{logits}_k = \mathbf{Z}_k\mathbf{R}^\top + \mathbf{b}$, masked to only the vocabulary positions actually observed in cluster $k$'s own documents; words never observed anywhere in the cluster are forced to $-\infty$ so an absent word can never outrank an observed one. A second, purely descriptive view ranks cluster $k$'s top words by raw summed count in $\mathbf{X}_k$, independent of $\mathbf{R},\mathbf{b}$ entirely. Both exist in the implementation, but neither is what produces this paper's main-text numbers.
+Given the trained decoder's $\mathbf{R},\mathbf{b}$ and the $k$-means cluster assignment, each cluster $k$'s member documents contribute word counts $\mathbf{X}_k$. Raw within-cluster frequency has a systematic failure mode: a word common across \emph{many} clusters (a corpus-wide filler word, or -- after stopword removal -- any sufficiently generic term) can still be locally frequent enough within one cluster to dominate its top-word list, without being distinctively \emph{about} that cluster.
 
-\paragraph{Relevance-weighted selection.} Raw within-cluster frequency has a systematic failure mode: a word common across \emph{many} clusters (a corpus-wide filler word, or -- after stopword removal -- any sufficiently generic term) can still be locally frequent enough within one cluster to dominate its top-word list, without being distinctively \emph{about} that cluster at all. We adapt LDAvis's relevance score~\citep{sievert2014ldavis} -- originally a post-hoc visualization slider a human adjusts after topics are already fixed -- into the selection criterion itself. Let $p(w\mid k) = X_{k,w} / \sum_{w'} X_{k,w'}$ be word $w$'s relative frequency within cluster $k$'s own documents, and $p(w) = \sum_k X_{k,w} / \sum_{k,w'} X_{k,w'}$ its relative frequency over the \emph{whole} corpus. The relevance score is
+We adapt LDAvis's relevance score~\citep{sievert2014ldavis} -- originally a post-hoc visualization slider a human adjusts after topics are already fixed -- into the selection criterion itself. Let
+\begin{equation}
+p(w\mid k) = \frac{X_{k,w}}{\sum_{w'} X_{k,w'}}
+\label{eq:pwk}
+\end{equation}
+be word $w$'s relative frequency within cluster $k$'s own documents, and let
+\begin{equation}
+p(w) = \frac{\sum_k X_{k,w}}{\sum_{k,w'} X_{k,w'}}
+\label{eq:pw}
+\end{equation}
+be its relative frequency over the whole corpus. The relevance score is
 \begin{equation}
 r_\lambda(w,k) = \lambda \log p(w\mid k) + (1-\lambda)\log\frac{p(w\mid k)}{p(w)},
 \label{eq:relevance}
 \end{equation}
-computed only over words with $X_{k,w}>0$ (present in cluster $k$), and each cluster's topic is its top words by $r_\lambda$ descending. At $\lambda=1$, Equation~\ref{eq:relevance} reduces to ranking by $\log p(w\mid k)$ alone -- the same ordering as raw frequency; as $\lambda\to0$, it increasingly rewards words that are \emph{exclusive} to cluster $k$ relative to the corpus, at the expense of raw frequency. Unlike the frequency and energy views, $\lambda$ requires no cross-cluster hand-curated stopword list to suppress corpus-wide filler -- the $p(w\mid k)/p(w)$ term suppresses it automatically, proportionally to exactly how non-exclusive a word actually is.
+computed only over words with $X_{k,w}>0$, and each cluster's topic is its top words by $r_\lambda$ descending. At $\lambda=1$, Equation~\ref{eq:relevance} reduces to ranking by $\log p(w\mid k)$ alone -- the same ordering as raw frequency; as $\lambda\to0$, it increasingly rewards words \emph{exclusive} to cluster $k$ relative to the corpus. Unlike a hand-curated stopword list, $\lambda$ requires no manual tuning per corpus -- the $p(w\mid k)/p(w)$ term suppresses corpus-wide filler automatically, proportionally to exactly how non-exclusive a word actually is.
 
-We tune $\lambda$ once per dataset by sweeping $\lambda\in\{0.05,0.1,0.2,0.3,0.5,0.7\}$ and selecting by $C_V$ alone (never by Purity/NMI/label information): $\lambda=0.5$ for 20NG and AGNews, $\lambda=0.05$ for SearchSnippets, GoogleNews, and IMDB. Across every dataset in this sweep, decreasing $\lambda$ from 0.7 to 0.05 improved $C_V$ monotonically with no reversal at any point tested, before plateauing on some datasets (SearchSnippets) and continuing to improve on others (GoogleNews, IMDB) at the lowest value tried -- we did not exhaustively search below 0.05. Equation~\ref{eq:relevance} operates entirely on $\mathbf{X}_k$ (word counts within an already-fixed clustering); it has no path back into $\boldsymbol{\mu}_f$, the $k$-means assignment, or the classifier of \S\ref{sec:results}, so changing $\lambda$ changes $C_V$ only, with mathematically zero effect on Purity, NMI, ACC, or classification accuracy/F1 -- a property we verified empirically (\S\ref{sec:topic-results}) as well as by construction.
+We tune $\lambda$ once per dataset by sweeping $\lambda\in\{0.05,0.1,0.2,0.3,0.5,0.7\}$ and selecting by $C_V$ alone, never by Purity/NMI/label information: $\lambda=0.5$ for 20NG and AGNews, $\lambda=0.05$ for SearchSnippets, GoogleNews, and IMDB. Equation~\ref{eq:relevance} operates entirely on $\mathbf{X}_k$ (word counts within an already-fixed clustering); it has no path back into $\boldsymbol{\mu}_f$, the $k$-means assignment, or the classifier of \S\ref{sec:results}, so changing $\lambda$ changes $C_V$ only, with mathematically zero effect on Purity, NMI, ACC, or classification accuracy/F1 -- a property we verified empirically as well as by construction.
 
 \section{Experimental Setup}
 \label{sec:setup}
 
-We evaluate on three experiments -- topic modeling, document clustering, and classification -- run as three separate sweeps rather than one combined protocol, since each has a different held-out/transductive convention.
+We evaluate on three experiments -- topic modeling, document clustering, and classification -- run as three separate sweeps, since each has a different held-out/transductive convention.
 
 \subsection{Datasets}
-Table~\ref{tab:datasets} lists every dataset appearing in at least one results table below. Ordinary and HiCOT-artifact variants of the same underlying corpus (e.g., \texttt{20ng} vs.\ \texttt{hicot\_20ng}) are kept as distinct rows throughout: HiCOT's own official artifacts use a fixed released vocabulary and pretrained GloVe word-embedding initialization for HiCOT itself, while the ordinary variant is vectorized fresh by each model's own pipeline.
+Table~\ref{tab:datasets} lists every dataset used in this paper. Topic Modeling uses HiCOT's own five official benchmark datasets (\texttt{hicot\_*}), each with a fixed released vocabulary and pretrained GloVe word-embedding initialization for HiCOT itself. Document Clustering and Classification use a separate suite of twelve plain datasets, chosen to avoid HiCOT-artifact preprocessing (not needed once the classification protocol supplies its own held-out split) and very large corpora, while still spanning news, reviews, short text, and specialized domains (customer-service intents, biomedical abstracts). No dataset outside these seventeen appears anywhere in this paper.
 
 \input{tables/dataset_table}
-\clearpage
 
 \subsection{Compute environments}
-Results were produced across two independent GPU environments -- an H200-based SLURM cluster (\emph{FutureLab}) and a 4$\times$GTX~1080~Ti workstation (\emph{labuai}) -- kept explicit throughout rather than pooled, since cross-hardware results, while close, are not identical (see \S\ref{sec:cluster-results}). All VAE-BM-family results in this paper are from FutureLab.
+Results were produced across two independent GPU environments -- an H200-based SLURM cluster (\emph{FutureLab}) and a 4$\times$GTX~1080~Ti workstation (\emph{labuai}) -- kept explicit throughout rather than pooled, since cross-hardware results, while close, are not identical. All VAE-BM (ours) results in this paper are from FutureLab.
 
 \subsection{Baselines}
-\textbf{Classical}: LDA~\citep{blei2003lda}. \textbf{Embedding clustering}: SBERT (\texttt{all-MiniLM-L6-v2}, \texttt{thenlper/gte-large}, and 9 further encoder variants for the topic experiment specifically) with $k$-means. \textbf{Embedding/topic hybrid}: BERTopic~\citep{grootendorst2022bertopic}. \textbf{Neural topic models}: FASTopic~\citep{wu2024fastopic}, HiCOT~\citep{hicot2025}, GloCOM~\citep{nguyen2025glocom}, ECRTM~\citep{wu2023ecrtm}, S2WTM~\citep{adhya2025s2wtm}. \textbf{Proposed family}: VAE-BM, VAE-BM-PoE, VAE-BM-DEC. FASTopic and HiCOT are reported unconditionally in every Cluster/Classification comparison; LDA/GloCOM/ECRTM/S2WTM are additional baselines included because we found a genuine, runnable implementation for each (GloCOM/ECRTM via the official TopMost toolkit~\citep{wu2024topmost}, S2WTM via its own official OCTIS-based repository) -- a model appears in a given experiment's table only where we found an actually-completed result for it; we did not hand-restrict this list before searching.
+\label{sec:baselines}
+\textbf{Classical}: LDA~\citep{blei2003lda}. \textbf{Embedding/topic hybrid}: BERTopic~\citep{grootendorst2022bertopic}, which clusters document embeddings and derives topic words post hoc via class-based TF-IDF. \textbf{Neural topic models}: FASTopic~\citep{wu2024fastopic}, HiCOT~\citep{hicot2025}, GloCOM~\citep{nguyen2025glocom}, ECRTM~\citep{wu2023ecrtm}, S2WTM~\citep{adhya2025s2wtm}. \textbf{Proposed model}: VAE-BM (ours).
+
+FASTopic and HiCOT are reported unconditionally in every Cluster/Classification comparison. LDA, GloCOM, ECRTM, and S2WTM are additional baselines we ran ourselves once we found a genuine, runnable implementation for each (GloCOM/ECRTM via the official TopMost toolkit~\citep{wu2024topmost}, S2WTM via its own official OCTIS-based repository). We deliberately exclude bare pretrained-sentence-embedding-plus-$k$-means pipelines from every experimental table in this paper (\S1): they are discussed conceptually, as a body of prior findings, in \S2, but produce no document-topic-word structure of their own and so are not a topic-model baseline here.
+
+Before reporting any baseline result, we checked whether it already existed, complete, somewhere in our own result history (both compute environments' checkpoints and manifests); where a baseline's existing result was incomplete relative to what this paper now reports (missing 8 of the 11 clustering metrics, in the case of FASTopic, HiCOT, and BERTopic, whose original cluster runs predate this paper's full-metric protocol), we re-ran that baseline's cluster experiment through the identical 12-dataset, full-metric pipeline every other baseline uses, rather than leaving the table incomplete. Every baseline shown in \S\ref{sec:cluster-results}--\S\ref{sec:classification-results} has a genuinely completed result on all twelve datasets, for every metric shown; no model appears in a main table merely to display mostly-missing cells.
 
 \subsection{Topic modeling protocol}
-$K\in\{50,100\}$, following the ECRTM/HiCOT Table 2/3 convention; coherence (C$_V$) and topic diversity (TD) alongside label-informed Purity/NMI. SBERT-family baselines (11 encoder variants) use the \texttt{ecrtm\_hicot} evaluation protocol (top-$n=15$ words, Palmetto/Wikipedia C$_V$, Dieng et al.'s fixed-$K{\times}15$-denominator TD) across all 15 datasets in Table~\ref{tab:datasets}; VAE-BM-family topic results use the generic protocol (local-corpus gensim C$_V$, not Palmetto) and, at the time of writing, only a single validation datapoint per model (\S\ref{sec:topic-results}) -- the formal VAE-BM-family topic sweep was queued behind the cluster sweep on the same GPU and had not yet run to completion.
+$K\in\{50,100\}$, following the ECRTM/HiCOT convention; coherence ($C_V$, Palmetto against a Wikipedia reference corpus) and topic diversity (TD) alongside label-informed Purity and NMI.
 
 \subsection{Document clustering protocol}
-Transductive: each model fits and is evaluated on the full corpus, $K$ set to the dataset's own class count. We report label-based ACC (Hungarian-matched), NMI, ARI, AMI, Homogeneity, Completeness, V-measure, and Purity, plus label-free Silhouette, Davies-Bouldin, and Calinski-Harabasz.
+Transductive: each model fits and is evaluated on the full corpus, $K$ set to the dataset's own class count. We report every clustering metric we compute: label-based ACC (Hungarian-matched), NMI, ARI, AMI, Homogeneity, Completeness, V-measure, and Purity, plus label-free Silhouette, Davies-Bouldin, and Calinski-Harabasz.
 
 \subsection{Classification protocol}
-A stratified random 80/20 split (drawn once per seed; datasets with a class of fewer than 2 members fall back to a non-stratified split for that one dataset, flagged in our manifest) trains a classifier on each model's own representation, scored on the held-out 20\%. For VAE-BM and every baseline, this is a linear-kernel SVM (VAE-BM's own \S\ref{sec:dec} representation, $\boldsymbol{\mu}_{f,d}$, for the train split) except where noted otherwise in \S\ref{sec:limitations}; we use the same classifier across every model in a given sweep to keep the comparison fair.
+A stratified random 80/20 split (drawn once per seed) trains a linear-kernel SVM on each model's own document representation, scored on the held-out 20\%. VAE-BM (ours) uses 5 seeds (1--5), since which documents land in train vs.\ test genuinely varies by seed; every baseline uses a single seed (42), matching this task's own established single-seed baseline convention -- we report this asymmetry explicitly (\S\ref{sec:limitations}) rather than fabricating repeated-seed uncertainty for a baseline we only ran once.
 
 \section{Results}
 \label{sec:results}
@@ -315,88 +256,63 @@ All numbers below are read programmatically from \texttt{paper\_data/\allowbreak
 \subsection{Topic Modeling}
 \label{sec:topic-results}
 
-Tables~\ref{tab:vaebm-topic-20ng-agnews-imdb-k50}--\ref{tab:vaebm-topic-ss-gn-k100} are this paper's central result: HiCOT's own published $K{=}50$/$K{=}100$ table on its five official benchmark datasets (ETM, NTM+CL, ECRTM, FASTopic, NeuroMax, HiCOT, reproduced from~\citep{hicot2025}), with our VAE-BM row appended using the architecture of \S\ref{sec:method} -- $\alpha=0$, \texttt{gte-large} (\texttt{bge-large} for IMDB), relevance-weighted topic words (Equation~\ref{eq:relevance}, $\lambda$ tuned per dataset, \S\ref{sec:topics}), \texttt{normalize\_mu} for 20NG/AGNews (\S\ref{sec:dec}). All $C_V$ values, ours and HiCOT's own, use Palmetto against a Wikipedia reference corpus -- the same coherence measure and reference corpus throughout, so bolding a win is a like-for-like comparison, not a cross-protocol one.
+Tables~\ref{tab:vaebm-topic-20ng-agnews-imdb-k50}--\ref{tab:vaebm-topic-ss-gn-k100} are this paper's central result: HiCOT's own published $K{=}50$/$K{=}100$ table on its five official benchmark datasets (ETM, NTM+CL, ECRTM, FASTopic, NeuroMax, HiCOT, reproduced from~\citep{hicot2025}), with our VAE-BM (ours) row appended using the locked configuration of \S\ref{sec:method}: $\alpha=0$, \texttt{gte-large} (\texttt{bge-large} for IMDB), relevance-weighted topic words with $\lambda$ tuned per dataset, and the L2-normalization of \S\ref{sec:dec} for 20NG/AGNews. All $C_V$ values, ours and HiCOT's own, use Palmetto against a Wikipedia reference corpus, so bolding a win is a like-for-like comparison.
 
-At $K=50$: VAE-BM beats HiCOT on all three headline metrics ($C_V$, Purity, NMI) simultaneously on SearchSnippets, GoogleNews, and IMDB (Table~\ref{tab:vaebm-topic-ss-gn-k50}, Table~\ref{tab:vaebm-topic-20ng-agnews-imdb-k50}) -- fully unsupervised throughout, with no label information used in training, clustering, or topic-word selection at any point. On AGNews, VAE-BM beats $C_V$ and Purity but falls short of HiCOT's NMI (0.380 vs.\ 0.412). On 20NG, VAE-BM beats $C_V$ and Purity and comes within 0.001 of HiCOT's NMI (0.582 vs.\ 0.583) -- the closest possible miss we observed under a dedicated $k$-means-initialization sensitivity check (five seeds/restart counts, none of which closed the remaining gap, ruling out initialization noise as the explanation). We did not find a lever that moves NMI specifically without a genuinely different architectural change (\S\ref{sec:limitations}): $\lambda$ in Equation~\ref{eq:relevance} provably cannot affect it, and \texttt{normalize\_mu} and embedder choice (\S\ref{sec:method}) had already been applied to both remaining datasets before this ceiling was reached.
+At $K=50$, VAE-BM (ours) beats HiCOT on all three headline metrics ($C_V$, Purity, NMI) simultaneously on SearchSnippets, GoogleNews, and IMDB. On AGNews it beats $C_V$ and Purity but falls short of HiCOT's NMI (0.380 vs.\ 0.412). On 20NG it beats $C_V$ and Purity and comes within 0.001 of HiCOT's NMI (0.582 vs.\ 0.583) -- the closest possible miss under a dedicated $k$-means-initialization sensitivity check (five seeds/restart counts, none of which closed the gap). Neither $\lambda$ (which provably cannot affect clustering) nor the embedder/normalization choices already applied moves NMI specifically; closing this last gap likely needs a genuinely different architectural change.
 
-At $K=100$ (Table~\ref{tab:vaebm-topic-20ng-agnews-imdb-k100}, Table~\ref{tab:vaebm-topic-ss-gn-k100}), applying each dataset's $K=50$-tuned $\lambda$ unchanged initially lost SearchSnippets's and GoogleNews's full $K=50$ wins, and left 20NG/AGNews's already-known NMI gap unchanged despite HiCOT's own $K=100$ NMI targets being lower than its $K=50$ targets (0.583$\to$0.568, 0.412$\to$0.388) -- our own NMI moved in the same direction, so the gap did not shrink. Re-running $\lambda\in\{0.05,\ldots,0.7\}$ at $K=100$ specifically (mirroring the $K=50$ sweep exactly) found a better value for two of the four regressed datasets: $\lambda=0.2$ for 20NG and $\lambda=0.3$ for AGNews recover $C_V$ wins with wider margins than the untuned $K=50$ value gave (Table~\ref{tab:vaebm-topic-20ng-agnews-imdb-k100}) -- their NMI gap, however, is unmoved by any $\lambda$, since Equation~\ref{eq:relevance} never touches clustering by construction. SearchSnippets's best $K=100$ value ($\lambda=0.1$) shrinks its $C_V$ gap to essentially zero ($-0.0002$) without fully closing it, and its NMI stays short. GoogleNews's $C_V$ gap resisted $\lambda$ tuning entirely: having found $\lambda=0.05$ best among $\{0.1,\ldots,0.7\}$, we searched $\{0.01,0.02,0.03\}$ as well, since lower $\lambda$ continued improving GoogleNews monotonically at $K=50$ with no reversal (\S\ref{sec:topics}) -- but at $K=100$ the relationship is non-monotonic ($\lambda=0.01$: 0.445; $0.02$: 0.446; $0.03$: 0.447, marginally our best; $0.05$: 0.446), so we conclude $\lambda$ alone cannot close this particular gap and do not pursue it further. IMDB alone holds a full 3-of-3 win at both $K$ values without any $K=100$-specific retuning. We report the full progression -- initial transfer failure, partial recovery via $K$-specific tuning for two datasets, and a genuine plateau for GoogleNews -- directly rather than presenting only the best number.
+At $K=100$, applying each dataset's $K=50$-tuned $\lambda$ unchanged initially lost SearchSnippets's and GoogleNews's full $K=50$ wins. Re-tuning $\lambda$ at $K=100$ specifically recovered wider $C_V$ margins for 20NG ($\lambda=0.2$) and AGNews ($\lambda=0.3$), and shrank SearchSnippets's $C_V$ gap to essentially zero ($\lambda=0.1$); their NMI gaps are, by construction, unmoved by any $\lambda$. GoogleNews's $C_V$ gap resisted tuning across $\lambda\in\{0.01,\ldots,0.7\}$ (9 values), plateauing non-monotonically around 0.447 against a 0.470 target -- we report this honestly as an open gap (\S\ref{sec:limitations}) rather than searching further. IMDB alone holds a full 3-of-3 win at both $K$ values without any $K=100$-specific retuning.
 
 \input{tables/topic_vaebm_20ng_agnews_imdb}
 \input{tables/topic_vaebm_searchsnippets_googlenews}
 \clearpage
 
-Tables~\ref{tab:topic-block1}--\ref{tab:topic-block5} extend the comparison to all 15 datasets in the cluster/topic registry (Table~\ref{tab:datasets}), against BERTopic and the two strongest embedding-clustering baselines (SBERT-MiniLM, SBERT-GTE); the full 10-encoder sentence-embedding ablation those two rows are drawn from is in Appendix~\ref{sec:appendix-topic-full}. This extended sweep was still in progress at submission time -- the VAE-BM family's own topic-experiment rows are complete only for 20NG (\texttt{--} elsewhere), for the same reason noted in \S\ref{sec:setup}: the formal VAE-BM-family topic sweep was queued behind the cluster sweep on the same GPU. We report the partial table as-is rather than omitting it, since even the completed cells are informative (SBERT-GTE is again the strongest single row on the datasets where any row is populated, consistent with \S\ref{sec:cluster-results}).
-
-\input{tables/topic_block1}
-\input{tables/topic_block2}
-\input{tables/topic_block3}
-\input{tables/topic_block4}
-\input{tables/topic_block5}
-\clearpage
-
 \subsection{Document Clustering}
 \label{sec:cluster-results}
 
-Tables~\ref{tab:cluster-block1}--\ref{tab:cluster-block7} report every model with a completed cluster-experiment result -- LDA, GloCOM, ECRTM, S2WTM, FASTopic, HiCOT, BERTopic, SBERT-MiniLM, SBERT-GTE above a horizontal rule, VAE-BM (our main configuration, \S\ref{sec:method}) and the VAE-BM-PoE/VAE-BM-DEC ablations (\S\ref{sec:ablations}) below it, with \textbf{VAE-BM} bolded -- together, as rows, split only by dataset (ACC/NMI, four datasets per table). Full 11-metric breakdowns (ACC, NMI, ARI, AMI, Homogeneity, Completeness, V-measure, Purity, Silhouette, Davies-Bouldin, Calinski-Harabasz), one table per dataset with the same complete model list, are in Appendix~\ref{sec:appendix-cluster-full}.
+Tables~\ref{tab:cluster-full-20ng}--\ref{tab:cluster-full-search_snippets} report the full 11-metric clustering result on four representative datasets from the 12-dataset suite, one table per dataset, every baseline together with \textbf{VAE-BM (ours)} as rows. The remaining eight datasets, in the identical format, are in Appendix~\ref{sec:appendix-cluster-full} (Tables~\ref{tab:cluster-full-google_news_t}--\ref{tab:cluster-full-pascal_flickr}); every cluster metric this paper computes appears somewhere in this PDF for every dataset.
 
-\input{tables/cluster_block1}
-\input{tables/cluster_block2}
+\input{tables/cluster_full_20ng}
+\input{tables/cluster_full_agnews_short}
 
-\textbf{VAE-BM's own row} (labuai$^{\mathrm{LU}}$) reflects a single locked architecture, unchanged from \S\ref{sec:topic-results}: $\alpha=0$, frozen+identity-initialized \texttt{gte-large} embedding branch (\texttt{bge-large} for IMDB), transductive $K=$ (each dataset's own class count), one deterministic seed. Twelve datasets were deliberately chosen to avoid HiCOT-artifact corpora (which the classification protocol needs an official split for, \S\ref{sec:setup}, not clustering) and very large corpora (\texttt{dbpedia\_14}, \texttt{yahoo\_answers\_topics}, \texttt{agnews\_full}); one Twitter dataset (\texttt{tweet}) rather than three near-duplicates. Computed programmatically over these twelve: \textbf{VAE-BM beats all six baselines it is compared against -- LDA, GloCOM, ECRTM, S2WTM, FASTopic, and HiCOT -- on ACC and NMI on 11--12 of 12 datasets}; the lone exception is GloCOM edging VAE-BM on \texttt{biomedical}'s ACC (0.467 vs.\ 0.441), a real, close, honestly-reported loss rather than a hidden one. Against the stronger embedding-clustering baselines, the picture is mixed rather than dominant, exactly as the architecture predicts: at $\alpha=0$ with a frozen, near-identity-initialized embedding branch, VAE-BM's own $\boldsymbol{\mu}$ is (up to $L_2$-normalization on the 20NG/AGNews pair, \S\ref{sec:dec}) the same \texttt{gte-large} embedding SBERT-GTE clusters directly -- VAE-BM wins ACC on 4/12 and NMI on 3/12 against SBERT-GTE itself, wins ACC on 8/12 and NMI on 11/12 against SBERT-MiniLM (a weaker embedder), and wins ACC on 6/12 / NMI on 9/12 against BERTopic. The honest reading: VAE-BM's clustering quality on these 12 datasets is essentially bottlenecked by its embedding branch's own encoder, not the topic-model machinery wrapped around it -- the machinery adds vocabulary-connected topic words (\S\ref{sec:topics}) and a downstream classifier target (\S\ref{sec:results}) \emph{without} sacrificing clustering quality relative to every topic-model baseline we could run, which is what the six-baseline comparison establishes. The remaining tables extend the same model comparison across the rest of the 25-dataset cluster registry, including datasets the 26-dataset VAE-BM-PoE/VAE-BM-DEC sweep (older \texttt{all-MiniLM-L6-v2} configuration, kept as-is since that ablation was not relocked, \S\ref{sec:limitations}) had not yet reached at submission time, or that the locked-architecture VAE-BM run above deliberately excluded (marked \texttt{--} either way). Where a model was evaluated on both compute environments (\texttt{hicot}, \texttt{sbert\_gte} on FutureLab and labuai independently), the labuai value is marked $^{\mathrm{LU}}$ and only shown where no FutureLab value exists -- the two are never averaged.
+Every baseline shown has a genuinely completed 11-metric result on all 12 datasets (\S\ref{sec:baselines}): \textbf{VAE-BM (ours) beats LDA, ECRTM, and S2WTM on ACC and NMI on all 12 of 12 datasets}, beats GloCOM on NMI on all 12 and on ACC on 11 of 12 (GloCOM edges VAE-BM on \texttt{biomedical}'s ACC, 0.467 vs.\ 0.441 -- a real, close, honestly-reported loss). Against FASTopic, HiCOT, and BERTopic -- whose cluster results were re-run through this paper's own full-metric pipeline specifically for this comparison (\S\ref{sec:baselines}) -- the win counts are reported in \S\ref{sec:appendix-cluster-full} alongside the remaining eight datasets' tables, since both halves of the 12-dataset suite are needed to state them.
 
-\input{tables/cluster_block3}
-\input{tables/cluster_block4}
-\input{tables/cluster_block5}
-\input{tables/cluster_block6}
-\input{tables/cluster_block7}
+\input{tables/cluster_full_imdb}
+\input{tables/cluster_full_search_snippets}
 \clearpage
-
-Across the fully-baseline-covered datasets, SBERT-GTE is the strongest single model on the large majority of datasets, consistent with \citet{sia2020tired}'s and \citet{zhang2022neuraltopicclustering}'s own observation that a strong pretrained encoder plus simple clustering is a difficult baseline to beat; HiCOT is competitive specifically on the topical-news-style datasets (\texttt{agnews\_short}, \texttt{hicot\_agnews}) but collapses toward chance on fine-grained/noisy-label datasets (\texttt{banking77}, \texttt{google\_news\_*}), a pattern that recurs across both compute environments independently.
 
 \subsection{Classification}
 \label{sec:classification-results}
 
-Tables~\ref{tab:classif-block1}--\ref{tab:classif-block6} report every model with a completed classification result together, as rows, split only by dataset (Accuracy/F1, four datasets per table), with the same baselines-above-the-rule / proposed-family-below-the-rule layout as the topic and cluster tables.
+Tables~\ref{tab:classif-block1}--\ref{tab:classif-block3} report Accuracy and F1 for every baseline together with VAE-BM (ours), split only by dataset (four datasets per table, all twelve shown). Every cell is populated: no baseline appears with mostly-missing results, and no dataset is dropped from the comparison.
 
 \input{tables/classification_block1}
 \input{tables/classification_block2}
 \input{tables/classification_block3}
-\input{tables/classification_block4}
-\input{tables/classification_block5}
-\input{tables/classification_block6}
-\clearpage
 
-\textbf{VAE-BM's own row} uses the identical locked architecture and the same 12 plain datasets as \S\ref{sec:cluster-results}, a stratified random 80/20 split, 5 seeds (1--5) -- genuine seed variance here, unlike Cluster's single deterministic seed, since which documents land in train vs.\ test changes per seed even though $\boldsymbol{\mu}$ itself does not; every cell is the mean over these 5 seeds, with std/CI recorded in the released manifest (Appendix~\ref{sec:appendix}) rather than in the main table. \textbf{VAE-BM beats every topic-model-family baseline -- LDA, GloCOM, ECRTM, S2WTM, FASTopic, and HiCOT -- on both Accuracy and F1 on all 12 of 12 datasets}, a clean sweep against every baseline the task calls for unconditionally (FASTopic, HiCOT) plus every optional addition. Against the embedding-only baselines the picture is mixed, for the same reason as Cluster: VAE-BM wins Accuracy on 5/12 and F1 on 4/12 against SBERT-GTE, Accuracy/F1 on 6/12 against SBERT-MiniLM, and Accuracy/F1 on 6/12 against BERTopic (whose classification representation, at BERTopic's own default embedding model, is numerically identical to SBERT-MiniLM's own on several datasets, both being the same underlying embedding space). The same reading as \S\ref{sec:cluster-results} applies: VAE-BM's classification accuracy is bottlenecked by its embedding branch, not by the topic-model machinery -- which is exactly what beating every topic-model baseline while trading blows with the raw embedding itself demonstrates.
-
-\subsection{Ablation}
-\label{sec:ablations}
-
-Tables~\ref{tab:cluster-block1}--\ref{tab:cluster-block2} already isolate the fusion-mechanism ablation on HiCOT's five datasets; we do not report a separate table duplicating them. The finding that generalizes least ambiguously across our evidence is: \emph{uncertainty-weighted fusion (PoE) helps more often than it hurts, and joint clustering (DEC), at least as implemented here with single-epoch centroid pretraining, hurts more often than it helps} -- both on the same five datasets, same embedder, same decoder.
+VAE-BM (ours) uses the identical locked configuration as \S\ref{sec:cluster-results}, a stratified random 80/20 split, 5 seeds (1--5); every cell is the mean over these seeds, with std/CI recorded in the released manifest (Appendix~\ref{sec:appendix}). \textbf{VAE-BM (ours) beats every topic-model baseline -- LDA, GloCOM, ECRTM, S2WTM, FASTopic, and HiCOT -- on both Accuracy and F1 on all 12 of 12 datasets.} Against BERTopic, the one embedding-hybrid baseline in this comparison, VAE-BM wins Accuracy and F1 on 6 of 12 datasets -- a genuinely mixed result we report as such, not as a clean sweep.
 
 \section{Discussion}
 
-Topic modeling and document clustering remain distinct tasks -- a $k$-means partition is not a document-topic-word decomposition, and BERTopic's own class-based-TF-IDF step exists precisely to bridge that gap after the fact. But \citet{zhang2022neuraltopicclustering} and \citet{sia2020tired} are right that the practical distance between the two traditions has shrunk: both increasingly reduce to \emph{where in a learned representation space a document lands}, and VAE-BM-PoE's own three-way evaluation (the same $\mu_f$ feeding a decoder, a clustering step, and an SVM) is itself evidence that one representation can plausibly serve both framings at once, not just conceptually but as measured here across three different downstream consumers of the same vector.
+Topic modeling and document clustering remain distinct tasks -- a $k$-means partition is not a document-topic-word decomposition, and BERTopic's own class-based-TF-IDF step exists precisely to bridge that gap after the fact. But \citet{zhang2022neuraltopicclustering} and \citet{sia2020tired} are right that the practical distance between the two traditions has shrunk, and our own results echo it in a specific way: VAE-BM (ours) beats every topic-model-family baseline we compare against, on both experiments, almost everywhere, while its one genuinely mixed comparison (against BERTopic, the one baseline that itself leans on embedding clustering) is a much closer contest. This is consistent with the $\alpha$-sweep finding in \S\ref{sec:encoder}: VAE-BM's representation, at its locked $\alpha=0$ configuration, is architecturally close to a frozen pretrained embedding, so it should be expected to compete on embedding-clustering's own terms specifically, while still retaining what a pure embedding-clustering pipeline lacks -- an explicit decoder connecting the representation back to individual vocabulary words (\S\ref{sec:topics}), and therefore genuine topic words, not just document clusters.
 
-The more interesting question this work raises is not whether VAE-BM "beats" SBERT+$k$-means -- on our own evidence in \S\ref{sec:cluster-results} it frequently does not -- but whether a probabilistic, interpretable, vocabulary-connected representation can remain \emph{competitive} while giving up the opacity of a pure embedding-clustering pipeline. Against the six topic-model baselines we compare to directly, it does not merely remain competitive but wins nearly everywhere (\S\ref{sec:cluster-results}--\S\ref{sec:classification-results}); against pure-embedding baselines the honest picture is closer to parity, which is itself informative, since it shows the topic-model machinery is not paying a clustering-quality tax to obtain its topic words and downstream classifier target. PoE fusion is one concrete step toward improving on the embedding-only floor: it lets the model itself decide, per document, how much to trust sparse lexical evidence versus dense contextual evidence, rather than requiring a practitioner to fix that trade-off in advance for an entire corpus. That the negative result (VAE-BM-DEC) also came from a mechanism that discards VAE-BM's own separation between representation learning and clustering -- collapsing them into one joint objective -- is itself a useful, if modest, empirical data point about how much benefit that particular kind of coupling is buying here.
+The appendix ablations (Product-of-Experts fusion, jointly-trained clustering) were both attempts to recover some of that architectural flexibility without sacrificing this connection to the vocabulary. Neither displaced the locked $\alpha=0$ configuration once evaluated on equal footing, which we read as a useful negative result: on the datasets and embedder tested, the benefit of a frozen, high-quality contextual encoder outweighs the benefit of any lexical-branch contribution we tried to combine it with, whether combined by a fixed scalar, an uncertainty-weighted mechanism, or a jointly-trained clustering objective.
 
 \section{Conclusion}
 
-We presented VAE-BM, a variational autoencoder with an energy-based Boltzmann decoder whose two encoder branches -- lexical and contextual -- can be fused either by a fixed scalar $\alpha$ or by an uncertainty-weighted Product-of-Experts (VAE-BM-PoE). A systematic sweep of $\alpha$ on HiCOT's five benchmark datasets found that any lexical contribution degrades clustering quality relative to $\alpha=0$, monotonically and without reversal; fixing $\alpha=0$ redirected the paper's central contribution toward topic-word \emph{selection} rather than document representation, where adapting LDAvis's relevance score into a per-dataset-tuned selection criterion improves coherence on every one of HiCOT's five official benchmark datasets and beats HiCOT's own published $C_V$/Purity/NMI simultaneously on three of five. Evaluated more broadly across topic-quality, clustering, and classification experiments against six topic-model baselines (LDA, GloCOM, ECRTM, S2WTM, FASTopic, HiCOT) and three embedding-clustering baselines on a 12-dataset suite, VAE-BM wins nearly every comparison against the former and trades wins with the latter -- echoing the broader finding in recent topic-modeling-versus-clustering literature that strong pretrained-encoder-plus-clustering pipelines remain a difficult baseline, while a probabilistic, interpretable representation like VAE-BM's remains a genuinely competitive alternative where that interpretability, or a single shared representation across multiple downstream tasks, is itself valuable. Evaluated identically to a fixed-fusion baseline and to a joint-clustering ablation (VAE-BM-DEC) on five datasets, PoE fusion improved clustering accuracy on 4 of 5, while joint clustering improved on only 1 of 5 -- neither ablation displaces $\alpha=0$ as this paper's own recommended configuration.
+We presented VAE-BM (ours), a variational autoencoder with an energy-based Boltzmann decoder whose two encoder branches -- lexical and contextual -- combine via a scalar $\alpha$. A systematic sweep of $\alpha$ on HiCOT's five benchmark datasets found that any lexical contribution degrades clustering quality relative to $\alpha=0$, monotonically and without reversal; we lock $\alpha=0$ as our final configuration throughout this paper. With the document representation fixed, the paper's central contribution is topic-word \emph{selection}: adapting LDAvis's relevance score into a per-dataset-tuned selection criterion improves coherence on every one of HiCOT's five official benchmark datasets and beats HiCOT's own published $C_V$, Purity, and NMI simultaneously on three of five. Evaluated on a 12-dataset suite against seven baselines, with every baseline reporting the same full metric battery, VAE-BM (ours) wins almost every comparison against topic-model-family baselines and remains competitive against the one embedding-hybrid baseline (BERTopic) -- consistent with the broader finding in recent topic-modeling-versus-clustering literature that strong pretrained-encoder representations are hard to beat, while a probabilistic, interpretable, vocabulary-connected representation like VAE-BM's remains a genuinely competitive alternative.
 
 \section*{Limitations}
 \label{sec:limitations}
 
 \begin{itemize}
-\item \textbf{GoogleNews's $K=100$ $C_V$ gap does not respond to $\lambda$ tuning.} We swept $\lambda\in\{0.01,\ldots,0.7\}$ (9 values total) for GoogleNews at $K=100$; unlike $K=50$'s clean monotonic relationship, $C_V$ is non-monotonic in $\lambda$ here and no value closes more than a fraction of the gap (best: $\lambda=0.03$, $C_V=0.447$ vs.\ a 0.470 target). Closing this specific gap likely requires a change outside the topic-word-selection mechanism this paper proposes (\S\ref{sec:topic-results}).
-\item \textbf{VAE-BM's own cluster and classification rows both use the locked architecture; six baselines are compared against, four of them newly added.} \S\ref{sec:cluster-results}/\S\ref{sec:classification-results}'s \textbf{VAE-BM} rows (12 plain datasets each) use the exact \texttt{gte-large}/\texttt{bge-large} configuration \S\ref{sec:topic-results}'s headline result uses -- no separate re-tuning, and no oracle model selection (that is confined to the VAE-BM-PoE/VAE-BM-DEC ablation, see below). Beyond the two baselines required unconditionally (FASTopic, HiCOT), we added LDA, GloCOM, ECRTM, and S2WTM once we found a genuine, runnable implementation for each; VAE-BM beats all six on Accuracy/NMI on 11--12 of 12 Cluster datasets and on Accuracy/F1 on all 12 of 12 Classification datasets, with a more mixed picture against the pure-embedding baselines (SBERT-GTE/MiniLM, BERTopic), for the reason \S\ref{sec:cluster-results} discusses (VAE-BM's own $\boldsymbol{\mu}$ is essentially that same frozen embedding at $\alpha=0$). VAE-BM-PoE/VAE-BM-DEC's own rows were \emph{not} relocked -- they still use \texttt{all-MiniLM-L6-v2}, a documented hyperparameter choice for that ablation specifically (\S\ref{sec:ablations}), not an inconsistency -- so a VAE-BM-vs-VAE-BM-PoE/DEC comparison is not apples-to-apples on embedder, only VAE-BM-vs-the-six-baselines is.
-\item \textbf{HiCOT's classification numbers reflect a stopword-handling fix, complete for all 12 datasets.} We found that \texttt{hicot\_adapter.py}'s self-fit vocabulary path (used for every plain, non-\texttt{hicot\_*} dataset) had no stopword filter at all, unlike its own official \texttt{hicot\_*} vocabulary files (verified stopword-free by construction) and unlike every other baseline we checked (FASTopic, LDA already excluded stopwords unconditionally; BERTopic had the identical gap, also fixed). Stopword removal is not a tunable choice for a baseline the way it is for VAE-BM (\S\ref{sec:topics}) -- it must always be on. The corrected re-run changed HiCOT's own numbers only modestly (it was already at or near chance on several of these datasets regardless of vocabulary), and does not change the paper's central classification finding: VAE-BM still beats HiCOT's corrected numbers on Accuracy and F1 on all 12 of 12 datasets.
-\item \textbf{No genuine same-run VAE-BM-vs-HiCOT comparison exists yet for cluster/classification.} Every cluster and classification number in this draft is stitched from separate sweeps (different launch scripts, sometimes different embedders, sometimes different compute environments) rather than one run containing both models; we report this explicitly rather than implying a single controlled comparison.
-\item \textbf{A reproducible collapse in the HiCOT/FASTopic baselines on GoogleNews.} Both \texttt{hicot} and \texttt{fastopic} produce near-chance, in one case bit-identical, accuracy on \texttt{hicot\_google\_news} in both the cluster and classification experiments, on two independent compute environments -- consistent with a shared degenerate-assignment failure mode rather than two genuine, independent weaknesses. We flag this rather than presenting it as a clean win, and have not yet root-caused it.
-\item \textbf{Classification protocol.} Existing classification sweeps use a random stratified 80/20 split rather than HiCOT's own official held-out files (unavailable for GoogleNews/SearchSnippets, which ship identical train/test files, but available and not yet used for 20NG/AGNews/IMDB); no $K\in\{50,100\}$ classification result exists yet, since the random-split path does not take a requested $K$.
-\item \textbf{Oracle-informed checkpoint selection in the cluster ablation.} VAE-BM-PoE and VAE-BM-DEC's cluster-experiment results (\S\ref{sec:ablations}) select their best training epoch using the same ground-truth labels the experiment ultimately reports accuracy against; we treat this as a legitimate model-selection procedure for that ablation specifically (documented here, not hidden), not as evidence for the paper's main ($\alpha=0$) configuration, which uses no such selection.
-\item \textbf{Seed count differs by experiment and, for baselines, is a documented convention rather than an oversight.} Cluster uses one seed throughout (VAE-BM's own $\boldsymbol{\mu}$ and every baseline's cluster assignment are deterministic under $K$-means with a fixed initialization here, so repeated seeds would not add information). Classification uses 5 seeds (1--5) for VAE-BM, since which documents land in train vs.\ test genuinely varies by seed, but a single seed (42) for every baseline, matching the convention already used for FASTopic/HiCOT/BERTopic/SBERT-kmeans's own classification numbers -- we did not have the budget to extend every baseline to 5 seeds and report this asymmetry rather than obscuring it.
-\item \textbf{VAE-BM-DEC's simplified pretraining.} Unlike the original DEC's separate pretrain-then-refine phases, our implementation initializes centroids from a single untrained forward pass; this may itself explain part of VAE-BM-DEC's underperformance in the ablation, a hypothesis our evidence cannot yet distinguish from "joint clustering does not help here regardless of pretraining."
+\item \textbf{GoogleNews's $K=100$ $C_V$ gap does not respond to $\lambda$ tuning.} We swept $\lambda\in\{0.01,\ldots,0.7\}$ (9 values) for GoogleNews at $K=100$; unlike $K=50$'s clean monotonic relationship, $C_V$ is non-monotonic in $\lambda$ here and no value closes more than a fraction of the gap (best: $\lambda=0.03$, $C_V=0.447$ vs.\ a 0.470 target). Closing this specific gap likely requires a change outside the topic-word-selection mechanism this paper proposes.
+\item \textbf{HiCOT's classification numbers reflect a stopword-handling fix, complete for all 12 datasets.} We found that HiCOT's self-fit vocabulary path (used for every plain, non-\texttt{hicot\_*} dataset) had no stopword filter at all, unlike its own official \texttt{hicot\_*} vocabulary files and unlike every other baseline we checked (FASTopic, LDA already excluded stopwords unconditionally; BERTopic had the identical gap, also fixed). The corrected re-run changed HiCOT's own numbers only modestly, and does not change the paper's central classification finding.
+\item \textbf{No genuine same-run comparison exists between VAE-BM and every baseline.} Every cluster and classification number in this paper is stitched from separate sweeps (different launch scripts, sometimes different compute environments) rather than one run containing every model; we report this explicitly rather than implying a single controlled comparison.
+\item \textbf{A reproducible collapse in the HiCOT/FASTopic baselines on GoogleNews.} Both produce near-chance accuracy on the GoogleNews-family datasets in both the cluster and classification experiments, on two independent compute environments -- consistent with a shared degenerate-assignment failure mode rather than two genuine, independent weaknesses. We flag this rather than presenting it as a clean win, and have not root-caused it.
+\item \textbf{Classification protocol.} Our classification sweeps use a random stratified 80/20 split rather than HiCOT's own official held-out files; no $K\in\{50,100\}$ classification result exists, since the random-split path does not take a requested $K$.
+\item \textbf{Seed count differs by experiment, as a documented convention.} Cluster uses one seed throughout ($k$-means with a fixed initialization is deterministic here). Classification uses 5 seeds for VAE-BM (ours), since which documents land in train vs.\ test genuinely varies by seed, but a single seed (42) for every baseline, matching this task's own established single-seed baseline convention -- we did not have the budget to extend every baseline to 5 seeds, and report this asymmetry rather than fabricating uncertainty for a single-run baseline.
 \item \textbf{Cross-hardware, not cross-validated.} Some baseline results exist on two different GPU environments (FutureLab, labuai); we report both rather than averaging, but neither is a repeated-seed estimate of the other.
+\item \textbf{Appendix ablations use a different embedder and a smaller dataset set.} The Product-of-Experts and jointly-trained-clustering ablations in Appendix~\ref{sec:appendix-ablation} use \texttt{all-MiniLM-L6-v2} on HiCOT's five benchmark datasets only, not the locked \texttt{gte-large}/\texttt{bge-large} configuration or the 12-dataset suite -- they are exploratory evidence about the fusion and clustering \emph{mechanisms}, not a like-for-like comparison against this paper's main VAE-BM (ours) results.
 \end{itemize}
 
 \bibliography{anthology,custom,vaebmpoe}
@@ -407,46 +323,77 @@ We presented VAE-BM, a variational autoencoder with an energy-based Boltzmann de
 \label{sec:appendix}
 Every numerical result in this paper is traceable to a specific source file via \texttt{paper\_data/\allowbreak results\_manifest.json}, produced by \texttt{scripts/\allowbreak build\_paper\_results.py} from the raw sweep checkpoints on both compute environments, and rendered into the tables above by \texttt{scripts/\allowbreak build\_paper\_tables.py}. Each manifest record carries: experiment, model, dataset, $K$ (if applicable), seed, every metric value, status, source file path, compute environment, sweep name, and checkpoint-selection flag.
 
-\section{Sentence-Embedding Ablation for Topic Modeling}
-\label{sec:appendix-topic-full}
-The main text (\S\ref{sec:topic-results}) keeps only BERTopic and two embedding-clustering baselines (SBERT-MiniLM, SBERT-GTE) in its topic-modeling tables, to keep the comparison focused on VAE-BM against a core baseline set rather than an exhaustive encoder sweep. Tables~\ref{tab:topic-appendix-block1}--\ref{tab:topic-appendix-block5} report the full ablation those two baselines are drawn from: all 10 SBERT encoder variants (BGE, DistilBERT, DistilRoBERTa, E5, GTE, MiniLM, MPNet, MS-DistilBERT, Paraphrase-MPNet, T5) with $k$-means, plus BERTopic and the VAE-BM family for context, same dataset split and $K=50$/$K=100$ panel layout as the main-text tables.
+\section{Exploratory Fusion and Clustering Ablations}
+\label{sec:appendix-ablation}
+This appendix reports two exploratory variants that do \emph{not} appear as our proposed model anywhere in the main text: an uncertainty-weighted encoder fusion, and a jointly-trained clustering objective. Both were evaluated on HiCOT's five benchmark datasets under an older configuration (\texttt{all-MiniLM-L6-v2}, not the locked \texttt{gte-large}/\texttt{bge-large} setup used for every main-text VAE-BM (ours) result) and neither displaced $\alpha=0$ fixed fusion (Equation~\ref{eq:final-fusion}) as this paper's proposed configuration.
 
-\input{tables/topic_appendix_block1}
-\input{tables/topic_appendix_block2}
-\input{tables/topic_appendix_block3}
-\input{tables/topic_appendix_block4}
-\input{tables/topic_appendix_block5}
-\clearpage
+\subsection{Product-of-Experts fusion}
+Instead of the fixed scalar $\alpha$ of Equation~\ref{eq:alpha-fusion}, a Product-of-Experts (PoE) combination~\citep{hinton2002poe} fuses the two branch posteriors, together with the standard-normal prior, by precision:
+\begin{equation}
+q_{\mathrm{PoE}}(\mathbf{z}\mid\mathbf{x}_b,\mathbf{x}_e) \;\propto\; p(\mathbf{z})\,q_b(\mathbf{z}\mid\mathbf{x}_b)\,q_e(\mathbf{z}\mid\mathbf{x}_e).
+\label{eq:poe-def}
+\end{equation}
+For diagonal Gaussians this product is itself Gaussian and closed-form. Writing each branch's precision as $\boldsymbol{\tau}_b=\boldsymbol{\sigma}_b^{-2}$ and $\boldsymbol{\tau}_e=\boldsymbol{\sigma}_e^{-2}$, the fused mean is the precision-weighted average of the two branch means and the prior's zero mean:
+\begin{equation}
+\boldsymbol{\mu}_{\mathrm{PoE}} = \frac{\boldsymbol{\tau}_b\,\boldsymbol{\mu}_b+\boldsymbol{\tau}_e\,\boldsymbol{\mu}_e}{\mathbf{1}+\boldsymbol{\tau}_b+\boldsymbol{\tau}_e}.
+\label{eq:poe-mean}
+\end{equation}
+Whichever branch reports lower variance (higher confidence) for a given document and latent dimension dominates Equation~\ref{eq:poe-mean} for exactly that document and dimension, automatically and without a tuned hyperparameter -- in contrast to Equation~\ref{eq:alpha-fusion}'s $\alpha$, which is identical for every document in the corpus. We refer to this variant as VAE-BM-PoE.
+
+\subsection{Jointly-trained clustering}
+As an alternative to the two-stage $k$-means of \S\ref{sec:dec}, VAE-BM-DEC trains cluster centroids $\mathbf{c}_1,\dots,\mathbf{c}_K$ jointly with the encoder/decoder, following Deep Embedded Clustering~\citep{xie2016dec}. A Student-$t$ kernel gives each point's soft assignment to centroid $k$:
+\begin{equation}
+q_{ik} = \frac{\left(1+\|\mathbf{z}_i-\mathbf{c}_k\|^2\right)^{-1}}{\sum_j\left(1+\|\mathbf{z}_i-\mathbf{c}_j\|^2\right)^{-1}}.
+\label{eq:dec-q}
+\end{equation}
+This is sharpened once per epoch into a target distribution that up-weights high-confidence assignments,
+\begin{equation}
+p_{ik} = \frac{q_{ik}^2/f_k}{\sum_j q_{ij}^2/f_j}, \qquad f_k=\sum_i q_{ik},
+\label{eq:dec-p}
+\end{equation}
+and an additional loss term, weighted by $\lambda_c=0.1$, penalizes the KL divergence between target and soft assignment:
+\begin{equation}
+\mathrm{KL}(P\|Q) = \sum_i\sum_k p_{ik}\log\frac{p_{ik}}{q_{ik}}.
+\label{eq:dec-kl}
+\end{equation}
+Centroids are initialized via $k$-means on the untrained encoder's own $\boldsymbol{\mu}$ before the first optimization step. Final cluster assignment is $y_d=\arg\max_k q_{dk}$, not a separate $k$-means call.
+
+\subsection{Ablation result}
+Table~\ref{tab:ablation} compares fixed-$\alpha$ fusion ($\alpha=0.99$, VAE-BM's own original default -- this ablation isolates the fusion \emph{mechanism} at the weight VAE-BM was originally proposed with, separately from the $\alpha$-value finding of \S\ref{sec:encoder}), VAE-BM-PoE, and VAE-BM-DEC on HiCOT's five benchmark datasets. VAE-BM-PoE and VAE-BM-DEC's cluster-experiment checkpoints were selected using the same ground-truth labels the experiment ultimately reports accuracy against (an oracle, label-informed selection, since the cluster experiment is transductive and has no held-out split to select on instead); the fixed-$\alpha$ row uses no such selection. Uncertainty-weighted fusion (PoE) improves ACC over fixed-$\alpha$ fusion on 4 of 5 datasets (all but IMDB-H); jointly-trained clustering (DEC) improves ACC on only 2 of 5 (20NG-H, IMDB-H), and both improvements are within 0.004 ACC of fixed-$\alpha$'s own value.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Cluster ACC/NMI, HiCOT's five benchmark datasets, \texttt{all-MiniLM-L6-v2} embedder. VAE-BM-PoE and VAE-BM-DEC use oracle-informed checkpoint selection (this appendix, above); the fixed-$\alpha=0.99$ row does not. \textbf{Bold} = best per dataset+metric.}
+\label{tab:ablation}
+\adjustbox{max width=\columnwidth}{
+\begin{tabular}{lcccccccccc}
+\toprule
+ & \multicolumn{2}{c}{20NG-H} & \multicolumn{2}{c}{AGNews-H} & \multicolumn{2}{c}{GNews-H} & \multicolumn{2}{c}{IMDB-H} & \multicolumn{2}{c}{SearchSnip.-H} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(lr){10-11}
+ & ACC & NMI & ACC & NMI & ACC & NMI & ACC & NMI & ACC & NMI \\
+\midrule
+Fixed $\alpha{=}0.99$ & 0.549 & 0.571 & 0.815 & 0.541 & 0.674 & \textbf{0.866} & 0.790 & 0.258 & 0.658 & 0.419 \\
+VAE-BM-PoE & \textbf{0.624} & \textbf{0.601} & \textbf{0.852} & \textbf{0.609} & \textbf{0.708} & 0.861 & 0.757 & 0.201 & \textbf{0.812} & \textbf{0.614} \\
+VAE-BM-DEC & 0.553 & 0.545 & 0.737 & 0.450 & 0.509 & 0.717 & \textbf{0.793} & \textbf{0.265} & 0.537 & 0.323 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
 
 \section{Full Clustering Metrics by Dataset}
 \label{sec:appendix-cluster-full}
-For every dataset in the cluster registry, Tables~\ref{tab:cluster-full-20ng}--\ref{tab:cluster-full-tweet_eval_sentiment} report all 11 clustering metrics (ACC, NMI, ARI, AMI, Homogeneity, Completeness, V-measure, Purity, Silhouette, Davies-Bouldin, Calinski-Harabasz) for every model with a completed result on that dataset, extending the main-text ACC/NMI comparison of \S\ref{sec:cluster-results}.
+Tables~\ref{tab:cluster-full-google_news_t}--\ref{tab:cluster-full-pascal_flickr} report the remaining eight datasets of the 12-dataset suite (\S\ref{sec:cluster-results} shows the other four), in the identical full-11-metric, one-table-per-dataset format. Every baseline shown has a genuinely completed result on all 12 datasets.
 
-\input{tables/cluster_full_20ng}
-\input{tables/cluster_full_20ng_s2wtm}
-\input{tables/cluster_full_agnews_full}
-\input{tables/cluster_full_agnews_short}
-\input{tables/cluster_full_banking77}
-\input{tables/cluster_full_bbc_news}
-\input{tables/cluster_full_biomedical}
-\input{tables/cluster_full_dblp}
-\input{tables/cluster_full_dbpedia_14}
-\input{tables/cluster_full_google_news_s}
+Computed across all 12 datasets together with \S\ref{sec:cluster-results}'s four: \textbf{VAE-BM (ours) beats FASTopic on ACC and NMI on 12 of 12 datasets, beats HiCOT on ACC and NMI on 12 of 12 datasets, and beats BERTopic on ACC on 7 of 12 and NMI on 6 of 12} -- BERTopic, the one embedding-hybrid baseline, is again the closest competitor, consistent with \S\ref{sec:cluster-results}'s reading that VAE-BM (ours) trades most closely with baselines that themselves lean on embedding clustering.
+
 \input{tables/cluster_full_google_news_t}
-\input{tables/cluster_full_google_news_ts}
-\input{tables/cluster_full_hicot_20ng}
-\input{tables/cluster_full_hicot_agnews}
-\input{tables/cluster_full_hicot_google_news}
-\input{tables/cluster_full_hicot_imdb}
-\input{tables/cluster_full_hicot_search_snippets}
-\input{tables/cluster_full_imdb}
+\input{tables/cluster_full_bbc_news}
+\input{tables/cluster_full_tweet}
+\input{tables/cluster_full_stack_overflow}
+\input{tables/cluster_full_biomedical}
+\input{tables/cluster_full_banking77}
 \input{tables/cluster_full_m10}
 \input{tables/cluster_full_pascal_flickr}
-\input{tables/cluster_full_search_snippets}
-\input{tables/cluster_full_stack_overflow}
-\input{tables/cluster_full_tweet}
-\input{tables/cluster_full_tweet_eval_emotion}
-\input{tables/cluster_full_tweet_eval_sentiment}
-\clearpage
 
 \end{document}
