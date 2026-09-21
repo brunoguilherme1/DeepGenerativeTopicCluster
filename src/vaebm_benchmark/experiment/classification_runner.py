@@ -78,6 +78,26 @@ def _representation(model, documents: list[str], representation_source: str):
     raise ValueError(f"Unknown representation_source '{representation_source}'")
 
 
+def _make_svm(svm_kernel: str, svm_C: float, seed: int):
+    """Linear-SVM classifier, swapped from `SVC(kernel="linear")` (libsvm)
+    to `LinearSVC` (liblinear) on 2026-09-21 - found via direct
+    diagnosis that libsvm's uncapped SMO solver was not converging on
+    the locked architecture's raw (high-dimensional, continuous) `mu`
+    representation, hanging the classification sweep's 3600s-timeout
+    combos indefinitely (confirmed on a synthetic worst-case benchmark
+    at the same n/d: SVC took 84s where LinearSVC took 3.8s; the real
+    `agnews_short` run sat with zero progress for 9+ minutes past
+    model-fit). Both are linear decision boundaries - this is a solver
+    swap, not a change of model family - and the module's own docstring
+    already flags the exact kernel/C as "a documented choice, not a
+    claim of reproducing either paper's own SVM tuning."."""
+    from sklearn.svm import SVC, LinearSVC
+
+    if svm_kernel != "linear":
+        return SVC(kernel=svm_kernel, C=svm_C, random_state=seed)
+    return LinearSVC(C=svm_C, random_state=seed, max_iter=10000, dual="auto")
+
+
 def _build_model_for_classification(model_name: str, k: int, seed: int, voc_size: int, dataset_id: str):
     """build_model() dispatch, EXCEPT for hicot: wires the same
     VAEBM_HICOT_MAX_FIT_SECONDS-configurable wall-clock early-stop
@@ -115,7 +135,6 @@ def run_single(
     svm_C: float = 1.0,
 ) -> ClassificationRunResult:
     from sklearn.metrics import accuracy_score, f1_score
-    from sklearn.svm import SVC
 
     from vaebm_benchmark.datasets.definitions.hicot_datasets import load_hicot_split
     from vaebm_benchmark.experiment.scientific_models import build_model, representation_source_for_model
@@ -133,7 +152,7 @@ def run_single(
         train_repr = _representation(model, train_docs, representation_source)
         test_repr = _representation(model, test_docs, representation_source)
 
-        clf = SVC(kernel=svm_kernel, C=svm_C, random_state=seed)
+        clf = _make_svm(svm_kernel, svm_C, seed)
         clf.fit(train_repr, train_labels)
         preds = clf.predict(test_repr)
 
@@ -196,7 +215,6 @@ def run_single_random_split(
     dataset."""
     from sklearn.metrics import accuracy_score, f1_score
     from sklearn.model_selection import train_test_split
-    from sklearn.svm import SVC
 
     from vaebm_benchmark.datasets.simple_registry import load_dataset, resolve_dataset_id
     from vaebm_benchmark.experiment.scientific_models import representation_source_for_model
@@ -238,7 +256,7 @@ def run_single_random_split(
         train_repr = _representation(model, train_docs, representation_source)
         test_repr = _representation(model, test_docs, representation_source)
 
-        clf = SVC(kernel=svm_kernel, C=svm_C, random_state=seed)
+        clf = _make_svm(svm_kernel, svm_C, seed)
         clf.fit(train_repr, train_labels)
         preds = clf.predict(test_repr)
 

@@ -853,3 +853,71 @@ within 0.03 of target, SearchSnippets essentially exact) or plateaued
 (Rounds 32-35) is now complete and reported honestly in the paper,
 including the parts that didn't work.
 
+## Cluster/Classification (locked architecture, 12 plain datasets, run 2026-09-21)
+
+Per the user's explicit instruction: lock ONE VAE-BM architecture and
+reuse it, unchanged, across Cluster and Classification (the Topic
+experiment's own K=50/K=100 sweep is a separate, already-closed-out
+axis above). Locked config: `gte-large` (bge-large for `imdb`
+specifically), `alpha=0`, frozen+identity-init embedding branch,
+`epochs=1` (provably sufficient - see `scripts/run_vaebm_cluster_locked_12ds.py`'s
+own docstring), `normalize_mu=1` for `20ng`/`agnews_short` only. K =
+each dataset's own number of ground-truth classes (transductive, no
+`--k` flag). Single seed=42 for Cluster (deterministic under this
+architecture - see Round 28); 5 seeds (1-5) for Classification
+(genuine train/test-split variance). 12 datasets, chosen to avoid the
+very large ones (`dbpedia_14`, `yahoo_answers_topics`, `agnews_full`
+excluded in favor of `agnews_short`), one tweet dataset only
+(`tweet`, not `tweet_eval_sentiment`/`tweet_eval_emotion`).
+
+**Infrastructure note**: FutureLab's head-node root filesystem
+(`/dev/sda6`) has been at 100% capacity (383G/383G, ~15-35M free)
+since this sweep began, blocking all new `sbatch` submissions with
+`I/O error writing script/environment to file`. Confirmed not caused
+by this project (home dir 6.4G, all caches on the separate 27TB
+`/shared/dgx-raid` mount) and not fixable without sudo - flagged for
+admin attention, still unresolved as of this run. Both sweeps below
+ran entirely on labuai instead.
+
+Also found and killed several long-abandoned orphaned processes on
+labuai (`agnews_full` cluster/hicot running 5.5 days,
+`yahoo_answers_topics` cluster/bertopic running 3.9 days,
+`tweet_eval_sentiment` classification/vaebm_dec running 3.4 days, plus
+6 duplicate orphaned K=100-topic worker processes from the earlier
+labuai timeout) - all for datasets already excluded from this plan,
+all reparented to PID 1 (orphaned, no live driver), silently
+consuming CPU/GPU/RAM and directly causing the Classification sweep's
+first combo (`20ng`) to genuinely time out at its 3600s cap. Killing
+them dropped load average from 8.1 to ~6.6 and let both sweeps
+proceed at their expected per-combo speed.
+
+### Cluster results (K=n_classes, single seed=42)
+
+| Dataset | K | Acc | NMI | Purity | Runtime |
+|---|---:|---:|---:|---:|---:|
+| 20ng | 20 | 0.519 | 0.557 | 0.555 | 1374s |
+| agnews_short | 4 | 0.883 | 0.678 | 0.883 | 83s |
+| google_news_t | 152 | 0.647 | 0.871 | 0.840 | 98s |
+| imdb | 2 | -- | -- | -- | timed out at 2400s on first attempt (resource contention, see above); retried after cleanup, in progress |
+| search_snippets | 8 | 0.753 | 0.622 | 0.823 | 241s |
+| bbc_news | 5 | 0.961 | 0.877 | 0.961 | 129s |
+| tweet | 89 | 0.648 | 0.877 | 0.910 | 63s |
+| stack_overflow | 20 | 0.725 | 0.791 | 0.760 | 445s |
+| biomedical | 20 | 0.441 | 0.417 | 0.473 | 379s |
+| banking77 | 77 | 0.663 | 0.808 | 0.699 | 208s |
+| m10 | 10 | 0.690 | 0.545 | 0.737 | 86s |
+| pascal_flickr | 20 | 0.354 | 0.399 | 0.394 | 77s |
+
+11/12 succeeded on the first pass; `imdb` timed out (was competing
+with the since-killed orphaned processes) and is being retried
+directly (bypassing the 40-min sweep-driver timeout) now that the
+contention is gone.
+
+### Classification results (K=n_classes, 5 seeds, random 80/20 split)
+
+Sweep launched 2026-09-20 23:27, in progress. `20ng`'s first attempt
+timed out at 3600s (same orphaned-process contention as above,
+diagnosed and fixed retroactively) and is queued for a manual retry
+once the sweep finishes its first pass over the other 11 datasets.
+Results will be appended here as they complete.
+
