@@ -1,0 +1,51 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{Document clustering summary (ACC/NMI/ARI/Purity), datasets 1 of 2. Every baseline row (LDA/GloCOM/ECRTM/S2WTM/FASTopic/HiCOT/BERTopic) is a genuinely completed single-seed result; \textbf{VAE-BM (ours)} likewise. $^{\mathrm{LU}}$ marks a labuai value (shown only when no FutureLab value exists). \textbf{Bold}/\underline{underline} = best/second-best per dataset+metric. Full 11-metric breakdowns for every dataset are in Appendix~\ref{sec:appendix-cluster-full}.}
+\label{tab:cluster-summary-1}
+\adjustbox{max width=\textwidth}{
+\begin{tabular}{lcccccccccccccccccccccccc}
+\toprule
+ & \multicolumn{4}{c}{\textbf{20NG}} & \multicolumn{4}{c}{\textbf{AGNews}} & \multicolumn{4}{c}{\textbf{GNews-T}} & \multicolumn{4}{c}{\textbf{IMDB}} & \multicolumn{4}{c}{\textbf{SearchSnip.}} & \multicolumn{4}{c}{\textbf{BBCNews}} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(lr){10-13}\cmidrule(lr){14-17}\cmidrule(lr){18-21}\cmidrule(lr){22-25}
+ & ACC & NMI & ARI & Pur. & ACC & NMI & ARI & Pur. & ACC & NMI & ARI & Pur. & ACC & NMI & ARI & Pur. & ACC & NMI & ARI & Pur. & ACC & NMI & ARI & Pur. \\
+\midrule
+LDA & 0.256$^{\mathrm{LU}}$ & 0.264$^{\mathrm{LU}}$ & 0.071$^{\mathrm{LU}}$ & 0.265$^{\mathrm{LU}}$ & 0.481$^{\mathrm{LU}}$ & 0.212$^{\mathrm{LU}}$ & 0.189$^{\mathrm{LU}}$ & 0.519$^{\mathrm{LU}}$ & 0.403$^{\mathrm{LU}}$ & 0.580$^{\mathrm{LU}}$ & 0.323$^{\mathrm{LU}}$ & 0.475$^{\mathrm{LU}}$ & \underline{0.688}$^{\mathrm{LU}}$ & \underline{0.106}$^{\mathrm{LU}}$ & \underline{0.142}$^{\mathrm{LU}}$ & \underline{0.688}$^{\mathrm{LU}}$ & 0.324$^{\mathrm{LU}}$ & 0.153$^{\mathrm{LU}}$ & 0.117$^{\mathrm{LU}}$ & 0.350$^{\mathrm{LU}}$ & 0.776$^{\mathrm{LU}}$ & 0.606$^{\mathrm{LU}}$ & 0.566$^{\mathrm{LU}}$ & 0.776$^{\mathrm{LU}}$ \\
+GloCOM & 0.382 & 0.457 & 0.242 & 0.389 & \underline{0.817} & 0.564 & 0.587 & \underline{0.817} & 0.359 & 0.616 & 0.150 & 0.359 & 0.501 & 0.000 & 0.000 & 0.501 & 0.653 & 0.529 & 0.438 & 0.713 & 0.852 & 0.697 & 0.708 & 0.852 \\
+ECRTM & 0.250 & 0.294 & 0.107 & 0.260 & 0.736 & 0.407 & 0.428 & 0.736 & 0.056 & 0.035 & 0.001 & 0.056 & 0.500 & 0.000 & -0.000 & 0.500 & 0.346 & 0.131 & 0.099 & 0.377 & 0.733 & 0.581 & 0.521 & 0.733 \\
+S2WTM & 0.222 & 0.213 & 0.096 & 0.242 & 0.383 & 0.252 & 0.124 & 0.462 & 0.250 & 0.524 & 0.130 & 0.265 & 0.647 & 0.066 & 0.087 & 0.647 & 0.326 & 0.239 & 0.127 & 0.346 & 0.540 & 0.409 & 0.338 & 0.551 \\
+FASTopic & 0.214 & 0.224 & 0.104 & 0.235 & 0.430 & 0.236 & 0.216 & 0.485 & 0.233 & 0.485 & 0.182 & 0.292 & 0.591 & 0.024 & 0.033 & 0.591 & 0.333 & 0.178 & 0.125 & 0.366 & 0.704 & 0.560 & 0.519 & 0.731 \\
+HiCOT & 0.146 & 0.174 & 0.039 & 0.148 & 0.803 & 0.540 & 0.570 & 0.803 & 0.040 & 0.007 & 0.000 & 0.040 & 0.503 & 0.000 & 0.000 & 0.503 & 0.659 & 0.497 & 0.450 & 0.729 & 0.924 & 0.788 & \underline{0.824} & 0.924 \\
+BERTopic & \textbf{0.534} & \underline{0.548} & \textbf{0.415} & \underline{0.540} & 0.815 & \underline{0.582} & \underline{0.594} & 0.815 & \textbf{0.732} & \textbf{0.901} & \textbf{0.658} & \textbf{0.903} & 0.604 & 0.035 & 0.043 & 0.604 & \textbf{0.807} & \textbf{0.671} & \textbf{0.647} & \textbf{0.840} & \underline{0.924} & \underline{0.798} & 0.820 & \underline{0.924} \\
+\midrule
+\textbf{VAE-BM (ours)} & \underline{0.519}$^{\mathrm{LU}}$ & \textbf{0.557}$^{\mathrm{LU}}$ & \underline{0.397}$^{\mathrm{LU}}$ & \textbf{0.555}$^{\mathrm{LU}}$ & \textbf{0.883}$^{\mathrm{LU}}$ & \textbf{0.678}$^{\mathrm{LU}}$ & \textbf{0.720}$^{\mathrm{LU}}$ & \textbf{0.883}$^{\mathrm{LU}}$ & \underline{0.647}$^{\mathrm{LU}}$ & \underline{0.871}$^{\mathrm{LU}}$ & \underline{0.571}$^{\mathrm{LU}}$ & \underline{0.840}$^{\mathrm{LU}}$ & \textbf{0.941}$^{\mathrm{LU}}$ & \textbf{0.676}$^{\mathrm{LU}}$ & \textbf{0.776}$^{\mathrm{LU}}$ & \textbf{0.941}$^{\mathrm{LU}}$ & \underline{0.753}$^{\mathrm{LU}}$ & \underline{0.622}$^{\mathrm{LU}}$ & \underline{0.592}$^{\mathrm{LU}}$ & \underline{0.823}$^{\mathrm{LU}}$ & \textbf{0.961}$^{\mathrm{LU}}$ & \textbf{0.877}$^{\mathrm{LU}}$ & \textbf{0.908}$^{\mathrm{LU}}$ & \textbf{0.961}$^{\mathrm{LU}}$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Document clustering summary (ACC/NMI/ARI/Purity), datasets 2 of 2. Every baseline row (LDA/GloCOM/ECRTM/S2WTM/FASTopic/HiCOT/BERTopic) is a genuinely completed single-seed result; \textbf{VAE-BM (ours)} likewise. $^{\mathrm{LU}}$ marks a labuai value (shown only when no FutureLab value exists). \textbf{Bold}/\underline{underline} = best/second-best per dataset+metric. Full 11-metric breakdowns for every dataset are in Appendix~\ref{sec:appendix-cluster-full}.}
+\label{tab:cluster-summary-2}
+\adjustbox{max width=\textwidth}{
+\begin{tabular}{lcccccccccccccccccccccccc}
+\toprule
+ & \multicolumn{4}{c}{\textbf{Tweet}} & \multicolumn{4}{c}{\textbf{StackOv.}} & \multicolumn{4}{c}{\textbf{Biomed.}} & \multicolumn{4}{c}{\textbf{Banking77}} & \multicolumn{4}{c}{\textbf{M10}} & \multicolumn{4}{c}{\textbf{Pascal-Fl.}} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(lr){10-13}\cmidrule(lr){14-17}\cmidrule(lr){18-21}\cmidrule(lr){22-25}
+ & ACC & NMI & ARI & Pur. & ACC & NMI & ARI & Pur. & ACC & NMI & ARI & Pur. & ACC & NMI & ARI & Pur. & ACC & NMI & ARI & Pur. & ACC & NMI & ARI & Pur. \\
+\midrule
+LDA & 0.567$^{\mathrm{LU}}$ & 0.738$^{\mathrm{LU}}$ & 0.465$^{\mathrm{LU}}$ & 0.663$^{\mathrm{LU}}$ & 0.305$^{\mathrm{LU}}$ & 0.219$^{\mathrm{LU}}$ & 0.149$^{\mathrm{LU}}$ & 0.319$^{\mathrm{LU}}$ & 0.175$^{\mathrm{LU}}$ & 0.102$^{\mathrm{LU}}$ & 0.055$^{\mathrm{LU}}$ & 0.191$^{\mathrm{LU}}$ & 0.211$^{\mathrm{LU}}$ & 0.413$^{\mathrm{LU}}$ & 0.115$^{\mathrm{LU}}$ & 0.221$^{\mathrm{LU}}$ & 0.306$^{\mathrm{LU}}$ & 0.139$^{\mathrm{LU}}$ & 0.109$^{\mathrm{LU}}$ & 0.340$^{\mathrm{LU}}$ & 0.161$^{\mathrm{LU}}$ & 0.131$^{\mathrm{LU}}$ & 0.046$^{\mathrm{LU}}$ & 0.174$^{\mathrm{LU}}$ \\
+GloCOM & 0.316 & 0.382 & 0.028 & 0.328 & 0.718 & 0.680 & 0.543 & 0.718 & \textbf{0.467} & \underline{0.408} & \underline{0.283} & 0.468 & 0.263 & 0.620 & 0.204 & 0.264 & 0.576 & 0.465 & 0.410 & 0.639 & 0.312 & 0.342 & 0.156 & 0.330 \\
+ECRTM & 0.186 & 0.106 & 0.005 & 0.186 & 0.275 & 0.188 & 0.056 & 0.277 & 0.180 & 0.128 & 0.020 & 0.180 & 0.076 & 0.220 & 0.019 & 0.076 & 0.209 & 0.044 & 0.017 & 0.212 & 0.119 & 0.087 & 0.009 & 0.119 \\
+S2WTM & 0.319 & 0.507 & 0.200 & 0.386 & 0.169 & 0.150 & 0.054 & 0.172 & 0.170 & 0.141 & 0.051 & 0.173 & 0.146 & 0.323 & 0.062 & 0.150 & 0.316 & 0.196 & 0.112 & 0.342 & 0.182 & 0.192 & 0.073 & 0.186 \\
+FASTopic & 0.477 & 0.637 & \underline{0.541} & 0.559 & 0.255 & 0.240 & 0.125 & 0.269 & 0.266 & 0.203 & 0.113 & 0.269 & 0.205 & 0.470 & 0.117 & 0.225 & 0.300 & 0.181 & 0.134 & 0.318 & 0.186 & 0.198 & 0.072 & 0.196 \\
+HiCOT & 0.175 & 0.160 & 0.023 & 0.176 & 0.375 & 0.355 & 0.254 & 0.379 & 0.296 & 0.257 & 0.175 & 0.302 & 0.019 & 0.008 & -0.000 & 0.019 & 0.261 & 0.115 & 0.089 & 0.280 & 0.180 & 0.167 & 0.066 & 0.195 \\
+BERTopic & \underline{0.623} & \textbf{0.881} & 0.479 & \textbf{0.932} & \textbf{0.761} & \underline{0.708} & \underline{0.645} & \textbf{0.761} & \underline{0.464} & 0.387 & 0.274 & \textbf{0.475} & \underline{0.643} & \textbf{0.814} & \underline{0.557} & \underline{0.670} & \underline{0.651} & \underline{0.502} & \underline{0.461} & \underline{0.676} & \textbf{0.382} & \textbf{0.416} & \textbf{0.235} & \textbf{0.403} \\
+\midrule
+\textbf{VAE-BM (ours)} & \textbf{0.648}$^{\mathrm{LU}}$ & \underline{0.877}$^{\mathrm{LU}}$ & \textbf{0.550}$^{\mathrm{LU}}$ & \underline{0.910}$^{\mathrm{LU}}$ & \underline{0.725}$^{\mathrm{LU}}$ & \textbf{0.791}$^{\mathrm{LU}}$ & \textbf{0.665}$^{\mathrm{LU}}$ & \underline{0.760}$^{\mathrm{LU}}$ & 0.441$^{\mathrm{LU}}$ & \textbf{0.417}$^{\mathrm{LU}}$ & \textbf{0.287}$^{\mathrm{LU}}$ & \underline{0.473}$^{\mathrm{LU}}$ & \textbf{0.663}$^{\mathrm{LU}}$ & \underline{0.808}$^{\mathrm{LU}}$ & \textbf{0.559}$^{\mathrm{LU}}$ & \textbf{0.699}$^{\mathrm{LU}}$ & \textbf{0.690}$^{\mathrm{LU}}$ & \textbf{0.545}$^{\mathrm{LU}}$ & \textbf{0.485}$^{\mathrm{LU}}$ & \textbf{0.737}$^{\mathrm{LU}}$ & \underline{0.354}$^{\mathrm{LU}}$ & \underline{0.399}$^{\mathrm{LU}}$ & \underline{0.190}$^{\mathrm{LU}}$ & \underline{0.394}$^{\mathrm{LU}}$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}

@@ -303,20 +303,11 @@ At $K=100$, applying each dataset's $K=50$-tuned $\lambda$ unchanged initially l
 \subsection{Document Clustering}
 \label{sec:cluster-results}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{figs/cluster_acc_barplot.pdf}
-\caption{Clustering ACC, all 12 datasets, all 8 models (LDA, GloCOM, ECRTM, S2WTM, FASTopic, HiCOT, BERTopic, \textbf{VAE-BM (ours)} in black). Full per-dataset breakdowns, all 11 metrics, are in Tables~\ref{tab:cluster-full-20ng}--\ref{tab:cluster-full-search_snippets} and Appendix~\ref{sec:appendix-cluster-full}.}
-\label{fig:cluster-acc-bar}
-\end{figure}
+\input{tables/cluster_summary_all12}
 
-Figure~\ref{fig:cluster-acc-bar} summarizes ACC across all 12 datasets and all 8 models at once; Tables~\ref{tab:cluster-full-20ng}--\ref{tab:cluster-full-search_snippets} then report the full 11-metric clustering result on four representative datasets from the same suite, one table per dataset, every baseline together with \textbf{VAE-BM (ours)} as rows. The remaining eight datasets, in the identical table format, are in Appendix~\ref{sec:appendix-cluster-full} (Tables~\ref{tab:cluster-full-google_news_t}--\ref{tab:cluster-full-pascal_flickr}); every cluster metric this paper computes appears somewhere in this PDF for every dataset.
+Tables~\ref{tab:cluster-summary-1}--\ref{tab:cluster-summary-2} report ACC, NMI, ARI, and Purity for every baseline together with \textbf{VAE-BM (ours)}, across all 12 datasets. Every baseline shown has a genuinely completed result on all 12 datasets (\S\ref{sec:baselines}), including FASTopic, HiCOT, and BERTopic, whose cluster results were re-run through this paper's own full-metric pipeline specifically for this comparison. The full 11-metric breakdown (adding ARI, AMI, Homogeneity, Completeness, V-measure, Silhouette, Davies-Bouldin, and Calinski-Harabasz for every dataset) is in Appendix~\ref{sec:appendix-cluster-full}.
 
-\input{tables/cluster_full_20ng_agnews}
-
-Every baseline shown has a genuinely completed 11-metric result on all 12 datasets (\S\ref{sec:baselines}): \textbf{VAE-BM (ours) beats LDA, ECRTM, and S2WTM on ACC and NMI on all 12 of 12 datasets}, beats GloCOM on NMI on all 12 and on ACC on 11 of 12 (GloCOM edges VAE-BM on \texttt{biomedical}'s ACC, 0.467 vs.\ 0.441 -- a real, close, honestly-reported loss). Against FASTopic, HiCOT, and BERTopic -- whose cluster results were re-run through this paper's own full-metric pipeline specifically for this comparison (\S\ref{sec:baselines}) -- the win counts are reported in \S\ref{sec:appendix-cluster-full} alongside the remaining eight datasets' tables, since both halves of the 12-dataset suite are needed to state them.
-
-\input{tables/cluster_full_imdb_searchsnippets}
+\textbf{VAE-BM (ours) beats LDA, ECRTM, and S2WTM on ACC and NMI on all 12 of 12 datasets}, beats GloCOM on NMI on all 12 and on ACC on 11 of 12 (GloCOM edges VAE-BM on \texttt{biomedical}'s ACC, 0.467 vs.\ 0.441 -- a real, close, honestly-reported loss), beats FASTopic on ACC and NMI on 12 of 12, and beats HiCOT on ACC and NMI on 12 of 12. Against BERTopic, the one embedding-hybrid baseline in this comparison, VAE-BM (ours) wins ACC on 6 of 12 and NMI on 7 of 12 -- a genuinely mixed result, consistent with the reading in \S\ref{sec:setup} that VAE-BM (ours) trades most closely with baselines that themselves lean on embedding clustering.
 
 \subsection{Classification}
 \label{sec:classification-results}
@@ -420,6 +411,12 @@ VAE-BM-DEC & 0.553 & 0.545 & 0.737 & 0.450 & 0.509 & 0.717 & \textbf{0.793} & \t
 \section{Full Clustering Metrics by Dataset}
 \label{sec:appendix-cluster-full}
 
+Tables~\ref{tab:cluster-full-20ng}--\ref{tab:cluster-full-pascal_flickr} report all 12 datasets of the clustering suite, in full-11-metric, one-table-per-dataset-pair format (\S\ref{sec:cluster-results}'s own main-text tables show only the 4-metric summary); every baseline shown has a genuinely completed result on all 12 datasets.
+
+\input{tables/cluster_full_20ng_agnews}
+
+\input{tables/cluster_full_imdb_searchsnippets}
+
 \input{tables/cluster_full_gnewst_bbcnews}
 
 On GNews-T specifically, BERTopic (0.732 ACC) outright beats VAE-BM (ours) (0.647) -- one of the few datasets where a baseline wins outright rather than trading blows; on BBCNews the pattern reverses sharply, with VAE-BM (ours) at 0.961 ACC.
@@ -433,9 +430,5 @@ On Tweet, BERTopic and VAE-BM (ours) trade wins by metric (BERTopic's own NMI/Pu
 Biomed.\ is the one dataset in the entire 12-dataset suite where a baseline (GloCOM, 0.467 ACC) beats VAE-BM (ours) (0.441) outright, discussed already in \S\ref{sec:cluster-results}; Banking77 shows the more typical pattern, VAE-BM (ours) ahead on ACC, ARI, and Purity.
 
 \input{tables/cluster_full_m10_pascalfl}
-
-Tables~\ref{tab:cluster-full-google_news_t}--\ref{tab:cluster-full-pascal_flickr} report the remaining eight datasets of the 12-dataset suite (\S\ref{sec:cluster-results} shows the other four), in the identical full-11-metric, one-table-per-dataset format. Every baseline shown has a genuinely completed result on all 12 datasets.
-
-Computed across all 12 datasets together with \S\ref{sec:cluster-results}'s four: \textbf{VAE-BM (ours) beats FASTopic on ACC and NMI on 12 of 12 datasets, beats HiCOT on ACC and NMI on 12 of 12 datasets, and beats BERTopic on ACC on 6 of 12 and NMI on 7 of 12} -- BERTopic, the one embedding-hybrid baseline, is again the closest competitor, consistent with \S\ref{sec:cluster-results}'s reading that VAE-BM (ours) trades most closely with baselines that themselves lean on embedding clustering.
 
 \end{document}
