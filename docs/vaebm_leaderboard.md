@@ -788,10 +788,49 @@ transfer-failure finding, and is now the clearest, cheapest remaining
 lever: a fresh lambda sweep at K=100, identical methodology to Rounds
 29-31, on the 4 non-IMDB datasets.
 
-## Round 34 (next): K=100-specific lambda tuning for the 4 regressed datasets
+## Round 34 (complete, job 1648): K=100-specific lambda found for 2 of 4, GoogleNews plateaus
 
-Given Round 33's 16-combo sweep took only 30 minutes total on
-FutureLab's H200, a full lambda sweep ({0.05, 0.1, 0.2, 0.3, 0.5, 0.7})
-at K=100 for hicot_20ng, hicot_agnews, hicot_search_snippets,
-hicot_google_news is cheap and the highest-value next experiment.
+| Dataset | Best λ@K=100 | Cv | Δ target | Purity | NMI | 3/3? |
+|---|---|---:|---:|---:|---:|---|
+| hicot_20ng | 0.2 (was 0.5) | **0.450** | **+0.026 (up from +0.019)** | 0.691 | 0.546 (unmoved) | 2/3 |
+| hicot_agnews | 0.3 (was 0.5) | **0.456** | **+0.021 (up from +0.012)** | 0.875 | 0.342 (unmoved) | 2/3 |
+| hicot_search_snippets | 0.1 (was 0.05) | 0.449 | -0.0002 (essentially zero, was -0.001) | 0.864 | 0.471 (unmoved) | 1/3 |
+| hicot_google_news | 0.05 (unchanged - best of {0.1..0.7} tested) | 0.446 | -0.024 (unchanged) | 0.801 | 0.878 | 2/3 |
+
+Purity/NMI are bit-identical across every lambda tested within each
+dataset, confirming by direct empirical check (not just by construction)
+that `lambda_relevance` cannot affect clustering. 20NG and AGNews got
+real, meaningfully wider Cv margins from K=100-specific tuning (+0.026,
++0.021 vs the untuned K=50 value's +0.019, +0.012) - their NMI blocker
+is unchanged, confirmed still unmovable via lambda. SearchSnippets's Cv
+gap shrank to essentially zero but didn't fully close, and its NMI gap
+is untouched. **GoogleNews plateaued**: none of {0.1, 0.2, 0.3, 0.5,
+0.7} beat lambda=0.05 (already known from Round 33) - unlike the other
+3 datasets, this one's optimum in the tested range is at the boundary,
+mirroring the K=50 pattern where GoogleNews kept improving as lambda
+dropped below 0.1 with no sign of reversal (Round 31). Lower values
+(0.01-0.04) remain untried at K=100.
+
+## Round 35 (next, optional): push GoogleNews's K=100 lambda below 0.05
+
+Given the K=50 precedent (GoogleNews improved monotonically down to the
+lowest value tested, 0.05, with no reversal), testing lambda in
+{0.01, 0.02, 0.03} at K=100 for hicot_google_news specifically is the
+one remaining cheap lever before concluding this dataset's K=100 Cv
+gap (-0.024) needs a different kind of fix.
+
+## Updated final K=100 status (after Rounds 32-34)
+
+| Dataset | Cv | Purity | NMI | 3/3? |
+|---|---:|---:|---:|---|
+| hicot_20ng | 0.450 | 0.691 | 0.546 | 2/3 |
+| hicot_agnews | 0.456 | 0.875 | 0.342 | 2/3 |
+| hicot_search_snippets | 0.449 | 0.864 | 0.471 | 1/3 |
+| hicot_google_news | 0.446 | 0.801 | 0.878 | 2/3 |
+| **hicot_imdb** | **0.402** | **0.836** | **0.119** | **3/3 ✓** |
+
+At K=100, only IMDB holds a full win (matching K=50). At K=50, 3 of 5
+(SearchSnippets, GoogleNews, IMDB) hold full wins. IMDB is the only
+dataset with a full win at BOTH K values without any K=100-specific
+retuning - a genuinely K-robust result, unlike the others.
 
