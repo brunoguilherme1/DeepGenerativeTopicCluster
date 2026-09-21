@@ -3,6 +3,7 @@
 \small
 \caption{Datasets used in this paper. The five HiCOT-artifact datasets (\texttt{hicot\_*}) are used only for the Topic Modeling experiment (\S\ref{sec:topic-results}), matching HiCOT's own official benchmark protocol; the twelve plain datasets below them are used for both Document Clustering and Classification (\S\ref{sec:cluster-results}--\S\ref{sec:classification-results}). Document counts and class counts are read from the classification experiment's own train+test split sizes.}
 \label{tab:datasets}
+\adjustbox{max width=\linewidth}{
 \begin{tabular}{lrrl}
 \toprule
 Dataset & Docs & Classes & Domain \\
@@ -29,4 +30,5 @@ M10 & 8355 & 10 & Publication abstracts (short text) \\
 Pascal-Fl. & 4834 & 20 & Image captions (short text) \\
 \bottomrule
 \end{tabular}
+}
 \end{table}

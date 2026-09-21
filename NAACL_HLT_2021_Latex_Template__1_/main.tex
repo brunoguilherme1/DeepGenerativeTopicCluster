@@ -72,6 +72,45 @@ LDA~\citep{blei2003lda} is the classical probabilistic topic model whose discret
 
 This section presents VAE-BM's mathematics in the order it was derived: a general probabilistic latent-variable model (\S\ref{sec:background}), its variational treatment as a VAE, VAE-BM's own two-branch encoder (\S\ref{sec:encoder}), its decoder (\S\ref{sec:decoder}--\S\ref{sec:be-decoder}), the resulting training objective (\S\ref{sec:objective}), and the two downstream consumers of the learned representation, clustering (\S\ref{sec:dec}) and topic extraction (\S\ref{sec:topics}). Every equation below matches the code that produced \S\ref{sec:results}'s numbers. We write vectors and matrices in bold ($\mathbf{x}$, $\mathbf{R}$) and keep scalars ($\alpha$, $\lambda$, $K$) in ordinary italic, following the notational convention of \citet{kim2018tutorial}.
 
+\begin{figure*}[t]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  node distance=8mm and 10mm,
+  box/.style={draw, rounded corners, minimum height=8mm, minimum width=26mm, align=center, font=\small},
+  op/.style={draw, circle, minimum size=7mm, font=\small},
+  arr/.style={-Stealth, thick},
+]
+  \node[box] (xb) {Lexical input $\mathbf{x}_b$\\(TF-IDF, log1p)};
+  \node[box, below=of xb] (xe) {Contextual input $\mathbf{x}_e$\\(frozen sentence embedding)};
+  \node[box, right=16mm of xb] (encb) {Lexical MLP\\$\to \boldsymbol{\mu}_b,\log\boldsymbol{\sigma}_b$};
+  \node[box, right=16mm of xe] (ence) {Contextual MLP (frozen)\\$\to \boldsymbol{\mu}_e,\log\boldsymbol{\sigma}_e$};
+  \node[op, right=20mm of $(encb)!0.5!(ence)$] (fuse) {$\alpha{=}0$};
+  \node[box, right=14mm of fuse] (mu) {$\boldsymbol{\mu}_f{=}\boldsymbol{\mu}_e,\ \boldsymbol{\sigma}_f{=}\boldsymbol{\sigma}_e \to \mathbf{z}$};
+  \node[box, above right=6mm and 16mm of mu] (dec) {Energy decoder\\$-\mathbf{z}^\top\mathbf{R}\mathbf{x}-\mathbf{b}^\top\mathbf{x}$};
+  \node[box, right=14mm of mu] (km) {$k$-means};
+  \node[box, below right=6mm and 16mm of mu] (svm) {SVM};
+  \node[box, right=10mm of dec] (top) {Topic words};
+  \node[box, right=10mm of km] (clu) {Clusters};
+  \node[box, right=10mm of svm] (lab) {Labels};
+
+  \draw[arr] (xb) -- (encb);
+  \draw[arr] (xe) -- (ence);
+  \draw[arr] (encb) -- (fuse);
+  \draw[arr] (ence) -- (fuse);
+  \draw[arr] (fuse) -- (mu);
+  \draw[arr] (mu) -- (dec);
+  \draw[arr] (mu) -- (km);
+  \draw[arr] (mu) -- (svm);
+  \draw[arr] (dec) -- (top);
+  \draw[arr] (km) -- (clu);
+  \draw[arr] (svm) -- (lab);
+\end{tikzpicture}%
+}
+\caption{VAE-BM (ours) architecture, at its locked final configuration. Two encoder branches each produce a Gaussian posterior over the shared latent $\mathbf{z}$ (\S\ref{sec:encoder}); the lexical branch's contribution is fixed to zero ($\alpha=0$), so the fused representation is exactly the frozen contextual branch's own posterior. This feeds an energy-based Boltzmann decoder for reconstruction and topic-word extraction (\S\ref{sec:be-decoder}--\S\ref{sec:topics}), and downstream $k$-means clustering or an SVM classifier (\S\ref{sec:dec}, \S\ref{sec:setup}). The general $\alpha$-weighted fusion mechanism this figure specializes to $\alpha=0$, and an uncertainty-weighted Product-of-Experts alternative, are both described in Appendix~\ref{sec:appendix-ablation} as exploratory ablations, not this paper's proposed model.}
+\label{fig:architecture}
+\end{figure*}
+
 \subsection{Background}
 \label{sec:background}
 
@@ -261,6 +300,7 @@ Tables~\ref{tab:vaebm-topic-20ng-agnews-imdb-k50}--\ref{tab:vaebm-topic-ss-gn-k1
 At $K=50$, VAE-BM (ours) beats HiCOT on all three headline metrics ($C_V$, Purity, NMI) simultaneously on SearchSnippets, GoogleNews, and IMDB. On AGNews it beats $C_V$ and Purity but falls short of HiCOT's NMI (0.380 vs.\ 0.412). On 20NG it beats $C_V$ and Purity and comes within 0.001 of HiCOT's NMI (0.582 vs.\ 0.583) -- the closest possible miss under a dedicated $k$-means-initialization sensitivity check (five seeds/restart counts, none of which closed the gap). Neither $\lambda$ (which provably cannot affect clustering) nor the embedder/normalization choices already applied moves NMI specifically; closing this last gap likely needs a genuinely different architectural change.
 
 At $K=100$, applying each dataset's $K=50$-tuned $\lambda$ unchanged initially lost SearchSnippets's and GoogleNews's full $K=50$ wins. Re-tuning $\lambda$ at $K=100$ specifically recovered wider $C_V$ margins for 20NG ($\lambda=0.2$) and AGNews ($\lambda=0.3$), and shrank SearchSnippets's $C_V$ gap to essentially zero ($\lambda=0.1$); their NMI gaps are, by construction, unmoved by any $\lambda$. GoogleNews's $C_V$ gap resisted tuning across $\lambda\in\{0.01,\ldots,0.7\}$ (9 values), plateauing non-monotonically around 0.447 against a 0.470 target -- we report this honestly as an open gap (\S\ref{sec:limitations}) rather than searching further. IMDB alone holds a full 3-of-3 win at both $K$ values without any $K=100$-specific retuning.
+\enlargethispage{\baselineskip}
 
 \input{tables/topic_vaebm_20ng_agnews_imdb}
 \input{tables/topic_vaebm_searchsnippets_googlenews}
