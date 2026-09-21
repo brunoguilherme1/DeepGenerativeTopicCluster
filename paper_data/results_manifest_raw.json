@@ -8739,6 +8739,222 @@
     "notes": "split_stratified=True"
   },
   {
+    "experiment": "classification",
+    "model": "hicot",
+    "dataset": "20ng",
+    "k": 20,
+    "seed": 42,
+    "metrics": {
+      "accuracy": 0.11511936339522547,
+      "f1": 0.07787095944424108
+    },
+    "status": "ok",
+    "error": "",
+    "source_file": "futurelab_new/hicot_classif_stopword_fix_20260921.json",
+    "environment": "futurelab",
+    "sweep": "hicot_classif_stopword_fix_20260921 (hicot x 12 plain datasets, stopword fix, --split random)",
+    "checkpoint_selection": "none",
+    "notes": "split_stratified=True"
+  },
+  {
+    "experiment": "classification",
+    "model": "hicot",
+    "dataset": "agnews_short",
+    "k": 4,
+    "seed": 42,
+    "metrics": {
+      "accuracy": 0.813125,
+      "f1": 0.813167394600257
+    },
+    "status": "ok",
+    "error": "",
+    "source_file": "futurelab_new/hicot_classif_stopword_fix_20260921.json",
+    "environment": "futurelab",
+    "sweep": "hicot_classif_stopword_fix_20260921 (hicot x 12 plain datasets, stopword fix, --split random)",
+    "checkpoint_selection": "none",
+    "notes": "split_stratified=True"
+  },
+  {
+    "experiment": "classification",
+    "model": "hicot",
+    "dataset": "google_news_t",
+    "k": 152,
+    "seed": 42,
+    "metrics": {
+      "accuracy": 0.0387038703870387,
+      "f1": 0.0004902855057922101
+    },
+    "status": "ok",
+    "error": "",
+    "source_file": "futurelab_new/hicot_classif_stopword_fix_20260921.json",
+    "environment": "futurelab",
+    "sweep": "hicot_classif_stopword_fix_20260921 (hicot x 12 plain datasets, stopword fix, --split random)",
+    "checkpoint_selection": "none",
+    "notes": "split_stratified=True"
+  },
+  {
+    "experiment": "classification",
+    "model": "hicot",
+    "dataset": "imdb",
+    "k": 2,
+    "seed": 42,
+    "metrics": {
+      "accuracy": 0.5022,
+      "f1": 0.39753915196749334
+    },
+    "status": "ok",
+    "error": "",
+    "source_file": "futurelab_new/hicot_classif_stopword_fix_20260921.json",
+    "environment": "futurelab",
+    "sweep": "hicot_classif_stopword_fix_20260921 (hicot x 12 plain datasets, stopword fix, --split random)",
+    "checkpoint_selection": "none",
+    "notes": "split_stratified=True"
+  },
+  {
+    "experiment": "classification",
+    "model": "hicot",
+    "dataset": "search_snippets",
+    "k": 8,
+    "seed": 42,
+    "metrics": {
+      "accuracy": 0.7475688816855753,
+      "f1": 0.7163517453476748
+    },
+    "status": "ok",
+    "error": "",
+    "source_file": "futurelab_new/hicot_classif_stopword_fix_20260921.json",
+    "environment": "futurelab",
+    "sweep": "hicot_classif_stopword_fix_20260921 (hicot x 12 plain datasets, stopword fix, --split random)",
+    "checkpoint_selection": "none",
+    "notes": "split_stratified=True"
+  },
+  {
+    "experiment": "classification",
+    "model": "hicot",
+    "dataset": "biomedical",
+    "k": 20,
+    "seed": 42,
+    "metrics": {
+      "accuracy": 0.3465,
+      "f1": 0.3203438228601577
+    },
+    "status": "ok",
+    "error": "",
+    "source_file": "futurelab_new/hicot_classif_stopword_fix_20260921.json",
+    "environment": "futurelab",
+    "sweep": "hicot_classif_stopword_fix_20260921 (hicot x 12 plain datasets, stopword fix, --split random)",
+    "checkpoint_selection": "none",
+    "notes": "split_stratified=True"
+  },
+  {
+    "experiment": "classification",
+    "model": "hicot",
+    "dataset": "bbc_news",
+    "k": 5,
+    "seed": 42,
+    "metrics": {
+      "accuracy": 0.8561797752808988,
+      "f1": 0.8403181516970053
+    },
+    "status": "ok",
+    "error": "",
+    "source_file": "futurelab_new/hicot_classif_stopword_fix_20260921.json",
+    "environment": "futurelab",
+    "sweep": "hicot_classif_stopword_fix_20260921 (hicot x 12 plain datasets, stopword fix, --split random)",
+    "checkpoint_selection": "none",
+    "notes": "split_stratified=True"
+  },
+  {
+    "experiment": "classification",
+    "model": "hicot",
+    "dataset": "tweet",
+    "k": 89,
+    "seed": 42,
+    "metrics": {
+      "accuracy": 0.09494949494949495,
+      "f1": 0.003341907689733776
+    },
+    "status": "ok",
+    "error": "",
+    "source_file": "futurelab_new/hicot_classif_stopword_fix_20260921.json",
+    "environment": "futurelab",
+    "sweep": "hicot_classif_stopword_fix_20260921 (hicot x 12 plain datasets, stopword fix, --split random)",
+    "checkpoint_selection": "none",
+    "notes": "split_stratified=False"
+  },
+  {
+    "experiment": "classification",
+    "model": "hicot",
+    "dataset": "pascal_flickr",
+    "k": 20,
+    "seed": 42,
+    "metrics": {
+      "accuracy": 0.26990692864529475,
+      "f1": 0.2397498821590606
+    },
+    "status": "ok",
+    "error": "",
+    "source_file": "futurelab_new/hicot_classif_stopword_fix_20260921.json",
+    "environment": "futurelab",
+    "sweep": "hicot_classif_stopword_fix_20260921 (hicot x 12 plain datasets, stopword fix, --split random)",
+    "checkpoint_selection": "none",
+    "notes": "split_stratified=True"
+  },
+  {
+    "experiment": "classification",
+    "model": "hicot",
+    "dataset": "banking77",
+    "k": 77,
+    "seed": 42,
+    "metrics": {
+      "accuracy": 0.08071920428462127,
+      "f1": 0.019400867617907186
+    },
+    "status": "ok",
+    "error": "",
+    "source_file": "futurelab_new/hicot_classif_stopword_fix_20260921.json",
+    "environment": "futurelab",
+    "sweep": "hicot_classif_stopword_fix_20260921 (hicot x 12 plain datasets, stopword fix, --split random)",
+    "checkpoint_selection": "none",
+    "notes": "split_stratified=True"
+  },
+  {
+    "experiment": "classification",
+    "model": "hicot",
+    "dataset": "stack_overflow",
+    "k": 20,
+    "seed": 42,
+    "metrics": {
+      "accuracy": 0.5635,
+      "f1": 0.5669347701153555
+    },
+    "status": "ok",
+    "error": "",
+    "source_file": "futurelab_new/hicot_classif_stopword_fix_20260921.json",
+    "environment": "futurelab",
+    "sweep": "hicot_classif_stopword_fix_20260921 (hicot x 12 plain datasets, stopword fix, --split random)",
+    "checkpoint_selection": "none",
+    "notes": "split_stratified=True"
+  },
+  {
+    "experiment": "classification",
+    "model": "hicot",
+    "dataset": "m10",
+    "k": 10,
+    "seed": 42,
+    "metrics": {
+      "accuracy": 0.39736684619988033,
+      "f1": 0.3009921038700825
+    },
+    "status": "ok",
+    "error": "",
+    "source_file": "futurelab_new/hicot_classif_stopword_fix_20260921.json",
+    "environment": "futurelab",
+    "sweep": "hicot_classif_stopword_fix_20260921 (hicot x 12 plain datasets, stopword fix, --split random)",
+    "checkpoint_selection": "none",
+    "notes": "split_stratified=True"
+  },
+  {
     "experiment": "topic",
     "model": "sbert_minilm",
     "dataset": "20ng",

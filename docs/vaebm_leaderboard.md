@@ -1029,3 +1029,35 @@ none) while auditing every adapter for the mandatory-stopword-removal
 policy. FASTopic/LDA/GloCOM/ECRTM were already clean (checked, not
 assumed).
 
+## HiCOT classification stopword-fix: COMPLETE (2026-09-21)
+
+All 12/12 datasets re-run with the fix (`hicot_adapter.py` now always
+excludes stopwords from its self-fit vocabulary). Parallelized 5-way
+on FutureLab (1 sequential + 4 split jobs across its 3 H200s + 2 MIG
+slices) plus 4-way on labuai (redundant coverage) - FutureLab's own
+combined result file already had all 12 datasets covered before any
+of the redundant copies finished, so those were stopped once
+confirmed complete.
+
+The fix changed HiCOT's own numbers only modestly (accuracy):
+
+| Dataset | HiCOT (fixed) acc | vs VAE-BM |
+|---|---:|---:|
+| 20ng | 0.098 | VAE-BM 0.748 |
+| agnews_short | 0.816 | VAE-BM 0.909 |
+| google_news_t | 0.039 | VAE-BM 0.882 |
+| imdb | 0.509 | VAE-BM 0.945 |
+| search_snippets | 0.770 | VAE-BM 0.901 |
+| bbc_news | 0.930 | VAE-BM 0.966 |
+| tweet | 0.123 | VAE-BM 0.786 |
+| stack_overflow | 0.259 | VAE-BM 0.916 |
+| biomedical | 0.279 | VAE-BM 0.732 |
+| banking77 | 0.054 | VAE-BM 0.901 |
+| m10 | 0.409 | VAE-BM 0.795 |
+| pascal_flickr | 0.284 | VAE-BM 0.610 |
+
+**VAE-BM beats HiCOT's corrected numbers on Accuracy and F1 on all
+12/12 datasets** - the fix does not change the paper's central
+classification finding. Integrated into `main.tex` \S{sec:results}/
+\S{sec:limitations} and `paper_data/results_manifest.json`.
+
