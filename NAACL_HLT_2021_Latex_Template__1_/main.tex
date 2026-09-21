@@ -168,7 +168,7 @@ The two branches combine into a single posterior over $\mathbf{z}$ via a scalar 
 \boldsymbol{\mu}_f &=& \alpha\,\boldsymbol{\mu}_b + (1-\alpha)\,\boldsymbol{\mu}_e, \label{eq:alpha-fusion}\\
 \boldsymbol{\sigma}_f &=& \alpha\,\boldsymbol{\sigma}_b + (1-\alpha)\,\boldsymbol{\sigma}_e. \label{eq:alpha-fusion-sigma}
 \end{eqnarray}
-A systematic sweep of $\alpha\in\{0, 0.01, 0.1\text{--}0.2, 0.5\}$ on HiCOT's five benchmark datasets found that clustering quality (Purity, NMI) degrades monotonically as $\alpha$ increases from zero, with no reversal at any tested value: $\alpha=0.5$ alone collapses 20NG's Purity from 0.676 to 0.444 and NMI from 0.582 to 0.415, and even $\alpha=0.01$ is uniformly flat-to-worse across all five datasets relative to $\alpha=0$. VAE-BM's final configuration, reported everywhere in this paper as \textbf{VAE-BM (ours)}, sets $\alpha=0$:
+A systematic sweep of $\alpha\in\{0, 0.01, 0.1\text{--}0.2, 0.5\}$ on HiCOT's five benchmark datasets found that clustering quality (Purity, NMI) degrades monotonically as $\alpha$ increases from zero, with no reversal at any tested value.\footnote{$\alpha=0.5$ collapses 20NG's Purity from 0.676 to 0.444 and NMI from 0.582 to 0.415; even $\alpha=0.01$ is flat-to-worse across all five datasets relative to $\alpha=0$.} VAE-BM's final configuration, reported everywhere in this paper as \textbf{VAE-BM (ours)}, sets $\alpha=0$:
 \begin{equation}
 \boldsymbol{\mu}_f = \boldsymbol{\mu}_e, \qquad \boldsymbol{\sigma}_f = \boldsymbol{\sigma}_e.
 \label{eq:final-fusion}
@@ -231,28 +231,24 @@ Clusters are assigned by ordinary $k$-means on $\{\boldsymbol{\mu}_{f,d}\}$ afte
 y_d = \arg\min_k \left\|\boldsymbol{\mu}_{f,d}-\mathbf{c}_k\right\|_2^2.
 \label{eq:kmeans}
 \end{equation}
-Following the cluster-experiment benchmark convention used throughout, $K$ is set to each dataset's own number of ground-truth classes (or the requested topic count for the topic experiment, \S\ref{sec:topic-results}); labels are inspected only to determine $K$, never passed to training. For 20NG and AGNews specifically we L2-normalize $\boldsymbol{\mu}_{f,d}$ before Equation~\ref{eq:kmeans} -- a cheap approximation to spherical/cosine $k$-means that improved Purity/NMI on these two datasets without affecting $C_V$ (\S\ref{sec:topics} is computed downstream of clustering, from a fixed assignment either way); we did not find a benefit elsewhere.
+Following the cluster-experiment benchmark convention used throughout, $K$ is set to each dataset's own number of ground-truth classes (or the requested topic count for the topic experiment, \S\ref{sec:topic-results}); labels are inspected only to determine $K$, never passed to training. For 20NG and AGNews specifically we L2-normalize $\boldsymbol{\mu}_{f,d}$ before Equation~\ref{eq:kmeans}, a cheap approximation to spherical/cosine $k$-means.\footnote{This improved Purity/NMI on these two datasets without affecting $C_V$, since \S\ref{sec:topics} is computed downstream of clustering, from a fixed assignment either way; we did not find a benefit elsewhere.}
 
 \subsection{Topic Extraction}
 \label{sec:topics}
 
 Given the trained decoder's $\mathbf{R},\mathbf{b}$ and the $k$-means cluster assignment, each cluster $k$'s member documents contribute word counts $\mathbf{X}_k$. Raw within-cluster frequency has a systematic failure mode: a word common across \emph{many} clusters (a corpus-wide filler word, or -- after stopword removal -- any sufficiently generic term) can still be locally frequent enough within one cluster to dominate its top-word list, without being distinctively \emph{about} that cluster.
 
-We adapt LDAvis's relevance score~\citep{sievert2014ldavis} -- originally a post-hoc visualization slider a human adjusts after topics are already fixed -- into the selection criterion itself. Let
-\begin{equation}
-p(w\mid k) = \frac{X_{k,w}}{\sum_{w'} X_{k,w'}}
-\label{eq:pwk}
-\end{equation}
-be word $w$'s relative frequency within cluster $k$'s own documents, and let
-\begin{equation}
-p(w) = \frac{\sum_k X_{k,w}}{\sum_{k,w'} X_{k,w'}}
-\label{eq:pw}
-\end{equation}
-be its relative frequency over the whole corpus. The relevance score is
-\begin{equation}
-r_\lambda(w,k) = \lambda \log p(w\mid k) + (1-\lambda)\log\frac{p(w\mid k)}{p(w)},
+We adapt LDAvis's relevance score~\citep{sievert2014ldavis} -- originally a post-hoc visualization slider a human adjusts after topics are already fixed -- into the selection criterion itself. Let $p(w\mid k)$ be word $w$'s relative frequency within cluster $k$'s own documents, and $p(w)$ its relative frequency over the whole corpus:
+\begin{eqnarray}
+p(w\mid k) &=& \frac{X_{k,w}}{\sum_{w'} X_{k,w'}}, \label{eq:pwk}\\
+p(w) &=& \frac{\sum_k X_{k,w}}{\sum_{k,w'} X_{k,w'}}. \label{eq:pw}
+\end{eqnarray}
+The relevance score is
+\begin{eqnarray}
+r_\lambda(w,k) &=& \lambda \log p(w\mid k) \nonumber\\
+&& {} + (1-\lambda)\log\frac{p(w\mid k)}{p(w)},
 \label{eq:relevance}
-\end{equation}
+\end{eqnarray}
 computed only over words with $X_{k,w}>0$, and each cluster's topic is its top words by $r_\lambda$ descending. At $\lambda=1$, Equation~\ref{eq:relevance} reduces to ranking by $\log p(w\mid k)$ alone -- the same ordering as raw frequency; as $\lambda\to0$, it increasingly rewards words \emph{exclusive} to cluster $k$ relative to the corpus. Unlike a hand-curated stopword list, $\lambda$ requires no manual tuning per corpus -- the $p(w\mid k)/p(w)$ term suppresses corpus-wide filler automatically, proportionally to exactly how non-exclusive a word actually is.
 
 We tune $\lambda$ once per dataset by sweeping $\lambda\in\{0.05,0.1,0.2,0.3,0.5,0.7\}$ and selecting by $C_V$ alone, never by Purity/NMI/label information: $\lambda=0.5$ for 20NG and AGNews, $\lambda=0.05$ for SearchSnippets, GoogleNews, and IMDB. Equation~\ref{eq:relevance} operates entirely on $\mathbf{X}_k$ (word counts within an already-fixed clustering); it has no path back into $\boldsymbol{\mu}_f$, the $k$-means assignment, or the classifier of \S\ref{sec:results}, so changing $\lambda$ changes $C_V$ only, with mathematically zero effect on Purity, NMI, ACC, or classification accuracy/F1 -- a property we verified empirically as well as by construction.
