@@ -38,10 +38,10 @@ FASTopic & 0.350 & 0.801 & 0.466 & 0.463 & 0.366 & 0.237 & 0.459 & 0.100 \\
 NeuroMax\textdagger & 0.439 & 0.854 & 0.472 & 0.960 & 0.427 & 0.664 & 0.834 & 0.915 \\
 HiCOT & 0.449 & 0.857 & 0.480 & 0.940 & 0.470 & 0.763 & 0.864 & 0.802 \\
 \midrule
-\textbf{VAE-BM (ours)} & 0.449 & \textbf{0.864} & 0.471 & 0.972 & 0.446 & \textbf{0.801} & \textbf{0.878} & 0.973 \\
+\textbf{VAE-BM (ours)} & 0.449 & \textbf{0.864} & 0.471 & 0.972 & 0.447 & \textbf{0.801} & \textbf{0.878} & 0.975 \\
 \bottomrule
 \end{tabular}
 \vspace{2pt}
-\caption{100-topic results, same layout and provenance as Table~\ref{tab:vaebm-topic-ss-gn-k50}, with $\lambda$ re-tuned for $K=100$ specifically ($\lambda=0.1$ for SearchSnippets, vs.\ $0.05$ at $K=50$; $\lambda=0.05$ remained optimal for GoogleNews among $\{0.1,...,0.7\}$ tested -- \S\ref{sec:topics}). Re-tuning shrinks SearchSnippets's $C_V$ gap to essentially zero ($-0.0002$, from $-0.001$ at the untuned $K=50$ value) but does not close it; its NMI gap (0.471 vs.\ 0.480) is unmoved by $\lambda$ by construction. GoogleNews's $C_V$ gap (0.446 vs.\ 0.470) did not improve within the range searched -- lower values, mirroring the pattern that continued improving GoogleNews's $K=50$ result below $\lambda=0.1$ (\S\ref{sec:topics}), remain untried at $K=100$. Both still beat Purity comfortably, and GoogleNews's NMI still beats target.}
+\caption{100-topic results, same layout and provenance as Table~\ref{tab:vaebm-topic-ss-gn-k50}, with $\lambda$ re-tuned for $K=100$ specifically ($\lambda=0.1$ for SearchSnippets, vs.\ $0.05$ at $K=50$; $\lambda=0.03$ for GoogleNews after searching $\{0.01,...,0.7\}$ -- \S\ref{sec:topics}). Re-tuning shrinks SearchSnippets's $C_V$ gap to essentially zero ($-0.0002$, from $-0.001$ at the untuned $K=50$ value) but does not close it; its NMI gap (0.471 vs.\ 0.480) is unmoved by $\lambda$ by construction. GoogleNews's $C_V$ gap only narrows marginally (0.447 vs.\ 0.470, from 0.446 at $\lambda=0.05$) -- unlike $K=50$, where lower $\lambda$ improved $C_V$ monotonically down to the lowest value tried, the $K=100$ relationship is non-monotonic ($\lambda=0.01$: 0.445; $0.02$: 0.446; $0.03$: 0.447, our best; extrapolating further was not productive), so we conclude $\lambda$ alone cannot close this gap at $K=100$ and do not pursue it further. Both datasets still beat Purity comfortably, and GoogleNews's NMI still beats target.}
 \label{tab:vaebm-topic-ss-gn-k100}
 \end{table}

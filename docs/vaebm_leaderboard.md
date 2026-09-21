@@ -819,18 +819,37 @@ lowest value tested, 0.05, with no reversal), testing lambda in
 one remaining cheap lever before concluding this dataset's K=100 Cv
 gap (-0.024) needs a different kind of fix.
 
-## Updated final K=100 status (after Rounds 32-34)
+## Round 35 (complete, job 1649): GoogleNews's K=100 gap does NOT respond to lambda - concluded
+
+lambda in {0.01, 0.02, 0.03}: Cv = 0.4446, 0.4461, 0.4467 respectively
+(Palmetto). Unlike K=50's clean monotonic relationship (lower lambda ->
+always higher Cv, no reversal down to the lowest value tried), K=100's
+relationship is NON-monotonic: 0.01 is worse than 0.02/0.03, and 0.03
+(the new best, Cv=0.4467) is only marginally better than the
+already-known 0.05 (Cv=0.4456) - both still ~0.023 short of the 0.470
+target. **Conclusion: lambda tuning is exhausted for GoogleNews at
+K=100 - the gap needs a different kind of fix (a genuinely different
+lever, not another lambda value), and this thread is closed rather than
+chased further.** Purity/NMI unchanged across every lambda tested, as
+expected.
+
+## Updated FINAL K=100 status (after Rounds 32-35)
 
 | Dataset | Cv | Purity | NMI | 3/3? |
 |---|---:|---:|---:|---|
-| hicot_20ng | 0.450 | 0.691 | 0.546 | 2/3 |
-| hicot_agnews | 0.456 | 0.875 | 0.342 | 2/3 |
-| hicot_search_snippets | 0.449 | 0.864 | 0.471 | 1/3 |
-| hicot_google_news | 0.446 | 0.801 | 0.878 | 2/3 |
+| hicot_20ng | 0.450 (λ=0.2) | 0.691 | 0.546 | 2/3 |
+| hicot_agnews | 0.456 (λ=0.3) | 0.875 | 0.342 | 2/3 |
+| hicot_search_snippets | 0.449 (λ=0.1) | 0.864 | 0.471 | 1/3 |
+| hicot_google_news | 0.447 (λ=0.03, plateaued) | 0.801 | 0.878 | 2/3 |
 | **hicot_imdb** | **0.402** | **0.836** | **0.119** | **3/3 ✓** |
 
 At K=100, only IMDB holds a full win (matching K=50). At K=50, 3 of 5
-(SearchSnippets, GoogleNews, IMDB) hold full wins. IMDB is the only
+(SearchSnippets, GoogleNews, IMDB) hold full wins. **IMDB is the only
 dataset with a full win at BOTH K values without any K=100-specific
-retuning - a genuinely K-robust result, unlike the others.
+retuning - a genuinely K-robust result**, unlike the others, whose Cv
+gaps either partially closed (20NG, AGNews, SearchSnippets - all now
+within 0.03 of target, SearchSnippets essentially exact) or plateaued
+(GoogleNews) under further tuning. This K=100 sub-investigation
+(Rounds 32-35) is now complete and reported honestly in the paper,
+including the parts that didn't work.
 
