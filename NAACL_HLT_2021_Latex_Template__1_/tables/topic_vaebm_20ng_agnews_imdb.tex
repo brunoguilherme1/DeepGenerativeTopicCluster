@@ -1,6 +1,7 @@
-\begin{table}[t]
+\begin{table*}[t]
 \centering
-\scriptsize
+\small
+\adjustbox{max width=\textwidth}{
 \begin{tabular}{lrrrr rrrr rrrr}
 \toprule
 \multirow{2}{*}{\textbf{50 Topics}} & \multicolumn{4}{c}{\textbf{20NG}} & \multicolumn{4}{c}{\textbf{AGNews}} & \multicolumn{4}{c}{\textbf{IMDB}} \\
@@ -17,14 +18,16 @@ HiCOT & 0.451 & 0.626 & 0.583 & 0.852 & 0.446 & 0.857 & 0.412 & 0.992 & 0.404 & 
 \textbf{VAE-BM (ours)} & \textbf{0.461} & \textbf{0.676} & 0.582 & 0.831 & \textbf{0.467} & \textbf{0.873} & 0.380 & 0.964 & \textbf{0.413} & \textbf{0.840} & \textbf{0.138} & 0.813 \\
 \bottomrule
 \end{tabular}
+}
 \vspace{2pt}
 \caption{50-topic results, 20NG/AGNews/IMDB. Baseline rows (ETM through HiCOT) reproduced from the HiCOT paper's own published table; \textdagger\ marks a baseline HiCOT itself reports as its own reproduction, not the original paper's number. \textbf{Bold} in our row marks a metric that beats HiCOT. VAE-BM: frozen \texttt{gte-large} (\texttt{bge-large} for IMDB) embedding branch ($\alpha=0$), relevance-weighted topic words ($\lambda=0.5$ for 20NG/AGNews, $\lambda=0.05$ for IMDB), \texttt{normalize\_mu} for 20NG/AGNews. Fully unsupervised -- no labels used in training or topic-word selection. Single seed (42).}
 \label{tab:vaebm-topic-20ng-agnews-imdb-k50}
-\end{table}
+\end{table*}
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering
-\scriptsize
+\small
+\adjustbox{max width=\textwidth}{
 \begin{tabular}{lrrrr rrrr rrrr}
 \toprule
 \multirow{2}{*}{\textbf{100 Topics}} & \multicolumn{4}{c}{\textbf{20NG}} & \multicolumn{4}{c}{\textbf{AGNews}} & \multicolumn{4}{c}{\textbf{IMDB}} \\
@@ -41,7 +44,8 @@ HiCOT & 0.424 & 0.652 & 0.568 & 0.741 & 0.435 & 0.862 & 0.388 & 0.960 & 0.388 & 
 \textbf{VAE-BM (ours)} & \textbf{0.450} & \textbf{0.691} & 0.546 & 0.782 & \textbf{0.456} & \textbf{0.875} & 0.342 & 0.911 & \textbf{0.402} & \textbf{0.836} & \textbf{0.119} & 0.716 \\
 \bottomrule
 \end{tabular}
+}
 \vspace{2pt}
 \caption{100-topic results, same layout and provenance as Table~\ref{tab:vaebm-topic-20ng-agnews-imdb-k50}, with $\lambda$ re-tuned for $K=100$ specifically ($\lambda=0.2$ for 20NG, $0.3$ for AGNews, vs.\ $0.5$ at $K=50$ -- \S\ref{sec:topics}) -- \texttt{normalize\_mu} unchanged. VAE-BM now beats HiCOT on $C_V$ and Purity on both 20NG and AGNews; NMI is unmoved by $\lambda$ by construction (Equation~\ref{eq:relevance} never touches clustering) and remains short on both (20NG: 0.546 vs.\ 0.568; AGNews: 0.342 vs.\ 0.388). IMDB alone holds a full 3-of-3 win at both $K$ values.}
 \label{tab:vaebm-topic-20ng-agnews-imdb-k100}
-\end{table}
+\end{table*}

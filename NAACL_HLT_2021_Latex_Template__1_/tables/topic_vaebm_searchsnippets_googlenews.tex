@@ -1,6 +1,7 @@
-\begin{table}[t]
+\begin{table*}[t]
 \centering
-\scriptsize
+\small
+\adjustbox{max width=\textwidth}{
 \begin{tabular}{lrrrr rrrr}
 \toprule
 \multirow{2}{*}{\textbf{50 Topics}} & \multicolumn{4}{c}{\textbf{SearchSnippets}} & \multicolumn{4}{c}{\textbf{GoogleNews}} \\
@@ -17,14 +18,16 @@ HiCOT & 0.460 & 0.818 & 0.478 & 1.000 & 0.454 & 0.465 & 0.657 & 0.920 \\
 \textbf{VAE-BM (ours)} & \textbf{0.482} & \textbf{0.856} & \textbf{0.503} & 1.000 & \textbf{0.482} & \textbf{0.614} & \textbf{0.820} & 0.995 \\
 \bottomrule
 \end{tabular}
+}
 \vspace{2pt}
 \caption{50-topic results, SearchSnippets/GoogleNews. Same layout and provenance as Table~\ref{tab:vaebm-topic-20ng-agnews-imdb-k50}. VAE-BM beats HiCOT on all three headline metrics simultaneously on both datasets. Config: frozen \texttt{gte-large} ($\alpha=0$), relevance-weighted topic words, $\lambda=0.05$.}
 \label{tab:vaebm-topic-ss-gn-k50}
-\end{table}
+\end{table*}
 
-\begin{table}[t]
+\begin{table*}[t]
 \centering
-\scriptsize
+\small
+\adjustbox{max width=\textwidth}{
 \begin{tabular}{lrrrr rrrr}
 \toprule
 \multirow{2}{*}{\textbf{100 Topics}} & \multicolumn{4}{c}{\textbf{SearchSnippets}} & \multicolumn{4}{c}{\textbf{GoogleNews}} \\
@@ -41,7 +44,8 @@ HiCOT & 0.449 & 0.857 & 0.480 & 0.940 & 0.470 & 0.763 & 0.864 & 0.802 \\
 \textbf{VAE-BM (ours)} & 0.449 & \textbf{0.864} & 0.471 & 0.972 & 0.447 & \textbf{0.801} & \textbf{0.878} & 0.975 \\
 \bottomrule
 \end{tabular}
+}
 \vspace{2pt}
 \caption{100-topic results, same layout and provenance as Table~\ref{tab:vaebm-topic-ss-gn-k50}, with $\lambda$ re-tuned for $K=100$ specifically ($\lambda=0.1$ for SearchSnippets, vs.\ $0.05$ at $K=50$; $\lambda=0.03$ for GoogleNews after searching $\{0.01,...,0.7\}$ -- \S\ref{sec:topics}). Re-tuning shrinks SearchSnippets's $C_V$ gap to essentially zero ($-0.0002$, from $-0.001$ at the untuned $K=50$ value) but does not close it; its NMI gap (0.471 vs.\ 0.480) is unmoved by $\lambda$ by construction. GoogleNews's $C_V$ gap only narrows marginally (0.447 vs.\ 0.470, from 0.446 at $\lambda=0.05$) -- unlike $K=50$, where lower $\lambda$ improved $C_V$ monotonically down to the lowest value tried, the $K=100$ relationship is non-monotonic ($\lambda=0.01$: 0.445; $0.02$: 0.446; $0.03$: 0.447, our best; extrapolating further was not productive), so we conclude $\lambda$ alone cannot close this gap at $K=100$ and do not pursue it further. Both datasets still beat Purity comfortably, and GoogleNews's NMI still beats target.}
 \label{tab:vaebm-topic-ss-gn-k100}
-\end{table}
+\end{table*}
