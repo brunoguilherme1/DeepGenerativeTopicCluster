@@ -237,7 +237,7 @@ _VAEBM_VARIANT_OVERRIDES: dict[str, dict] = {}
 # swapped in without a code change.
 _SBERT_KMEANS_DEFAULTS = dict(embedder="all-MiniLM-L6-v2")
 
-KNOWN_MODELS = ["vaebm", "vaebm_poe", "vaebm_dec", "vaebm_ckpt", "bertopic", "sbert_kmeans"]
+KNOWN_MODELS = ["vaebm", "vaebm_poe", "vaebm_dec", "vaebm_ckpt", "bertopic", "sbert_kmeans", "ecrtm"]
 
 
 def _valid_vaebm_params() -> set[str]:
@@ -456,6 +456,23 @@ def _build_model(model_name: str, k: int, seed: int, voc_size: int):
         params = dict(_SBERT_KMEANS_DEFAULTS)
         params.update(_SBERT_KMEANS_VARIANT_OVERRIDES.get(model_name, {}))
         return SBERTKMeansAdapter(n_clusters=k, random_state=seed, **params)
+    if model_name == "ecrtm":
+        # Self-runs ECRTM (Wu et al., ICML 2023) under this repo's own
+        # topic-experiment protocol (2026-09-21, replacing the Topic
+        # tables' own ECRTM row, currently numbers copied verbatim from
+        # HiCOT's own published table). Deliberately uses its own
+        # self-fit vocabulary (voc_size cap, unconditional stopword
+        # removal via topmost.Preprocess's own default - see
+        # models/ecrtm_adapter.py's own docstring), matching this
+        # project's own VAE-BM headline sweep's own vocabulary
+        # methodology (self-fit, NOT VAEBM_USE_HICOT_VOCAB's opt-in
+        # official-vocab path, off by default for VAE-BM's own headline
+        # numbers too) - internally consistent with what we report for
+        # ourselves, rather than reproducing HiCOT's own paper's exact
+        # (different, unverified from our side) vocab choice.
+        from vaebm_benchmark.models.ecrtm_adapter import ECRTMAdapter
+
+        return ECRTMAdapter(num_topics=k, vocab_size_cap=voc_size, seed=seed)
     raise KeyError(f"Unknown model '{model_name}'. Available: {', '.join(KNOWN_MODELS)}")
 
 
