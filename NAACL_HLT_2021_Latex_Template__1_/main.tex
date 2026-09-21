@@ -301,11 +301,17 @@ At $K=100$, applying each dataset's $K=50$-tuned $\lambda$ unchanged initially l
 \input{tables/topic_vaebm_20ng_agnews_imdb}
 \input{tables/topic_vaebm_searchsnippets_googlenews}
 \clearpage
-
 \subsection{Document Clustering}
 \label{sec:cluster-results}
 
-Tables~\ref{tab:cluster-full-20ng}--\ref{tab:cluster-full-search_snippets} report the full 11-metric clustering result on four representative datasets from the 12-dataset suite, one table per dataset, every baseline together with \textbf{VAE-BM (ours)} as rows. The remaining eight datasets, in the identical format, are in Appendix~\ref{sec:appendix-cluster-full} (Tables~\ref{tab:cluster-full-google_news_t}--\ref{tab:cluster-full-pascal_flickr}); every cluster metric this paper computes appears somewhere in this PDF for every dataset.
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figs/cluster_acc_barplot.pdf}
+\caption{Clustering ACC, all 12 datasets, all 8 models (LDA, GloCOM, ECRTM, S2WTM, FASTopic, HiCOT, BERTopic, \textbf{VAE-BM (ours)} in black). Full per-dataset breakdowns, all 11 metrics, are in Tables~\ref{tab:cluster-full-20ng}--\ref{tab:cluster-full-search_snippets} and Appendix~\ref{sec:appendix-cluster-full}.}
+\label{fig:cluster-acc-bar}
+\end{figure}
+
+Figure~\ref{fig:cluster-acc-bar} summarizes ACC across all 12 datasets and all 8 models at once; Tables~\ref{tab:cluster-full-20ng}--\ref{tab:cluster-full-search_snippets} then report the full 11-metric clustering result on four representative datasets from the same suite, one table per dataset, every baseline together with \textbf{VAE-BM (ours)} as rows. The remaining eight datasets, in the identical table format, are in Appendix~\ref{sec:appendix-cluster-full} (Tables~\ref{tab:cluster-full-google_news_t}--\ref{tab:cluster-full-pascal_flickr}); every cluster metric this paper computes appears somewhere in this PDF for every dataset.
 
 \input{tables/cluster_full_20ng}
 \input{tables/cluster_full_agnews_short}
