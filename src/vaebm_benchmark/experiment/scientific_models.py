@@ -173,6 +173,27 @@ def build_lda(k: int, seed: int, voc_size: int, dataset_id: str = None):
     return LDAAdapter(n_clusters=k, voc_size=voc_size, random_state=seed)
 
 
+def build_glocom(k: int, seed: int, voc_size: int, dataset_id: str = None):
+    """Mirrors experiment/cluster_runner.py's own `_build_glocom` exactly
+    (2026-09-21, added so the classification experiment can also use
+    GloCOM - it was cluster-only until now). Stopword removal is
+    unconditional here (models/_topmost_bases.py::run_preprocess ->
+    topmost.Preprocess's own default stopwords='English', never
+    overridden) - verified directly against the installed topmost
+    package, not assumed."""
+    from vaebm_benchmark.models.glocom_adapter import GloCOMAdapter
+
+    return GloCOMAdapter(
+        num_topics=k,
+        num_global_clusters=40,
+        vocab_size_cap=voc_size,
+        epochs=20,
+        learning_rate=0.002,
+        batch_size=200,
+        seed=seed,
+    )
+
+
 def build_hicot(k: int, seed: int, voc_size: int, dataset_id: str = None, max_fit_seconds: float = None):
     from vaebm_benchmark.models.hicot_adapter import HiCOTAdapter
 
@@ -259,6 +280,7 @@ MODEL_BUILDERS = {
     "vaebm_ckpt": build_vaebm_ckpt,
     "fastopic": build_fastopic,
     "lda": build_lda,
+    "glocom": build_glocom,
     "hicot": build_hicot,
     "sbert_kmeans": build_sbert_kmeans,
     "bertopic": build_bertopic,

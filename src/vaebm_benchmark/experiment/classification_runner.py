@@ -6,9 +6,12 @@ Following ECRTM (Wu et al., ICML 2023) Sec 4.4 / HiCOT's own `--tune_SVM`
 protocol reference: "we use the doc-topic distributions learned by topic
 models as document features and train SVMs to predict the class of each
 document." Neither paper's own text/code (HiCOT's `evaluations/` package
-has no SVM module) specifies an exact kernel/C - this experiment uses
-scikit-learn's `SVC(kernel="linear", C=1.0)` (a documented choice, not a
-claim of reproducing either paper's own SVM tuning).
+has no SVM module) specifies an exact kernel/C - this experiment uses a
+linear classifier, `C=1.0`, the SAME classifier class for every model on
+every dataset (currently `LogisticRegression(solver="lbfgs")` - see
+`_make_svm()`'s own docstring for the SVC->LinearSVC->LogisticRegression
+history and why each swap happened) - a documented choice, not a claim
+of reproducing either paper's own SVM tuning.
 
 Uses HiCOT's own OFFICIAL train/test split
 (datasets/definitions/hicot_datasets.py::load_hicot_split) - required,
@@ -79,23 +82,33 @@ def _representation(model, documents: list[str], representation_source: str):
 
 
 def _make_svm(svm_kernel: str, svm_C: float, seed: int):
-    """Linear-SVM classifier, swapped from `SVC(kernel="linear")` (libsvm)
-    to `LinearSVC` (liblinear) on 2026-09-21 - found via direct
-    diagnosis that libsvm's uncapped SMO solver was not converging on
-    the locked architecture's raw (high-dimensional, continuous) `mu`
-    representation, hanging the classification sweep's 3600s-timeout
-    combos indefinitely (confirmed on a synthetic worst-case benchmark
-    at the same n/d: SVC took 84s where LinearSVC took 3.8s; the real
-    `agnews_short` run sat with zero progress for 9+ minutes past
-    model-fit). Both are linear decision boundaries - this is a solver
-    swap, not a change of model family - and the module's own docstring
-    already flags the exact kernel/C as "a documented choice, not a
-    claim of reproducing either paper's own SVM tuning."."""
-    from sklearn.svm import SVC, LinearSVC
+    """Linear classifier over each model's own representation.
 
+    History: `SVC(kernel="linear")` (libsvm) was swapped to `LinearSVC`
+    (liblinear) on 2026-09-21 after libsvm's uncapped SMO solver was
+    found not converging on the locked architecture's raw
+    (high-dimensional, continuous) `mu` representation (confirmed on a
+    synthetic worst-case benchmark: SVC took 84s where LinearSVC took
+    3.8s at the same n/d). LinearSVC itself then failed the SAME way on
+    `biomedical` specifically - not a resource-contention artifact this
+    time: even capped at max_iter=1000 it had processed only 4 of 20
+    one-vs-rest classes after 38 minutes on the REAL embeddings (a
+    synthetic random-label benchmark at the same shape converged in
+    seconds - the slowness is intrinsic to biomedical's genuinely
+    harder, more overlapping real class structure, not a scale/
+    conditioning bug). Switched 2026-09-21 to `LogisticRegression`
+    (lbfgs, one linear decision boundary per class same as before) for
+    EVERY model on EVERY dataset uniformly - not only for the datasets
+    that broke - so no model gets a different classifier than any
+    other; user-specified: "we just need to be fair.\""""
     if svm_kernel != "linear":
+        from sklearn.svm import SVC
+
         return SVC(kernel=svm_kernel, C=svm_C, random_state=seed)
-    return LinearSVC(C=svm_C, random_state=seed, max_iter=10000, dual="auto")
+
+    from sklearn.linear_model import LogisticRegression
+
+    return LogisticRegression(C=svm_C, random_state=seed, max_iter=2000, solver="lbfgs", n_jobs=-1)
 
 
 def _build_model_for_classification(model_name: str, k: int, seed: int, voc_size: int, dataset_id: str):
