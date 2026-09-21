@@ -58,9 +58,18 @@ class BERTopicAdapter(ProtocolModelAdapter):
     def fit(self, documents: list[str]) -> "BERTopicAdapter":
         from bertopic import BERTopic
         from sklearn.cluster import KMeans
+        from sklearn.feature_extraction.text import CountVectorizer
         from umap import UMAP
 
         cluster_model = KMeans(n_clusters=self.n_clusters, random_state=self.random_state, n_init=10)
+        # Stopword removal is mandatory for a baseline (never a tunable
+        # knob the way VAEBM_EXCLUDE_STOPWORDS is for VAE-BM - see
+        # models/hicot_adapter.py's own fix, 2026-09-21). BERTopic's own
+        # default c-TF-IDF vectorizer has no stop_words filter at all -
+        # doesn't affect this adapter's cluster/classification numbers
+        # (KMeans runs on the embedding, never the vectorizer output),
+        # but would affect get_topics()'s own word quality if ever used.
+        vectorizer_model = CountVectorizer(stop_words="english")
         # UMAP's own stochastic optimization is NOT seeded by KMeans's
         # random_state - without this, re-running with the "same" seed
         # still produces different embeddings/topics (observed directly:
@@ -72,6 +81,7 @@ class BERTopicAdapter(ProtocolModelAdapter):
             embedding_model=self.embedding_model_name,
             umap_model=reducer_model,
             hdbscan_model=cluster_model,  # the officially-supported "swap the clustering backend" mechanism - see module docstring
+            vectorizer_model=vectorizer_model,
             calculate_probabilities=False,
             verbose=self.verbose,
         )
