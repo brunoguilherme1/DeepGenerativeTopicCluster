@@ -1,0 +1,36 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{Document clustering, full metric set, IMDB and SearchSnippets. Higher is better for every metric except Davies-Bouldin (DB), where lower is better. $^{\mathrm{LU}}$ marks a labuai value (shown only when no FutureLab value exists for that model/dataset). \textbf{Bold}/\underline{underline} = best/second-best per metric, computed separately within each dataset panel.}
+\label{tab:cluster-full-imdb}
+\label{tab:cluster-full-search_snippets}
+\adjustbox{max width=\textwidth}{
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
+\midrule
+\multicolumn{12}{l}{\textit{IMDB}} \\
+LDA & \underline{0.688}$^{\mathrm{LU}}$ & \underline{0.106}$^{\mathrm{LU}}$ & \underline{0.142}$^{\mathrm{LU}}$ & \underline{0.106}$^{\mathrm{LU}}$ & \underline{0.105}$^{\mathrm{LU}}$ & \underline{0.106}$^{\mathrm{LU}}$ & \underline{0.106}$^{\mathrm{LU}}$ & \underline{0.688}$^{\mathrm{LU}}$ & 0.617$^{\mathrm{LU}}$ & 0.517$^{\mathrm{LU}}$ & 141316.51$^{\mathrm{LU}}$ \\
+GloCOM & 0.501 & 0.000 & 0.000 & 0.000 & 0.000 & 0.000 & 0.000 & 0.501 & 0.956 & 0.205 & 555260.15 \\
+ECRTM & 0.500 & 0.000 & -0.000 & -0.000 & 0.000 & 0.000 & 0.000 & 0.500 & \underline{0.972} & \textbf{0.048} & \underline{1731668.83} \\
+S2WTM & 0.647 & 0.066 & 0.087 & 0.066 & 0.066 & 0.067 & 0.066 & 0.647 & 0.948 & \underline{0.080} & \textbf{1957251.29} \\
+FASTopic & 0.591 & 0.024 & 0.033 & 0.024 & 0.024 & 0.024 & 0.024 & 0.591 & 0.563 & 0.589 & 95398.91 \\
+HiCOT & 0.503 & 0.000 & 0.000 & 0.000 & 0.000 & 0.000 & 0.000 & 0.503 & \textbf{0.973} & 0.091 & 1415259.78 \\
+BERTopic & 0.604 & 0.035 & 0.043 & 0.035 & 0.034 & 0.036 & 0.035 & 0.604 & 0.017 & 10.004 & 467.82 \\
+\midrule
+\textbf{VAE-BM (ours)} & \textbf{0.941}$^{\mathrm{LU}}$ & \textbf{0.676}$^{\mathrm{LU}}$ & \textbf{0.776}$^{\mathrm{LU}}$ & \textbf{0.676}$^{\mathrm{LU}}$ & \textbf{0.675}$^{\mathrm{LU}}$ & \textbf{0.676}$^{\mathrm{LU}}$ & \textbf{0.676}$^{\mathrm{LU}}$ & \textbf{0.941}$^{\mathrm{LU}}$ & 0.158$^{\mathrm{LU}}$ & 2.190$^{\mathrm{LU}}$ & 10276.55$^{\mathrm{LU}}$ \\
+\midrule
+\multicolumn{12}{l}{\textit{SearchSnippets}} \\
+LDA & 0.324$^{\mathrm{LU}}$ & 0.153$^{\mathrm{LU}}$ & 0.117$^{\mathrm{LU}}$ & 0.152$^{\mathrm{LU}}$ & 0.155$^{\mathrm{LU}}$ & 0.150$^{\mathrm{LU}}$ & 0.153$^{\mathrm{LU}}$ & 0.350$^{\mathrm{LU}}$ & 0.285$^{\mathrm{LU}}$ & 1.030$^{\mathrm{LU}}$ & 3080.23$^{\mathrm{LU}}$ \\
+GloCOM & 0.653 & 0.529 & 0.438 & 0.529 & 0.540 & 0.519 & 0.529 & 0.713 & \textbf{0.422} & \underline{0.834} & \underline{6161.01} \\
+ECRTM & 0.346 & 0.131 & 0.099 & 0.131 & 0.127 & 0.136 & 0.131 & 0.377 & 0.266 & 1.060 & 2941.72 \\
+S2WTM & 0.326 & 0.239 & 0.127 & 0.238 & 0.232 & 0.247 & 0.239 & 0.346 & \underline{0.403} & 0.936 & \textbf{6789.78} \\
+FASTopic & 0.333 & 0.178 & 0.125 & 0.177 & 0.179 & 0.177 & 0.178 & 0.366 & 0.111 & 2.123 & 2025.43 \\
+HiCOT & 0.659 & 0.497 & 0.450 & 0.496 & 0.508 & 0.486 & 0.497 & 0.729 & 0.397 & \textbf{0.823} & 4807.14 \\
+BERTopic & \textbf{0.807} & \textbf{0.671} & \textbf{0.647} & \textbf{0.671} & \textbf{0.685} & \textbf{0.658} & \textbf{0.671} & \textbf{0.840} & 0.029 & 5.128 & 163.95 \\
+\midrule
+\textbf{VAE-BM (ours)} & \underline{0.753}$^{\mathrm{LU}}$ & \underline{0.622}$^{\mathrm{LU}}$ & \underline{0.592}$^{\mathrm{LU}}$ & \underline{0.622}$^{\mathrm{LU}}$ & \underline{0.634}$^{\mathrm{LU}}$ & \underline{0.610}$^{\mathrm{LU}}$ & \underline{0.622}$^{\mathrm{LU}}$ & \underline{0.823}$^{\mathrm{LU}}$ & 0.032$^{\mathrm{LU}}$ & 4.748$^{\mathrm{LU}}$ & 182.99$^{\mathrm{LU}}$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}

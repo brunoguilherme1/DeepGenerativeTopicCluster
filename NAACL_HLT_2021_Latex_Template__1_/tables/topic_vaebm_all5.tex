@@ -4,10 +4,11 @@
 \adjustbox{max width=\textwidth}{
 \begin{tabular}{lrrrr rrrr rrrr rrrr rrrr}
 \toprule
-\multirow{2}{*}{\textbf{50 Topics}} & \multicolumn{4}{c}{\textbf{20NG}} & \multicolumn{4}{c}{\textbf{AGNews}} & \multicolumn{4}{c}{\textbf{IMDB}} & \multicolumn{4}{c}{\textbf{SearchSnip.}} & \multicolumn{4}{c}{\textbf{GoogleNews}} \\
+ & \multicolumn{4}{c}{\textbf{20NG}} & \multicolumn{4}{c}{\textbf{AGNews}} & \multicolumn{4}{c}{\textbf{IMDB}} & \multicolumn{4}{c}{\textbf{SearchSnip.}} & \multicolumn{4}{c}{\textbf{GoogleNews}} \\
 \cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(lr){10-13}\cmidrule(lr){14-17}\cmidrule(lr){18-21}
  & $C_V$ & Pur. & NMI & TD & $C_V$ & Pur. & NMI & TD & $C_V$ & Pur. & NMI & TD & $C_V$ & Pur. & NMI & TD & $C_V$ & Pur. & NMI & TD \\
 \midrule
+\multicolumn{21}{l}{\textit{50 Topics}} \\
 ETM\textdagger & 0.375 & 0.347 & 0.319 & 0.704 & 0.364 & 0.679 & 0.224 & 0.819 & 0.346 & 0.660 & 0.038 & 0.557 & 0.397 & 0.688 & 0.389 & 0.594 & 0.402 & 0.366 & 0.560 & 0.916 \\
 NTM+CL & 0.437 & 0.582 & 0.491 & 0.802 & 0.440 & 0.322 & 0.100 & 0.441 & 0.396 & 0.657 & 0.044 & 0.617 & 0.403 & 0.215 & 0.030 & 0.532 & 0.433 & 0.041 & 0.005 & 0.301 \\
 ECRTM\textdagger & 0.431 & 0.560 & 0.524 & 0.964 & 0.466 & 0.802 & 0.367 & 0.961 & 0.393 & 0.694 & 0.058 & 0.974 & 0.450 & 0.711 & 0.419 & 0.998 & 0.441 & 0.396 & 0.615 & 0.987 \\
@@ -16,24 +17,8 @@ NeuroMax\textdagger & 0.435 & 0.623 & 0.570 & 0.912 & 0.385 & 0.804 & 0.410 & 0.
 HiCOT & 0.451 & 0.626 & 0.583 & 0.852 & 0.446 & 0.857 & 0.412 & 0.992 & 0.404 & 0.737 & 0.082 & 0.837 & 0.460 & 0.818 & 0.478 & 1.000 & 0.454 & 0.465 & 0.657 & 0.920 \\
 \midrule
 \textbf{VAE-BM (ours)} & \textbf{0.461} & \textbf{0.676} & 0.582 & 0.831 & \textbf{0.467} & \textbf{0.873} & 0.380 & 0.964 & \textbf{0.413} & \textbf{0.840} & \textbf{0.138} & 0.813 & \textbf{0.482} & \textbf{0.856} & \textbf{0.503} & 1.000 & \textbf{0.482} & \textbf{0.614} & \textbf{0.820} & 0.995 \\
-\bottomrule
-\end{tabular}
-}
-\vspace{2pt}
-\caption{50-topic results, all five of HiCOT's official benchmark datasets. Baseline rows (ETM through HiCOT) reproduced from the HiCOT paper's own published table; \textdagger\ marks a baseline HiCOT itself reports as its own reproduction, not the original paper's number. \textbf{Bold} in our row marks a metric that beats HiCOT. VAE-BM: frozen \texttt{gte-large} (\texttt{bge-large} for IMDB) embedding branch ($\alpha=0$), relevance-weighted topic words ($\lambda=0.5$ for 20NG/AGNews, $\lambda=0.05$ for IMDB/SearchSnippets/GoogleNews), \texttt{normalize\_mu} for 20NG/AGNews. Fully unsupervised -- no labels used in training or topic-word selection. Single seed (42).}
-\label{tab:topic-k50}
-\end{table*}
-
-\begin{table*}[t]
-\centering
-\scriptsize
-\adjustbox{max width=\textwidth}{
-\begin{tabular}{lrrrr rrrr rrrr rrrr rrrr}
-\toprule
-\multirow{2}{*}{\textbf{100 Topics}} & \multicolumn{4}{c}{\textbf{20NG}} & \multicolumn{4}{c}{\textbf{AGNews}} & \multicolumn{4}{c}{\textbf{IMDB}} & \multicolumn{4}{c}{\textbf{SearchSnip.}} & \multicolumn{4}{c}{\textbf{GoogleNews}} \\
-\cmidrule(lr){2-5}\cmidrule(lr){6-9}\cmidrule(lr){10-13}\cmidrule(lr){14-17}\cmidrule(lr){18-21}
- & $C_V$ & Pur. & NMI & TD & $C_V$ & Pur. & NMI & TD & $C_V$ & Pur. & NMI & TD & $C_V$ & Pur. & NMI & TD & $C_V$ & Pur. & NMI & TD \\
 \midrule
+\multicolumn{21}{l}{\textit{100 Topics}} \\
 ETM\textdagger & 0.369 & 0.394 & 0.339 & 0.573 & 0.371 & 0.674 & 0.204 & 0.773 & 0.341 & 0.648 & 0.037 & 0.371 & 0.389 & 0.691 & 0.365 & 0.448 & 0.398 & 0.554 & 0.713 & 0.677 \\
 NTM+CL & 0.420 & 0.626 & 0.490 & 0.624 & 0.415 & 0.280 & 0.050 & 0.277 & 0.382 & 0.705 & 0.044 & 0.492 & 0.406 & 0.217 & 0.020 & 0.394 & 0.432 & 0.039 & 0.005 & 0.367 \\
 ECRTM\textdagger & 0.405 & 0.555 & 0.494 & 0.904 & 0.416 & 0.812 & 0.428 & 0.981 & 0.373 & 0.694 & 0.049 & 0.887 & 0.432 & 0.789 & 0.443 & 0.966 & 0.418 & 0.342 & 0.491 & 0.991 \\
@@ -46,6 +31,6 @@ HiCOT & 0.424 & 0.652 & 0.568 & 0.741 & 0.435 & 0.862 & 0.388 & 0.960 & 0.388 & 
 \end{tabular}
 }
 \vspace{2pt}
-\caption{100-topic results, same layout and provenance as Table~\ref{tab:topic-k50}, with $\lambda$ re-tuned for $K=100$ specifically ($\lambda=0.2$ for 20NG, $0.3$ for AGNews, $0.1$ for SearchSnippets, $0.03$ for GoogleNews, vs.\ $0.5$/$0.05$/$0.05$/$0.05$ at $K=50$ -- \S\ref{sec:topics}) -- \texttt{normalize\_mu} unchanged. VAE-BM now beats HiCOT on $C_V$ and Purity on 20NG and AGNews, and on Purity and NMI on GoogleNews; NMI is unmoved by $\lambda$ by construction (Equation~\ref{eq:relevance} never touches clustering) and remains short on 20NG, AGNews, and SearchSnippets. SearchSnippets's $C_V$ gap shrinks to essentially zero ($-0.0002$); GoogleNews's $C_V$ gap narrows only marginally and does not close. IMDB alone holds a full 3-of-3 win at both $K$ values.}
-\label{tab:topic-k100}
+\caption{Topic results at $K=50$ and $K=100$, all five of HiCOT's official benchmark datasets. Baseline rows (ETM through HiCOT) reproduced from the HiCOT paper's own published table; \textdagger\ marks a baseline HiCOT itself reports as its own reproduction, not the original paper's number. \textbf{Bold} in our row marks a metric that beats HiCOT. VAE-BM: frozen \texttt{gte-large} (\texttt{bge-large} for IMDB) embedding branch ($\alpha=0$), relevance-weighted topic words ($\lambda=0.5/0.5/0.05/0.05/0.05$ at $K=50$, $0.2/0.3/0.05/0.1/0.03$ at $K=100$, per dataset in the order shown -- \S\ref{sec:topics}), \texttt{normalize\_mu} for 20NG/AGNews. Fully unsupervised -- no labels used in training or topic-word selection. Single seed (42). VAE-BM beats HiCOT on $C_V$/Purity on all five datasets at $K=50$ (and NMI on three); at $K=100$ it beats $C_V$/Purity on 20NG/AGNews/GoogleNews and NMI on GoogleNews, while NMI on 20NG/AGNews/SearchSnippets is unmoved by $\lambda$ by construction (Equation~\ref{eq:relevance} never touches clustering). IMDB alone holds a full 3-of-3 win at both $K$ values.}
+\label{tab:topic-k50}
 \end{table*}

@@ -1,0 +1,36 @@
+\begin{table*}[htb]
+\centering
+\small
+\caption{Document clustering, full metric set, Biomed. and Banking77. Higher is better for every metric except Davies-Bouldin (DB), where lower is better. $^{\mathrm{LU}}$ marks a labuai value (shown only when no FutureLab value exists for that model/dataset). \textbf{Bold}/\underline{underline} = best/second-best per metric, computed separately within each dataset panel.}
+\label{tab:cluster-full-biomedical}
+\label{tab:cluster-full-banking77}
+\adjustbox{max width=\textwidth}{
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
+\midrule
+\multicolumn{12}{l}{\textit{Biomed.}} \\
+LDA & 0.175$^{\mathrm{LU}}$ & 0.102$^{\mathrm{LU}}$ & 0.055$^{\mathrm{LU}}$ & 0.099$^{\mathrm{LU}}$ & 0.102$^{\mathrm{LU}}$ & 0.102$^{\mathrm{LU}}$ & 0.102$^{\mathrm{LU}}$ & 0.191$^{\mathrm{LU}}$ & 0.133$^{\mathrm{LU}}$ & 1.543$^{\mathrm{LU}}$ & 954.57$^{\mathrm{LU}}$ \\
+GloCOM & \textbf{0.467} & \underline{0.408} & \underline{0.283} & \underline{0.406} & \underline{0.395} & \textbf{0.422} & \underline{0.408} & 0.468 & \textbf{0.606} & \textbf{0.889} & \textbf{3260.47} \\
+ECRTM & 0.180 & 0.128 & 0.020 & 0.125 & 0.098 & 0.185 & 0.128 & 0.180 & 0.047 & \underline{1.054} & 564.44 \\
+S2WTM & 0.170 & 0.141 & 0.051 & 0.138 & 0.130 & 0.153 & 0.141 & 0.173 & \underline{0.154} & 1.275 & 1753.12 \\
+FASTopic & 0.266 & 0.203 & 0.113 & 0.201 & 0.192 & 0.216 & 0.203 & 0.269 & 0.026 & 3.006 & 1176.09 \\
+HiCOT & 0.296 & 0.257 & 0.175 & 0.255 & 0.242 & 0.275 & 0.257 & 0.302 & 0.078 & 1.698 & \underline{2212.81} \\
+BERTopic & \underline{0.464} & 0.387 & 0.274 & 0.385 & 0.385 & 0.388 & 0.387 & \textbf{0.475} & 0.029 & 4.924 & 204.87 \\
+\midrule
+\textbf{VAE-BM (ours)} & 0.441$^{\mathrm{LU}}$ & \textbf{0.417}$^{\mathrm{LU}}$ & \textbf{0.287}$^{\mathrm{LU}}$ & \textbf{0.415}$^{\mathrm{LU}}$ & \textbf{0.416}$^{\mathrm{LU}}$ & \underline{0.418}$^{\mathrm{LU}}$ & \textbf{0.417}$^{\mathrm{LU}}$ & \underline{0.473}$^{\mathrm{LU}}$ & 0.036$^{\mathrm{LU}}$ & 4.243$^{\mathrm{LU}}$ & 225.25$^{\mathrm{LU}}$ \\
+\midrule
+\multicolumn{12}{l}{\textit{Banking77}} \\
+LDA & 0.211$^{\mathrm{LU}}$ & 0.413$^{\mathrm{LU}}$ & 0.115$^{\mathrm{LU}}$ & 0.382$^{\mathrm{LU}}$ & 0.382$^{\mathrm{LU}}$ & 0.449$^{\mathrm{LU}}$ & 0.413$^{\mathrm{LU}}$ & 0.221$^{\mathrm{LU}}$ & 0.139$^{\mathrm{LU}}$ & 1.529$^{\mathrm{LU}}$ & 216.68$^{\mathrm{LU}}$ \\
+GloCOM & 0.263 & 0.620 & 0.204 & 0.614 & 0.517 & 0.776 & 0.620 & 0.264 & \underline{0.513} & \underline{1.223} & \textbf{2865.07} \\
+ECRTM & 0.076 & 0.220 & 0.019 & 0.213 & 0.145 & 0.451 & 0.220 & 0.076 & 0.150 & \textbf{1.149} & \underline{1154.51} \\
+S2WTM & 0.146 & 0.323 & 0.062 & 0.293 & 0.293 & 0.360 & 0.323 & 0.150 & -0.043 & 1.700 & 263.69 \\
+FASTopic & 0.205 & 0.470 & 0.117 & 0.439 & 0.426 & 0.524 & 0.470 & 0.225 & -0.016 & 3.297 & 245.00 \\
+HiCOT & 0.019 & 0.008 & -0.000 & 0.002 & 0.004 & 0.200 & 0.008 & 0.019 & \textbf{0.601} & 2.655 & 629.39 \\
+BERTopic & \underline{0.643} & \textbf{0.814} & \underline{0.557} & \textbf{0.802} & \textbf{0.803} & \textbf{0.825} & \textbf{0.814} & \underline{0.670} & 0.111 & 2.385 & 160.39 \\
+\midrule
+\textbf{VAE-BM (ours)} & \textbf{0.663}$^{\mathrm{LU}}$ & \underline{0.808}$^{\mathrm{LU}}$ & \textbf{0.559}$^{\mathrm{LU}}$ & \underline{0.796}$^{\mathrm{LU}}$ & \underline{0.802}$^{\mathrm{LU}}$ & \underline{0.813}$^{\mathrm{LU}}$ & \underline{0.808}$^{\mathrm{LU}}$ & \textbf{0.699}$^{\mathrm{LU}}$ & 0.118$^{\mathrm{LU}}$ & 2.438$^{\mathrm{LU}}$ & 165.11$^{\mathrm{LU}}$ \\
+\bottomrule
+\end{tabular}
+}
+\end{table*}
