@@ -8,12 +8,15 @@
 \toprule
 Model & ACC & NMI & ARI & AMI & Hom. & Comp. & V-m. & Pur. & Sil. & DB & CH \\
 \midrule
-LDA & \underline{0.567}$^{\mathrm{LU}}$ & \underline{0.738}$^{\mathrm{LU}}$ & \underline{0.465}$^{\mathrm{LU}}$ & \underline{0.681}$^{\mathrm{LU}}$ & \underline{0.735}$^{\mathrm{LU}}$ & 0.741$^{\mathrm{LU}}$ & \underline{0.738}$^{\mathrm{LU}}$ & \underline{0.663}$^{\mathrm{LU}}$ & 0.508$^{\mathrm{LU}}$ & 0.762$^{\mathrm{LU}}$ & 189.23$^{\mathrm{LU}}$ \\
+LDA & 0.567$^{\mathrm{LU}}$ & 0.738$^{\mathrm{LU}}$ & 0.465$^{\mathrm{LU}}$ & 0.681$^{\mathrm{LU}}$ & 0.735$^{\mathrm{LU}}$ & 0.741$^{\mathrm{LU}}$ & 0.738$^{\mathrm{LU}}$ & 0.663$^{\mathrm{LU}}$ & 0.508$^{\mathrm{LU}}$ & 0.762$^{\mathrm{LU}}$ & 189.23$^{\mathrm{LU}}$ \\
 GloCOM & 0.316 & 0.382 & 0.028 & 0.355 & 0.247 & \textbf{0.844} & 0.382 & 0.328 & \textbf{0.905} & \textbf{0.127} & \textbf{56411.40} \\
 ECRTM & 0.186 & 0.106 & 0.005 & 0.092 & 0.058 & 0.606 & 0.106 & 0.186 & \underline{0.511} & \underline{0.684} & 78.43 \\
-S2WTM & 0.319 & 0.507 & 0.200 & 0.456 & 0.423 & 0.634 & 0.507 & 0.386 & 0.016 & 1.207 & \underline{205.06} \\
+S2WTM & 0.319 & 0.507 & 0.200 & 0.456 & 0.423 & 0.634 & 0.507 & 0.386 & 0.016 & 1.207 & 205.06 \\
+FASTopic & 0.477 & 0.637 & \underline{0.541} & 0.552 & 0.628 & 0.647 & 0.637 & 0.559 & -0.002 & 2.889 & 50.38 \\
+HiCOT & 0.175 & 0.160 & 0.023 & 0.126 & 0.100 & 0.401 & 0.160 & 0.176 & -0.064 & 1.606 & \underline{2121.97} \\
+BERTopic & \underline{0.623} & \textbf{0.881} & 0.479 & \textbf{0.846} & \textbf{0.950} & 0.821 & \textbf{0.881} & \textbf{0.932} & 0.118 & 2.597 & 25.00 \\
 \midrule
-\textbf{VAE-BM (ours)} & \textbf{0.648}$^{\mathrm{LU}}$ & \textbf{0.877}$^{\mathrm{LU}}$ & \textbf{0.550}$^{\mathrm{LU}}$ & \textbf{0.842}$^{\mathrm{LU}}$ & \textbf{0.934}$^{\mathrm{LU}}$ & \underline{0.826}$^{\mathrm{LU}}$ & \textbf{0.877}$^{\mathrm{LU}}$ & \textbf{0.910}$^{\mathrm{LU}}$ & 0.137$^{\mathrm{LU}}$ & 2.716$^{\mathrm{LU}}$ & 25.46$^{\mathrm{LU}}$ \\
+\textbf{VAE-BM (ours)} & \textbf{0.648}$^{\mathrm{LU}}$ & \underline{0.877}$^{\mathrm{LU}}$ & \textbf{0.550}$^{\mathrm{LU}}$ & \underline{0.842}$^{\mathrm{LU}}$ & \underline{0.934}$^{\mathrm{LU}}$ & \underline{0.826}$^{\mathrm{LU}}$ & \underline{0.877}$^{\mathrm{LU}}$ & \underline{0.910}$^{\mathrm{LU}}$ & 0.137$^{\mathrm{LU}}$ & 2.716$^{\mathrm{LU}}$ & 25.46$^{\mathrm{LU}}$ \\
 \bottomrule
 \end{tabular}
 }

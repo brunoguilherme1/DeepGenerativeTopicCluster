@@ -127,10 +127,11 @@ ingest_cluster_final_rows("futurelab_new/s2wtm_locked_cluster_20260921.json", "f
 # battery for every model shown, never a "--" from a metric simply never
 # requested.
 for _mo in ("fastopic", "hicot", "bertopic"):
-    _fname = f"labuai/{_mo}_cluster_fullmetrics_20260921.json"
-    if (DATA / _fname).exists():
-        ingest_cluster_final_rows(_fname, "labuai",
-                                   f"{_mo}_cluster_fullmetrics_20260921 ({_mo} x 12 plain datasets, full 11-metric battery)")
+    for _env, _dir in (("futurelab", "futurelab_new"), ("labuai", "labuai")):
+        _fname = f"{_dir}/{_mo}_cluster_fullmetrics_20260921.json"
+        if (DATA / _fname).exists():
+            ingest_cluster_final_rows(_fname, _env,
+                                       f"{_mo}_cluster_fullmetrics_20260921 ({_mo} x 12 plain datasets, full 11-metric battery, {_env})")
 
 # ------------------------------------------------------------ classification --
 
