@@ -291,15 +291,14 @@ All numbers below are read programmatically from \texttt{paper\_data/\allowbreak
 \subsection{Topic Modeling}
 \label{sec:topic-results}
 
-Tables~\ref{tab:vaebm-topic-20ng-agnews-imdb-k50}--\ref{tab:vaebm-topic-ss-gn-k100} are this paper's central result: HiCOT's own published $K{=}50$/$K{=}100$ table on its five official benchmark datasets (ETM, NTM+CL, ECRTM, FASTopic, NeuroMax, HiCOT, reproduced from~\citep{hicot2025}), with our VAE-BM (ours) row appended using the locked configuration of \S\ref{sec:method}: $\alpha=0$, \texttt{gte-large} (\texttt{bge-large} for IMDB), relevance-weighted topic words with $\lambda$ tuned per dataset, and the L2-normalization of \S\ref{sec:dec} for 20NG/AGNews. All $C_V$ values, ours and HiCOT's own, use Palmetto against a Wikipedia reference corpus, so bolding a win is a like-for-like comparison.
+Tables~\ref{tab:topic-k50}--\ref{tab:topic-k100} are this paper's central result: HiCOT's own published $K{=}50$/$K{=}100$ table on its five official benchmark datasets (ETM, NTM+CL, ECRTM, FASTopic, NeuroMax, HiCOT, reproduced from~\citep{hicot2025}), with our VAE-BM (ours) row appended using the locked configuration of \S\ref{sec:method}: $\alpha=0$, \texttt{gte-large} (\texttt{bge-large} for IMDB), relevance-weighted topic words with $\lambda$ tuned per dataset, and the L2-normalization of \S\ref{sec:dec} for 20NG/AGNews. All $C_V$ values, ours and HiCOT's own, use Palmetto against a Wikipedia reference corpus, so bolding a win is a like-for-like comparison.
 
 At $K=50$, VAE-BM (ours) beats HiCOT on all three headline metrics ($C_V$, Purity, NMI) simultaneously on SearchSnippets, GoogleNews, and IMDB. On AGNews it beats $C_V$ and Purity but falls short of HiCOT's NMI (0.380 vs.\ 0.412). On 20NG it beats $C_V$ and Purity and comes within 0.001 of HiCOT's NMI (0.582 vs.\ 0.583) -- the closest possible miss under a dedicated $k$-means-initialization sensitivity check (five seeds/restart counts, none of which closed the gap). Neither $\lambda$ (which provably cannot affect clustering) nor the embedder/normalization choices already applied moves NMI specifically; closing this last gap likely needs a genuinely different architectural change.
 
 At $K=100$, applying each dataset's $K=50$-tuned $\lambda$ unchanged initially lost SearchSnippets's and GoogleNews's full $K=50$ wins. Re-tuning $\lambda$ at $K=100$ specifically recovered wider $C_V$ margins for 20NG ($\lambda=0.2$) and AGNews ($\lambda=0.3$), and shrank SearchSnippets's $C_V$ gap to essentially zero ($\lambda=0.1$); their NMI gaps are, by construction, unmoved by any $\lambda$. GoogleNews's $C_V$ gap resisted tuning across $\lambda\in\{0.01,\ldots,0.7\}$ (9 values), plateauing non-monotonically around 0.447 against a 0.470 target -- we report this honestly as an open gap (\S\ref{sec:limitations}) rather than searching further. IMDB alone holds a full 3-of-3 win at both $K$ values without any $K=100$-specific retuning.
 \enlargethispage{\baselineskip}
 
-\input{tables/topic_vaebm_20ng_agnews_imdb}
-\input{tables/topic_vaebm_searchsnippets_googlenews}
+\input{tables/topic_vaebm_all5}
 \clearpage
 \subsection{Document Clustering}
 \label{sec:cluster-results}
@@ -325,11 +324,9 @@ Every baseline shown has a genuinely completed 11-metric result on all 12 datase
 \subsection{Classification}
 \label{sec:classification-results}
 
-Tables~\ref{tab:classif-block1}--\ref{tab:classif-block3} report Accuracy and F1 for every baseline together with VAE-BM (ours), split only by dataset (four datasets per table, all twelve shown). Every cell is populated: no baseline appears with mostly-missing results, and no dataset is dropped from the comparison.
+Tables~\ref{tab:classif-block1}--\ref{tab:classif-block2} report Accuracy and F1 for every baseline together with VAE-BM (ours), split only by dataset (six datasets per table, all twelve shown). Every cell is populated: no baseline appears with mostly-missing results, and no dataset is dropped from the comparison.
 
-\input{tables/classification_block1}
-\input{tables/classification_block2}
-\input{tables/classification_block3}
+\input{tables/classification_all12}
 
 VAE-BM (ours) uses the identical locked configuration as \S\ref{sec:cluster-results}, a stratified random 80/20 split, 5 seeds (1--5); every cell is the mean over these seeds, with std/CI recorded in the released manifest (Appendix~\ref{sec:appendix}). \textbf{VAE-BM (ours) beats every topic-model baseline -- LDA, GloCOM, ECRTM, S2WTM, FASTopic, and HiCOT -- on both Accuracy and F1 on all 12 of 12 datasets.} Against BERTopic, the one embedding-hybrid baseline in this comparison, VAE-BM wins Accuracy and F1 on 6 of 12 datasets -- a genuinely mixed result we report as such, not as a clean sweep.
 
