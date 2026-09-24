@@ -109,6 +109,37 @@ class FASTopicProtocol(BaselineProtocol):
             num_classes=7,
             notes="exact_fastopic_artifact=False - see fastopic_wos.py's own module docstring for full provenance.",
         ),
+        # NeurIPS/ACL/Wikitext-103: Table 1 (topic quality, C_V/TD) only -
+        # no ground-truth labels (Table 7's own "#labels" column is "-" for
+        # all three), so no Table 2/Figure 4 cluster/classification rows
+        # exist for them and num_classes below is never used for topic_count.
+        DatasetSpec(
+            id="fastopic_neurips",
+            name="NeurIPS (conference papers, 1987-2017), via topmost's official mirror",
+            source_url="https://raw.githubusercontent.com/BobXWu/TopMost/master/data/NeurIPS.zip",
+            source_repository="https://github.com/BobXWu/TopMost",
+            num_docs_expected=7237,
+            num_classes=0,
+            notes="Pre-split train (6,512) / test (725) files, vocab_size=10000. No ground-truth labels.",
+        ),
+        DatasetSpec(
+            id="fastopic_acl",
+            name="ACL Anthology (1970-2015), via topmost's official mirror",
+            source_url="https://raw.githubusercontent.com/BobXWu/TopMost/master/data/ACL.zip",
+            source_repository="https://github.com/BobXWu/TopMost",
+            num_docs_expected=10560,
+            num_classes=0,
+            notes="Pre-split train (9,507) / test (1,053) files, vocab_size=10000. No ground-truth labels.",
+        ),
+        DatasetSpec(
+            id="fastopic_wikitext103",
+            name="Wikitext-103 (Wikipedia articles), via topmost's official mirror (Git-LFS, media.githubusercontent.com)",
+            source_url="https://media.githubusercontent.com/media/BobXWu/TopMost/main/data/Wikitext-103.zip",
+            source_repository="https://github.com/BobXWu/TopMost",
+            num_docs_expected=28532,
+            num_classes=0,
+            notes="Pre-split train (28,472) / test (60) files, vocab_size=10000. No ground-truth labels.",
+        ),
     ]
     split_strategy = SplitSpec(
         strategy="predefined_train_test (20NG/NYT) / generated_stratified_80_20_seed42 (WoS)",
@@ -117,7 +148,12 @@ class FASTopicProtocol(BaselineProtocol):
         "official artifact to ship a split, so this protocol generates its own stratified 80/20 split "
         "(seed=42) - documented explicitly as this project's own choice, not FASTopic's.",
     )
-    topic_count = {"fastopic_20ng": K, "fastopic_nyt": K, "fastopic_wos_reconstructed": K}
+    topic_count = {
+        "fastopic_20ng": K, "fastopic_nyt": K, "fastopic_wos_reconstructed": K,
+        "fastopic_neurips": K, "fastopic_acl": K, "fastopic_wikitext103": K,
+    }
+    # No ground-truth labels for these 3 - topic-quality (C_V/TD) only.
+    NO_LABEL_DATASETS = {"fastopic_neurips", "fastopic_acl", "fastopic_wikitext103"}
     metric_specs = [
         MetricSpec(name="purity", kind="clustering"),
         MetricSpec(name="nmi", kind="clustering"),
@@ -140,6 +176,19 @@ class FASTopicProtocol(BaselineProtocol):
         PublishedResult(dataset_id="fastopic_nyt", metric="f1", value=0.596, source="Figure 4, FASTopic row, NYT"),
         PublishedResult(dataset_id="fastopic_wos_reconstructed", metric="accuracy", value=0.739, source="Figure 4, FASTopic row, WoS"),
         PublishedResult(dataset_id="fastopic_wos_reconstructed", metric="f1", value=0.703, source="Figure 4, FASTopic row, WoS"),
+        # Table 1 (topic quality, C_V/TD), K=50, all 6 datasets
+        PublishedResult(dataset_id="fastopic_20ng", metric="cv", value=0.426, source="Table 1, FASTopic row, 20NG"),
+        PublishedResult(dataset_id="fastopic_20ng", metric="td", value=0.983, source="Table 1, FASTopic row, 20NG"),
+        PublishedResult(dataset_id="fastopic_nyt", metric="cv", value=0.437, source="Table 1, FASTopic row, NYT"),
+        PublishedResult(dataset_id="fastopic_nyt", metric="td", value=0.999, source="Table 1, FASTopic row, NYT"),
+        PublishedResult(dataset_id="fastopic_wos_reconstructed", metric="cv", value=0.457, source="Table 1, FASTopic row, WoS"),
+        PublishedResult(dataset_id="fastopic_wos_reconstructed", metric="td", value=1.000, source="Table 1, FASTopic row, WoS"),
+        PublishedResult(dataset_id="fastopic_neurips", metric="cv", value=0.422, source="Table 1, FASTopic row, NeurIPS"),
+        PublishedResult(dataset_id="fastopic_neurips", metric="td", value=0.998, source="Table 1, FASTopic row, NeurIPS"),
+        PublishedResult(dataset_id="fastopic_acl", metric="cv", value=0.420, source="Table 1, FASTopic row, ACL"),
+        PublishedResult(dataset_id="fastopic_acl", metric="td", value=0.998, source="Table 1, FASTopic row, ACL"),
+        PublishedResult(dataset_id="fastopic_wikitext103", metric="cv", value=0.439, source="Table 1, FASTopic row, Wikitext-103"),
+        PublishedResult(dataset_id="fastopic_wikitext103", metric="td", value=0.992, source="Table 1, FASTopic row, Wikitext-103"),
     ]
 
     def __init__(self, smoke_test: bool = True) -> None:
@@ -160,7 +209,19 @@ class FASTopicProtocol(BaselineProtocol):
         elif dataset_id == "fastopic_wos_reconstructed":
             from vaebm_benchmark.datasets.definitions.fastopic_wos import WoSReconstructedDataset
             return WoSReconstructedDataset()
-        raise KeyError(f"FASTopicProtocol supports fastopic_20ng/fastopic_nyt/fastopic_wos_reconstructed, got '{dataset_id}'")
+        elif dataset_id == "fastopic_neurips":
+            from vaebm_benchmark.datasets.definitions.fastopic_neurips import NeurIPSFASTopicDataset
+            return NeurIPSFASTopicDataset()
+        elif dataset_id == "fastopic_acl":
+            from vaebm_benchmark.datasets.definitions.fastopic_acl import ACLFASTopicDataset
+            return ACLFASTopicDataset()
+        elif dataset_id == "fastopic_wikitext103":
+            from vaebm_benchmark.datasets.definitions.fastopic_wikitext103 import Wikitext103FASTopicDataset
+            return Wikitext103FASTopicDataset()
+        raise KeyError(
+            f"FASTopicProtocol supports fastopic_20ng/fastopic_nyt/fastopic_wos_reconstructed/"
+            f"fastopic_neurips/fastopic_acl/fastopic_wikitext103, got '{dataset_id}'"
+        )
 
     def _load(self, dataset_id: str):
         loader = self._dataset_loader(dataset_id)
@@ -185,6 +246,15 @@ class FASTopicProtocol(BaselineProtocol):
             list(bundle.train_texts) + list(bundle.test_texts),
             list(bundle.train_labels) + list(bundle.test_labels),
         )
+
+    def prepare_all_documents(self, dataset_id: str) -> list[str]:
+        """Full corpus (train+test), no labels - for topic-quality (C_V/TD,
+        Table 1) evaluation, which needs no ground truth and so works for
+        all 6 datasets (unlike prepare_all_documents_and_labels, which
+        needs NO_LABEL_DATASETS's own train_labels/test_labels and would
+        AttributeError on those 3)."""
+        bundle = self._load(dataset_id)
+        return list(bundle.train_texts) + list(bundle.test_texts)
 
     def vocabulary_for(self, dataset_id: str) -> list[str]:
         return self._load(dataset_id).vocab
