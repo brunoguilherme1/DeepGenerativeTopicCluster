@@ -1,59 +1,59 @@
 """FASTopic protocol: reproduces github.com/bobxwu/FASTopic's own
-evaluation on **NYT**, verified directly against the cloned official repo,
-its companion toolkit `topmost` (github.com/BobXWu/TopMost, where FASTopic's
-own preprocessing/dataset-loading code actually lives), and the NeurIPS
-2024 paper PDF (arXiv:2405.17978).
+evaluation on **20NG, NYT, and WoS**, verified directly against the
+FASTopic NeurIPS 2024 paper PDF (arXiv:2405.17978) and its companion
+toolkit `topmost` (github.com/BobXWu/TopMost, where FASTopic's own
+preprocessing/dataset-loading code actually lives).
 
 Protocol facts (all verified against source, not inferred):
-  - Dataset artifact: `topmost.download_dataset('NYT', ...)` fetches
-    `raw.githubusercontent.com/BobXWu/TopMost/master/data/NYT.zip` - the
-    exact mirror FASTopic's own paper protocol uses. 9,172 docs total
-    (8,254 train / 918 test), avg length 175.4, vocab 10,000, 12 classes
-    (paper Table 7) - the smallest of the paper's six datasets that is
-    both downloadable and labeled (WoS is undownloadable - see
-    docs/methodological_notes.md; 20NG/ACL/NeurIPS/Wikitext-103 are all
-    larger).
-  - Split: topmost.BasicDataset ships PRE-SPLIT train/test files - this
-    project does not generate its own split. FASTopic's own training
-    (`fit_transform`) only ever sees `train_texts`; `test_texts` is used
-    solely at inference time (`model.transform`) to get held-out theta
-    for the paper's clustering metrics. Topic-quality metrics (CV, TD)
-    describe the topics discovered FROM TRAINING - there is no train/test
-    distinction for those (see protocols/base.py's `evaluate()`
-    docstring for how this project's own evaluate() reflects that split).
-  - K: paper's Table 1/2 primary results use K=50 (a sensitivity sweep
-    over K uses WoS only, which this protocol doesn't touch).
-  - Preprocessing / vocabulary: the baseline is trained on the RELEASED
-    `train_bow.npz`/`vocab.txt` directly (see
-    models/fastopic_adapter.py::_ReleasedArtifactPreprocess) - NOT a
-    re-tokenization via `topmost.Preprocess` that merely aims to be
-    equivalent. This makes the `vocabulary` check below a provable MATCH:
-    VAE-BM is pinned to this exact same vocab list AND (see
-    models/vaebm.py's `tokenizer=str.split` fix) the exact same
-    whitespace-tokenization rule, so both models' BoW inputs are built
-    from literally the same counts.
-  - Hyperparameters: fastopic's OWN constructor/fit_transform defaults -
-    DT_alpha=3.0, TW_alpha=2.0, theta_temp=1.0, epochs=200,
-    learning_rate=0.002 - verified to be EXACTLY what Appendix D states
-    (epsilon_1=1/3, epsilon_2=1/2, tau=1.0, Adam/200/0.002, "same
-    hyperparameters for all reported experiments"). `low_memory=False`
-    (full-batch training, matching the paper's actual training regime -
-    see fastopic_adapter.py's docstring for why this is NOT silently
-    auto-enabled above some doc count the way a "helpful" wrapper might).
-  - Metrics: CV coherence - `cv_palmetto_wikipedia` is the paper's actual
-    metric (Palmetto + an unreleased Wikipedia reference corpus - see
-    metrics/palmetto.py); this project also computes `cv_local_corpus`
-    (gensim CoherenceModel against the NYT train corpus) as a clearly
-    DIFFERENTLY-NAMED, non-paper-equivalent number - the two are NEVER
-    merged into one comparison column (see docs/methodological_notes.md
-    #5 and metrics/topic_quality.py). Topic Diversity (proportion-of-
-    unique-words - the SAME formula as this project's generic
-    `topic_diversity`, unlike GloCOM's distinct `glocom_td`), Purity and
-    NMI (sklearn, argmax(theta) on the TEST split vs. test labels).
-  - Seeds: fastopic's own code sets no random seed anywhere; the paper
-    reports significance markers across tables but never states run
-    count/seeds/test method. This protocol's `seeds` is this project's
-    OWN choice for its own runs.
+  - K: paper Table 1/2/Figure 4/Figure 7 all use K=50 as the main setting
+    (Figure 7's own caption: "under 50 topics (K=50)"). Tables 4/5 sweep
+    K in {75,...,200} but ONLY on WoS, as a separate adaptivity study -
+    not this protocol's setting.
+  - Datasets: 20NG (18,846 docs, vocab 5,000), NYT (9,172 docs, vocab
+    10,000) via TopMost's official pre-split artifacts (fastopic_20ng.py/
+    fastopic_nyt.py) - byte-verified against the paper's own Table 7. WoS
+    (10,000 docs, 7 labels, vocab 10,000) has NO official FASTopic/
+    TopMost artifact (verified via TopMost's full git history - never
+    distributed one); fastopic_wos.py reconstructs it from the dataset
+    the paper actually cites (Kowsari et al. 2017, HDLTex, WOS-11967),
+    marked exact_fastopic_artifact=false throughout - see that module's
+    own docstring.
+  - Split: 20NG/NYT ship pre-split train/test files (topmost.BasicDataset)
+    - this protocol does not generate its own split for them. WoS has no
+      official split to preserve (no official artifact exists at all);
+      fastopic_wos.py generates its own stratified 80/20 split at seed=42.
+    Classification fits each model on the TRAIN split only, then infers
+    train/test representations separately (theta for HiCOT, mu for
+    VAE-BM) - never re-fit on test. Clustering is transductive: fit+eval
+    on the full corpus (train+test concatenated), matching FASTopic's own
+    clustering protocol (topmost.BasicTrainer fits/evaluates the same
+    way).
+  - Classification protocol: "we train SVM classifiers with the inferred
+    doc-topic distributions as document features" (Sec 4.3), following
+    Wu et al. [73] = ECRTM. The EXACT rule (kernel/gamma/C, F1 averaging)
+    is not stated in FASTopic's own paper text - recovered instead from
+    TopMost's own shared evaluation code (topmost/eva/classification.py:
+    `SVC(gamma='scale')` - i.e. default kernel='rbf', default C=1.0 - and
+    `f1_score(..., average='macro')`). This protocol uses that exact
+    recovered rule, NOT this repo's other/different SVC(kernel='linear',
+    C=1.0) convention used elsewhere (see docs/methodological_notes.md's
+    own SVM-protocol note, which is a documented default for a DIFFERENT
+    experiment, not a claim about this one).
+  - Clustering assignment: HiCOT uses argmax(theta) (topmost/eva/
+    clustering.py's own `_clustering`); VAE-BM has no genuine theta, so
+    per this project's own established VAE-BM semantics it uses
+    KMeans(mu, n_clusters=K) instead - documented explicitly as a
+    necessary substitution, never called "theta".
+  - Baselines: this protocol's own published_results below are COPIED
+    from the paper's Table 2 (clustering) and Figure 4 (classification) -
+    FASTopic itself, and every other baseline in those tables, is NEVER
+    rerun here. Only VAE-BM and HiCOT are executed.
+  - Hyperparameters: VAE-BM's alpha is locked at 0 (this project's own
+    established finding - see main.tex/docs - that any lexical-branch
+    contribution hurts clustering quality relative to pure-embedding).
+    HiCOT uses its own paper-documented defaults. Both use the same
+    embedder FASTopic itself uses (all-MiniLM-L6-v2, Appendix D) unless
+    a search later finds a better one - see run_fastopic_protocol_search.py.
 """
 
 from __future__ import annotations
@@ -68,6 +68,8 @@ from vaebm_benchmark.protocols.base import (
     SplitSpec,
 )
 
+K = 50
+
 
 class FASTopicProtocol(BaselineProtocol):
     name = "fastopic"
@@ -81,211 +83,202 @@ class FASTopicProtocol(BaselineProtocol):
 
     datasets = [
         DatasetSpec(
-            id="nyt",
+            id="fastopic_20ng",
+            name="20NG, via topmost's official mirror",
+            source_url="https://raw.githubusercontent.com/BobXWu/TopMost/master/data/20NG.zip",
+            source_repository="https://github.com/BobXWu/TopMost",
+            num_docs_expected=18846,
+            num_classes=20,
+            notes="Pre-split train (11,314) / test (7,532) files, vocab_size=5000 - verified byte-identical to paper Table 7.",
+        ),
+        DatasetSpec(
+            id="fastopic_nyt",
             name="NYT (New York Times), via topmost's official mirror",
             source_url="https://raw.githubusercontent.com/BobXWu/TopMost/master/data/NYT.zip",
             source_repository="https://github.com/BobXWu/TopMost",
             num_docs_expected=9172,
             num_classes=12,
-            notes="Pre-split train (8,254) / test (918) files, vocab_size=10000, shipped by topmost's own download_dataset('NYT').",
+            notes="Pre-split train (8,254) / test (918) files, vocab_size=10000.",
+        ),
+        DatasetSpec(
+            id="fastopic_wos_reconstructed",
+            name="WoS (Web of Science), RECONSTRUCTED - no official artifact exists",
+            source_url="https://data.mendeley.com/datasets/9rw3vkcfy4/2",
+            source_repository="https://github.com/kk7nc/HDLTex",
+            num_docs_expected=10000,
+            num_classes=7,
+            notes="exact_fastopic_artifact=False - see fastopic_wos.py's own module docstring for full provenance.",
         ),
     ]
     split_strategy = SplitSpec(
-        strategy="predefined_train_test",
-        description="Ships pre-split train/test files; FASTopic trains on train_texts only, "
-        "infers held-out theta on test_texts via model.transform() for clustering metrics.",
+        strategy="predefined_train_test (20NG/NYT) / generated_stratified_80_20_seed42 (WoS)",
+        description="20NG/NYT ship pre-split train/test files; FASTopic trains on train_texts only, "
+        "infers held-out theta on test_texts via model.transform() for clustering metrics. WoS has no "
+        "official artifact to ship a split, so this protocol generates its own stratified 80/20 split "
+        "(seed=42) - documented explicitly as this project's own choice, not FASTopic's.",
     )
-    topic_count = {"nyt": 50}
+    topic_count = {"fastopic_20ng": K, "fastopic_nyt": K, "fastopic_wos_reconstructed": K}
     metric_specs = [
-        MetricSpec(name="cv_palmetto_wikipedia", kind="topic", top_n=20),
-        MetricSpec(name="cv_local_corpus", kind="topic", top_n=20),
-        MetricSpec(name="topic_diversity", kind="topic", top_n=20),
         MetricSpec(name="purity", kind="clustering"),
         MetricSpec(name="nmi", kind="clustering"),
     ]
     seeds = [42]
 
+    # Published reference rows - COPIED from the paper, never rerun here.
     published_results = [
-        PublishedResult(dataset_id="nyt", metric="cv_palmetto_wikipedia", value=0.437,
-                         source="Table 1, FASTopic row, NYT K=50 (Wu et al., NeurIPS 2024) - "
-                                "uses an unreleased Wikipedia reference corpus; see metrics/palmetto.py"),
-        PublishedResult(dataset_id="nyt", metric="topic_diversity", value=0.999,
-                         source="Table 1, FASTopic row, NYT K=50 (Wu et al., NeurIPS 2024)"),
-        PublishedResult(dataset_id="nyt", metric="purity", value=0.662,
-                         source="Table 2, FASTopic row, NYT K=50 (Wu et al., NeurIPS 2024)"),
-        PublishedResult(dataset_id="nyt", metric="nmi", value=0.369,
-                         source="Table 2, FASTopic row, NYT K=50 (Wu et al., NeurIPS 2024)"),
-        # cv_local_corpus has no published counterpart - it is not the paper's metric (see module docstring).
+        # Table 2 (clustering, Purity/NMI), K=50
+        PublishedResult(dataset_id="fastopic_20ng", metric="purity", value=0.577, source="Table 2, FASTopic row, 20NG"),
+        PublishedResult(dataset_id="fastopic_20ng", metric="nmi", value=0.525, source="Table 2, FASTopic row, 20NG"),
+        PublishedResult(dataset_id="fastopic_nyt", metric="purity", value=0.662, source="Table 2, FASTopic row, NYT"),
+        PublishedResult(dataset_id="fastopic_nyt", metric="nmi", value=0.369, source="Table 2, FASTopic row, NYT"),
+        PublishedResult(dataset_id="fastopic_wos_reconstructed", metric="purity", value=0.672, source="Table 2, FASTopic row, WoS"),
+        PublishedResult(dataset_id="fastopic_wos_reconstructed", metric="nmi", value=0.365, source="Table 2, FASTopic row, WoS"),
+        # Figure 4 (classification, Accuracy/F1)
+        PublishedResult(dataset_id="fastopic_20ng", metric="accuracy", value=0.604, source="Figure 4, FASTopic row, 20NG"),
+        PublishedResult(dataset_id="fastopic_20ng", metric="f1", value=0.593, source="Figure 4, FASTopic row, 20NG"),
+        PublishedResult(dataset_id="fastopic_nyt", metric="accuracy", value=0.754, source="Figure 4, FASTopic row, NYT"),
+        PublishedResult(dataset_id="fastopic_nyt", metric="f1", value=0.596, source="Figure 4, FASTopic row, NYT"),
+        PublishedResult(dataset_id="fastopic_wos_reconstructed", metric="accuracy", value=0.739, source="Figure 4, FASTopic row, WoS"),
+        PublishedResult(dataset_id="fastopic_wos_reconstructed", metric="f1", value=0.703, source="Figure 4, FASTopic row, WoS"),
     ]
 
     def __init__(self, smoke_test: bool = True) -> None:
         self.smoke_test = smoke_test
         self.mode = "smoke" if smoke_test else "full"
-        # Paper default is 200 epochs, full-batch on an A6000 GPU.
-        # Reduced for a CPU smoke test per this project's own instructions
-        # ("test only small experiments") - documented, not silent;
-        # verify() surfaces this as a DIFFERENCE.
-        self.epochs = 20 if smoke_test else 200
+        # Paper default is 200 epochs, full-batch. Reduced for a smoke
+        # test - documented, not silent (verify() surfaces this).
+        self.epochs_vaebm = 5 if smoke_test else 50
+        self.epochs_hicot = 5 if smoke_test else 200
 
-    def _require_nyt(self, dataset_id: str) -> None:
-        if dataset_id != "nyt":
-            raise KeyError(f"FASTopicProtocol only supports 'nyt' currently, got '{dataset_id}'")
+    def _dataset_loader(self, dataset_id: str):
+        if dataset_id == "fastopic_20ng":
+            from vaebm_benchmark.datasets.definitions.fastopic_20ng import TwentyNGFASTopicDataset
+            return TwentyNGFASTopicDataset()
+        elif dataset_id == "fastopic_nyt":
+            from vaebm_benchmark.datasets.definitions.fastopic_nyt import NYTDataset
+            return NYTDataset()
+        elif dataset_id == "fastopic_wos_reconstructed":
+            from vaebm_benchmark.datasets.definitions.fastopic_wos import WoSReconstructedDataset
+            return WoSReconstructedDataset()
+        raise KeyError(f"FASTopicProtocol supports fastopic_20ng/fastopic_nyt/fastopic_wos_reconstructed, got '{dataset_id}'")
+
+    def _load(self, dataset_id: str):
+        loader = self._dataset_loader(dataset_id)
+        if dataset_id == "fastopic_wos_reconstructed":
+            return loader.load(test_p=0.2, seed=42)
+        return loader.load()
 
     def prepare_dataset(self, dataset_id: str) -> list[str]:
-        self._require_nyt(dataset_id)
-        from vaebm_benchmark.datasets.definitions.fastopic_nyt import NYTDataset
-
-        return NYTDataset().load().train_texts
+        return self._load(dataset_id).train_texts
 
     def prepare_eval_documents(self, dataset_id: str) -> list[str]:
-        self._require_nyt(dataset_id)
-        from vaebm_benchmark.datasets.definitions.fastopic_nyt import NYTDataset
-
-        return NYTDataset().load().test_texts
+        return self._load(dataset_id).test_texts
 
     def prepare_labels(self, dataset_id: str):
-        self._require_nyt(dataset_id)
-        from vaebm_benchmark.datasets.definitions.fastopic_nyt import NYTDataset
+        return self._load(dataset_id).test_labels
 
-        return NYTDataset().load().test_labels
-
-    def artifact_checksum(self, dataset_id: str) -> str:
-        self._require_nyt(dataset_id)
-        from vaebm_benchmark.datasets.definitions.fastopic_nyt import EXPECTED_SHA256
-
-        return "|".join(f"{name}:{digest}" for name, digest in sorted(EXPECTED_SHA256.items()))
-
-    def preprocessing_version(self, dataset_id: str) -> str:
-        self._require_nyt(dataset_id)
-        return "released_artifact_train_bow_v1"  # bypasses topmost.Preprocess entirely - see build_baseline()
+    def prepare_all_documents_and_labels(self, dataset_id: str):
+        """Transductive clustering view: full corpus (train+test) and its
+        aligned labels, in the same concatenation order both times."""
+        bundle = self._load(dataset_id)
+        return (
+            list(bundle.train_texts) + list(bundle.test_texts),
+            list(bundle.train_labels) + list(bundle.test_labels),
+        )
 
     def vocabulary_for(self, dataset_id: str) -> list[str]:
-        self._require_nyt(dataset_id)
-        from vaebm_benchmark.datasets.definitions.fastopic_nyt import NYTDataset
+        return self._load(dataset_id).vocab
 
-        return NYTDataset().load().vocab
+    def artifact_checksum(self, dataset_id: str) -> str:
+        loader = self._dataset_loader(dataset_id)
+        if hasattr(loader, "verify"):
+            ok, problems = loader.verify()
+            return "verified" if ok else f"unverified: {problems}"
+        return "n/a"
 
-    def build_baseline(self, dataset_id: str, seed: int):
-        import scipy.sparse as sp
+    def preprocessing_version(self, dataset_id: str) -> str:
+        if dataset_id == "fastopic_wos_reconstructed":
+            return "wos_reconstructed_topmost_5step_v1_mintrm65"
+        return "topmost_official_artifact_v1"
 
-        from vaebm_benchmark.datasets.definitions.fastopic_nyt import NYTDataset
-        from vaebm_benchmark.models.fastopic_adapter import FASTopicAdapter
-
-        bundle = NYTDataset().load()
-        return FASTopicAdapter(
-            num_topics=self.topic_count[dataset_id],
-            num_top_words=20,  # matches this protocol's metric top_n (see metric_specs)
-            doc_embed_model="all-MiniLM-L6-v2",
-            epochs=self.epochs,
-            learning_rate=0.002,
-            DT_alpha=3.0,
-            TW_alpha=2.0,
-            theta_temp=1.0,
-            low_memory=False,
-            # Reuse the released train_bow.npz/vocab.txt directly instead
-            # of re-tokenizing train_texts via topmost.Preprocess - see
-            # models/fastopic_adapter.py::_ReleasedArtifactPreprocess and
-            # this module's own docstring.
-            released_train_bow=sp.csr_matrix(bundle.train_bow),
-            released_vocab=bundle.vocab,
-        )
-
-    def vaebm_variants(self) -> list[str]:
-        return ["protocol_faithful", "stability_adjusted"]
-
-    def build_vaebm(self, dataset_id: str, seed: int, variant: str = "stability_adjusted"):
-        from vaebm_benchmark.datasets.definitions.fastopic_nyt import NYTDataset
+    def build_vaebm(self, dataset_id: str, seed: int, config: dict | None = None):
         from vaebm_benchmark.models.vaebm_adapter import VAEBMAdapter
 
-        if variant not in self.vaebm_variants():
-            raise ValueError(f"Unknown VAE-BM variant '{variant}'; available: {self.vaebm_variants()}")
-
-        # protocol_faithful: the AS-SUPPLIED notebook default (lr=1e-2).
-        # Confirmed by direct diagnostic (docs/methodological_notes.md #8)
-        # to diverge to inf/NaN within a couple of epochs at this vocab
-        # scale (10,000 words) - this is EXPECTED and recorded as such,
-        # never hidden. stability_adjusted: lr=1e-3, which trains stably;
-        # this is a documented hyperparameter substitution, not a change
-        # to VAE-BM's architecture/loss, and is never presented as if it
-        # were the original formulation - see evaluation/runner.py's
-        # `variant` field in every persisted run.
-        lr = 1e-2 if variant == "protocol_faithful" else 1e-3
-
-        bundle = NYTDataset().load()
+        vocab = self.vocabulary_for(dataset_id)
+        cfg = {
+            "alpha": 0.0,
+            "lr": 1e-3,
+            "units": 50,
+            "normalize_mu": False,
+            "embedder": "all-MiniLM-L6-v2",  # matches FASTopic's own doc_embed_model, Appendix D
+            "freeze_embedding_branch": False,
+        }
+        if config:
+            cfg.update(config)
         return VAEBMAdapter(
             n_clusters=self.topic_count[dataset_id],
-            voc_size=len(bundle.vocab),
-            units=50,
-            epochs=self.epochs,
-            batch_size=128,
-            lr=lr,
+            voc_size=len(vocab),
+            vocabulary=vocab,
             random_state=seed,
-            vectorizer_type="tfidf",
-            embedder="all-MiniLM-L6-v2",  # matches FASTopic's own doc_embed_model
-            dim=(1500, 1000, 500),
-            dim_emb=(368,),
-            alpha=0.99,
-            top_words_mode="energy",
-            vocabulary=bundle.vocab,  # exact same vocab.txt as the FASTopic baseline, exact-count tokenizer (see vaebm.py)
+            alpha=cfg["alpha"],
+            lr=cfg["lr"],
+            units=cfg["units"],
+            epochs=self.epochs_vaebm,
+            normalize_mu=cfg["normalize_mu"],
+            embedder=cfg["embedder"],
+            freeze_embedding_branch=cfg["freeze_embedding_branch"],
+            batch_size=128,
+            verbose=0,
         )
+
+    def build_hicot(self, dataset_id: str, seed: int, config: dict | None = None):
+        from vaebm_benchmark.models.hicot_adapter import HiCOTAdapter
+
+        vocab = self.vocabulary_for(dataset_id)
+        cfg = {"lr": 0.002, "weight_loss_ECR": 40.0, "weight_loss_DT": 250.0, "en_units": 200, "max_fit_seconds": None}
+        if config:
+            cfg.update(config)
+        return HiCOTAdapter(
+            n_clusters=self.topic_count[dataset_id],
+            voc_size=len(vocab),
+            vocabulary=vocab,
+            random_state=seed,
+            lr=cfg["lr"],
+            epochs=self.epochs_hicot,
+            weight_loss_ECR=cfg["weight_loss_ECR"],
+            weight_loss_DT=cfg["weight_loss_DT"],
+            en_units=cfg["en_units"],
+            max_clusters=self.topic_count[dataset_id],
+            max_fit_seconds=cfg["max_fit_seconds"],
+        )
+
+    def build_model(self, model_name: str, dataset_id: str, seed: int, config: dict | None = None):
+        if model_name == "vaebm":
+            return self.build_vaebm(dataset_id, seed, config)
+        elif model_name == "hicot":
+            return self.build_hicot(dataset_id, seed, config)
+        raise KeyError(f"FASTopicProtocol runs vaebm/hicot only, got '{model_name}'")
 
     def checks(self) -> list[ProtocolCheck]:
-        from vaebm_benchmark.datasets.definitions.fastopic_nyt import NYTDataset
-        from vaebm_benchmark.metrics.palmetto import palmetto_available
-
-        checksum_ok, checksum_problems = NYTDataset().verify()
-        checksum_status = MatchStatus.MATCH if checksum_ok else MatchStatus.DIFFERENCE
-        checksum_note = (
-            "every file's SHA256 matches EXPECTED_SHA256, pinned by this project's own first download "
-            "(no independent third-party hash exists for NYT.zip specifically - see fastopic_nyt.py)"
-            if checksum_ok
-            else "; ".join(checksum_problems) or "not yet downloaded - run prepare_dataset() first"
-        )
-        palmetto_status = MatchStatus.MATCH if palmetto_available() else MatchStatus.UNKNOWN
-        palmetto_note = (
-            "tools/palmetto/palmetto.jar + wiki_data/wikipedia_bd found - real Palmetto C_V will be computed"
-            if palmetto_available()
-            else "tools/palmetto/{palmetto.jar,wiki_data/wikipedia_bd} not present - cv_palmetto_wikipedia will be "
-                 "recorded as unavailable, never silently replaced by cv_local_corpus"
-        )
-
         return [
-            ProtocolCheck("dataset", self.datasets[0].source_url, MatchStatus.MATCH,
-                          "fetched via topmost's own download_dataset('NYT'), the same mirror the FASTopic ecosystem uses"),
-            ProtocolCheck("checksum", "per-file SHA256 vs. EXPECTED_SHA256 (fastopic_nyt.py)", checksum_status,
-                          checksum_note),
-            ProtocolCheck("upstream_commit", self.upstream_commit, MatchStatus.MATCH,
-                          "pinned fastopic==1.0.1 package commit, verified against PyPI/GitHub"),
-            ProtocolCheck("preprocessing", "released train_bow.npz/vocab.txt injected directly (no re-tokenization)",
-                          MatchStatus.MATCH,
-                          "bypasses topmost.Preprocess entirely via _ReleasedArtifactPreprocess - byte-identical to the official artifact by construction"),
-            ProtocolCheck("vocabulary", f"{len(self.vocabulary_for('nyt'))}-word vocab.txt from the official NYT.zip artifact",
-                          MatchStatus.MATCH,
-                          "VAE-BM's vectorizer is pinned to this exact vocab list AND the same whitespace-split "
-                          "tokenization (models/vaebm.py) - counts are provably identical, not assumed equivalent"),
-            ProtocolCheck("K", f"{self.topic_count['nyt']}", MatchStatus.MATCH, "paper's Table 1/2 primary results use K=50"),
-            ProtocolCheck("split_strategy", self.split_strategy.strategy, MatchStatus.MATCH,
-                          "pre-split train/test files, as shipped; confirmed against topmost's own reference "
-                          "FASTopicTrainer (fits train_texts, evaluates held-out test_texts for clustering)"),
-            ProtocolCheck("seeds", f"{self.seeds}", MatchStatus.UNKNOWN,
-                          "official repo sets no seed; paper reports significance markers with undisclosed run count/seed/test method"),
-            ProtocolCheck("metric:cv_palmetto_wikipedia", "metrics/palmetto.py::palmetto_cv()", palmetto_status, palmetto_note),
-            ProtocolCheck("metric:cv_local_corpus", "gensim CoherenceModel c_v vs. training corpus", MatchStatus.DIFFERENCE,
-                          "NOT the paper's metric - a separately-named, documented approximation (see module docstring); "
-                          "never compared against the paper's published cv_palmetto_wikipedia number"),
-            ProtocolCheck("metric:topic_diversity", "topic_quality.topic_diversity()", MatchStatus.MATCH,
-                          "same proportion-of-unique-words formula as topmost/eva/topic_diversity.py"),
-            ProtocolCheck("metric:purity", "clustering_quality.purity()", MatchStatus.MATCH,
-                          "same as topmost/eva/clustering.py::purity_score"),
-            ProtocolCheck("metric:nmi", "clustering_quality.nmi()", MatchStatus.MATCH,
-                          "same as sklearn.metrics.normalized_mutual_info_score, same as official repo"),
-            ProtocolCheck("baseline_implementation", "official `fastopic` PyPI package, default hyperparameters",
-                          MatchStatus.MATCH, "verified against paper Appendix D (DT_alpha/TW_alpha/theta_temp/epochs/lr)"),
-            ProtocolCheck("vaebm_implementation", "models/vaebm.py, unmodified architecture/initializers/callbacks",
-                          MatchStatus.MATCH,
-                          "protocol_faithful variant uses the AS-SUPPLIED lr=1e-2; stability_adjusted uses lr=1e-3 - "
-                          "both persisted and labeled, never conflated (see docs/methodological_notes.md #8/#9)"),
+            ProtocolCheck("K", str(K), MatchStatus.MATCH,
+                          "paper Table 1/2/Figure 4/Figure 7 all use K=50 as the main setting"),
+            ProtocolCheck("dataset:fastopic_20ng", self.datasets[0].source_url, MatchStatus.MATCH,
+                          "official topmost mirror, doc/vocab counts verified against paper Table 7"),
+            ProtocolCheck("dataset:fastopic_nyt", self.datasets[1].source_url, MatchStatus.MATCH,
+                          "official topmost mirror, doc/vocab counts verified against paper Table 7"),
+            ProtocolCheck("dataset:fastopic_wos_reconstructed", self.datasets[2].source_url, MatchStatus.DIFFERENCE,
+                          "no official FASTopic/TopMost WoS artifact exists (verified via TopMost's full git "
+                          "history) - reconstructed from the paper's own cited source (Kowsari et al. 2017); "
+                          "exact 11,967->10,000 subsampling procedure is not published anywhere"),
+            ProtocolCheck("classification_svm", "SVC(gamma='scale'), macro-F1", MatchStatus.MATCH,
+                          "recovered from topmost/eva/classification.py::_cls - not stated in the paper's own text"),
+            ProtocolCheck("clustering_assignment", "argmax(theta) [HiCOT] / KMeans(mu) [VAE-BM]", MatchStatus.MATCH,
+                          "argmax(theta) matches topmost/eva/clustering.py::_clustering; VAE-BM has no genuine "
+                          "theta so uses this project's own established KMeans(mu) substitute instead"),
+            ProtocolCheck("baselines_rerun", "none - FASTopic/LDA-Mallet/NMF/BERTopic/etc. are reference rows only",
+                          MatchStatus.MATCH, "published_results copied directly from Table 2/Figure 4, never recomputed"),
             ProtocolCheck("mode", self.mode, MatchStatus.MATCH if not self.smoke_test else MatchStatus.DIFFERENCE,
-                          "smoke mode uses 20 epochs, not the paper's 200 - never described as paper reproduction"
-                          if self.smoke_test else "matches paper default (200 epochs)"),
+                          f"smoke mode uses {self.epochs_vaebm}/{self.epochs_hicot} epochs (vaebm/hicot), "
+                          f"not a paper-scale run" if self.smoke_test else "full-scale run"),
         ]
