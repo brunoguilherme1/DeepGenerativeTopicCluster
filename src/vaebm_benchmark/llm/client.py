@@ -42,11 +42,11 @@ class LLMClient:
         self,
         model_name: str = "mistralai/Mistral-7B-Instruct-v0.3",
         device: str = "auto",
-        quantization: str = "4bit",  # "4bit" | "none"
+        quantization: str = "4bit",  # "4bit" | "8bit" | "none"
         max_new_tokens: int = 64,
     ):
-        if quantization not in ("4bit", "none"):
-            raise ValueError(f"quantization must be '4bit' or 'none', got {quantization!r}")
+        if quantization not in ("4bit", "8bit", "none"):
+            raise ValueError(f"quantization must be '4bit', '8bit' or 'none', got {quantization!r}")
         self.model_name = model_name
         self.device = device
         self.quantization = quantization
@@ -69,21 +69,24 @@ class LLMClient:
             self._tokenizer.pad_token = self._tokenizer.eos_token
 
         model_kwargs: dict = {"device_map": self.device}
-        if self.quantization == "4bit":
+        if self.quantization in ("4bit", "8bit"):
             if not torch.cuda.is_available():
                 raise RuntimeError(
-                    "quantization='4bit' requires a CUDA device (bitsandbytes) - none detected. "
-                    "Pass --quantization none to run in full precision on CPU (very slow for a 7B "
-                    "model) or run on a GPU runtime (e.g. Google Colab)."
+                    f"quantization={self.quantization!r} requires a CUDA device (bitsandbytes) - none "
+                    "detected. Pass --quantization none to run in full precision on CPU (very slow for "
+                    "a 7B model) or run on a GPU runtime (e.g. Google Colab)."
                 )
             from transformers import BitsAndBytesConfig
 
-            model_kwargs["quantization_config"] = BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_compute_dtype=torch.float16,
-                bnb_4bit_quant_type="nf4",
-                bnb_4bit_use_double_quant=True,
-            )
+            if self.quantization == "4bit":
+                model_kwargs["quantization_config"] = BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    bnb_4bit_compute_dtype=torch.float16,
+                    bnb_4bit_quant_type="nf4",
+                    bnb_4bit_use_double_quant=True,
+                )
+            else:
+                model_kwargs["quantization_config"] = BitsAndBytesConfig(load_in_8bit=True)
 
         self._model = AutoModelForCausalLM.from_pretrained(self.model_name, **model_kwargs)
         self._model.eval()

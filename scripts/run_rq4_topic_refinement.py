@@ -161,7 +161,7 @@ def main():
     p.add_argument("--k", type=int, default=50)
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--llm-model", default="mistralai/Mistral-7B-Instruct-v0.3")
-    p.add_argument("--quantization", default="4bit", choices=["4bit", "none"])
+    p.add_argument("--quantization", default="4bit", choices=["4bit", "8bit", "none"])
     p.add_argument("--max-new-tokens", type=int, default=200)
     p.add_argument("--max-docs", type=int, default=None, help="Smoke-test only: truncate each dataset to the first N docs.")
     args = p.parse_args()
