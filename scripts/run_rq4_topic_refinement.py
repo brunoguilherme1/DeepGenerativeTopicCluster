@@ -45,17 +45,20 @@ CHECKPOINT_JSON = RESULTS_DIR / "checkpoint.json"
 LLM_CACHE_JSONL = RESULTS_DIR / "llm_cache.jsonl"
 RUN_LOG = RESULTS_DIR / "run.log"
 
-TOP_N = 10  # words per topic shown to the LLM and used for every metric
+TOP_N = 10  # N in the paper: words per topic shown to the LLM and used for every metric
 
-PROMPT_TEMPLATE = """You are refining a topic model's word list. Below are the top words for one topic, in order of importance.
+# Verbatim Fig. 3 prompt template from arXiv:2403.17706 (topic-words-minus-word
+# framing, per-word Yes/No + 10-alternative-word JSON response format).
+PROMPT_TEMPLATE = """Please analyze the following tasks and provide your answer in the specified format.
 
-Topic words: {words}
+1. Determine the common topic shared by these words: [{topic_words}].
+2. Assess whether the word "{word}" aligns with the same common topic as the words listed above.
 
-One or more of these words may be a semantic "intruder" - a word that does not fit the coherent theme the other words share. Identify at most 2 intruder words and suggest one coherent replacement word for each, a word that fits the theme implied by the remaining words and is not already in the list.
+Respond with:
+- "Yes", if the given word shares the common topic.
+- If "No", suggest 10 single-word alternatives that are commonly used and closely related to this topic. These words should be easily recognizable and distinct from the ones in the provided list.
 
-Respond in exactly this format, one line per intruder (or the single line "NONE" if every word already fits):
-REPLACE <intruder_word> WITH <replacement_word>
-"""
+Format your response in JSON, including the fields "Topic", "Answer", and "Alternative words" (only if the answer is "No")."""
 
 
 def log(msg: str) -> None:
@@ -84,48 +87,103 @@ def cache_key(prompt: str) -> str:
     return hashlib.sha256(prompt.encode()).hexdigest()
 
 
-def parse_refinement(response: str, topic_words: list[str]) -> dict[str, str]:
-    """Returns {intruder_word: replacement_word}, empty if NONE or unparsable."""
-    if "NONE" in response.upper() and "REPLACE" not in response.upper():
-        return {}
-    out = {}
-    for line in response.splitlines():
-        m = re.search(r"REPLACE\s+(\S+)\s+WITH\s+(\S+)", line, re.IGNORECASE)
-        if m:
-            intruder, replacement = m.group(1).strip(".,\"'"), m.group(2).strip(".,\"'")
-            if intruder.lower() in [w.lower() for w in topic_words]:
-                out[intruder] = replacement
-    return out
+def parse_json_response(response: str) -> dict | None:
+    """The paper's prompt asks for a JSON object with Topic/Answer/Alternative words.
+    Mistral-Instruct output isn't guaranteed to be pure JSON, so extract the first
+    {...} block and parse leniently."""
+    match = re.search(r"\{.*\}", response, re.DOTALL)
+    if not match:
+        return None
+    blob = match.group(0)
+    try:
+        return json.loads(blob)
+    except json.JSONDecodeError:
+        # Common LLM JSON slip: trailing commas
+        blob = re.sub(r",\s*([}\]])", r"\1", blob)
+        try:
+            return json.loads(blob)
+        except json.JSONDecodeError:
+            return None
 
 
-def refine_topics(topics: list[list[str]], llm_client, cache: dict, run_stats: dict) -> list[list[str]]:
+def build_vocabulary(tokenized_corpus: list[list[str]], vocab_size: int = 5000) -> list[str]:
+    """V in the paper. Not exposed uniformly by every model adapter, so we define
+    it identically for every backbone as the vocab_size most frequent corpus
+    tokens (same vocab_size passed to CLUSTER_MODEL_BUILDERS) - deterministic,
+    fair across backbones, and documented here as a deviation from any
+    model-internal vocabulary the paper may have assumed."""
+    from collections import Counter
+
+    counts = Counter(w for doc in tokenized_corpus for w in doc)
+    return [w for w, _ in counts.most_common(vocab_size)]
+
+
+def build_word2vec(tokenized_corpus: list[list[str]], seed: int):
+    """Fallback embedding space for Algorithm 1's 'most semantically similar on
+    average to the alternative words' step, used only when none of the LLM's 10
+    suggested alternatives are found in V. The paper does not specify this
+    embedding space; gensim Word2Vec on the same reference corpus is our
+    documented, deterministic choice."""
+    from gensim.models import Word2Vec
+
+    return Word2Vec(sentences=tokenized_corpus, vector_size=100, window=5, min_count=1, seed=seed, workers=1)
+
+
+def pick_replacement(alternatives: list[str], vocabulary: set[str], current_topic: list[str], w2v) -> str | None:
+    for alt in alternatives:
+        if alt.lower() in vocabulary and alt.lower() not in {w.lower() for w in current_topic}:
+            return alt
+    # None of the 10 alternatives are in V: fall back to the V word most similar
+    # on average to the alternatives (paper's own fallback rule), excluding
+    # words already in the topic.
+    valid_alts = [a for a in alternatives if a in w2v.wv]
+    if not valid_alts:
+        return None
+    best_word, best_score = None, -2.0
+    excluded = {w.lower() for w in current_topic}
+    for v_word in vocabulary:
+        if v_word.lower() in excluded or v_word not in w2v.wv:
+            continue
+        score = sum(w2v.wv.similarity(v_word, a) for a in valid_alts) / len(valid_alts)
+        if score > best_score:
+            best_score, best_word = score, v_word
+    return best_word
+
+
+def refine_topics(topics: list[list[str]], vocabulary: list[str], w2v, llm_client, cache: dict, run_stats: dict) -> list[list[str]]:
+    """Algorithm 1: for each topic, iterate words in reverse relevance order
+    (least important first), operating on the evolving refined topic t'_i."""
+    vocab_set = {w.lower() for w in vocabulary}
     refined = []
     for topic_words in topics:
-        words = topic_words[:TOP_N]
-        prompt = PROMPT_TEMPLATE.format(words=", ".join(words))
-        key = cache_key(prompt)
-        if key in cache:
-            response = cache[key]
-            run_stats["cache_hits"] += 1
-        else:
-            result = llm_client.generate(prompt)
-            response = result.text
-            append_cache(key, prompt, response)
-            cache[key] = response
-            run_stats["llm_calls"] += 1
-            run_stats["total_prompt_tokens"] += result.prompt_tokens
-            run_stats["total_completion_tokens"] += result.completion_tokens
+        t_prime = list(topic_words[:TOP_N])
+        for idx in range(len(t_prime) - 1, -1, -1):
+            word = t_prime[idx]
+            remaining = [w for j, w in enumerate(t_prime) if j != idx]
+            prompt = PROMPT_TEMPLATE.format(topic_words=", ".join(remaining), word=word)
+            key = cache_key(prompt)
+            if key in cache:
+                response = cache[key]
+                run_stats["cache_hits"] += 1
+            else:
+                result = llm_client.generate(prompt)
+                response = result.text
+                append_cache(key, prompt, response)
+                cache[key] = response
+                run_stats["llm_calls"] += 1
+                run_stats["total_prompt_tokens"] += result.prompt_tokens
+                run_stats["total_completion_tokens"] += result.completion_tokens
 
-        replacements = parse_refinement(response, words)
-        new_words = [replacements.get(w, w) for w in words]
-        # De-dup while preserving order (a suggested replacement might already be in the list)
-        seen = set()
-        deduped = []
-        for w in new_words:
-            if w.lower() not in seen:
-                seen.add(w.lower())
-                deduped.append(w)
-        refined.append(deduped)
+            parsed = parse_json_response(response)
+            answer = str(parsed.get("Answer", "Yes")).strip().lower() if parsed else "yes"
+            if answer.startswith("no") and parsed:
+                alternatives = parsed.get("Alternative words") or []
+                alternatives = [a for a in alternatives if isinstance(a, str)]
+                replacement = pick_replacement(alternatives, vocab_set, t_prime, w2v)
+                if replacement:
+                    t_prime[idx] = replacement
+            # "yes" (or unparsable response, treated as retain): word stays as-is.
+        refined.append(t_prime)
     return refined
 
 
@@ -206,7 +264,7 @@ def main():
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--llm-model", default="mistralai/Mistral-7B-Instruct-v0.3")
     p.add_argument("--quantization", default="4bit", choices=["4bit", "none"])
-    p.add_argument("--max-new-tokens", type=int, default=64)
+    p.add_argument("--max-new-tokens", type=int, default=200)
     args = p.parse_args()
 
     from vaebm_benchmark.llm.client import LLMClient
@@ -234,7 +292,9 @@ def main():
                 base_metrics = compute_metrics(topics, ref_corpus)
                 cluster_metrics = compute_cluster_metrics(clusters, labels)
 
-                refined_topics = refine_topics(topics, llm_client, cache, run_stats)
+                vocabulary = build_vocabulary(ref_corpus)
+                w2v = build_word2vec(ref_corpus, args.seed)
+                refined_topics = refine_topics(topics, vocabulary, w2v, llm_client, cache, run_stats)
                 llm_metrics = compute_metrics(refined_topics, ref_corpus)
 
                 row.update({
