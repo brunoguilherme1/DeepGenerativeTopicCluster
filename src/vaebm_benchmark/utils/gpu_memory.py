@@ -21,6 +21,7 @@ returns - never raises for a missing framework.
 from __future__ import annotations
 
 import gc
+import sys
 
 
 def release_accelerator_memory() -> None:
@@ -40,9 +41,18 @@ def release_accelerator_memory() -> None:
     except ImportError:
         pass
 
-    try:
+    # Only touch tensorflow if THIS process already chose to import it -
+    # never import it here just to check. A pure-torch process (HiCOT,
+    # FASTopic, GloCOM - none of which use tensorflow at all) that has
+    # already done real GPU work in torch can SIGSEGV the instant
+    # tensorflow's own CUDA init runs afterward in the same process
+    # (verified 2026-09-25 on labuai: this exact unconditional `import
+    # tensorflow` here was crashing every hicot/fastopic cluster-search
+    # trial, silently, right after each fit() - no traceback, since the
+    # crash is a native segfault, not a Python exception). Checking
+    # sys.modules first means this stays a no-op unless tensorflow is
+    # already loaded (e.g. a vaebm run, which already imports it itself).
+    if "tensorflow" in sys.modules:
         import tensorflow as tf
 
         tf.keras.backend.clear_session()
-    except ImportError:
-        pass

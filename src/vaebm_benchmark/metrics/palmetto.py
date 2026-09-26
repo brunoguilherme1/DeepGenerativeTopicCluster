@@ -41,6 +41,11 @@ def palmetto_cv(
     jar: Path = DEFAULT_JAR,
     wiki_index: Path = DEFAULT_WIKI_INDEX,
     top_n: int = 10,
+    timeout: int = 1800,  # was 600 - too tight once >1 Palmetto call runs
+    # concurrently (verified 2026-09-24: 4 parallel GPU processes each
+    # spawning their own Java process against the SAME 6.5GB wiki index
+    # file caused disk-I/O/CPU contention severe enough that several
+    # single-process-fine (~450-650s) calls exceeded 600s and failed).
 ) -> float:
     jar = Path(jar)
     wiki_index = Path(wiki_index)
@@ -59,7 +64,7 @@ def palmetto_cv(
             check=True,
             capture_output=True,
             text=True,
-            timeout=600,
+            timeout=timeout,
         )
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError) as exc:
         raise PalmettoUnavailable(f"Palmetto invocation failed: {exc}") from exc

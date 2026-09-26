@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import os
 import random
+import sys
 
 
 def set_all_seeds(seed: int) -> None:
@@ -28,9 +29,13 @@ def set_all_seeds(seed: int) -> None:
     except Exception:
         pass
 
-    try:
+    # Only touch tensorflow if THIS process already imported it - never
+    # import it here just to seed it. Importing tensorflow after torch has
+    # touched CUDA at all (even just torch.cuda.is_available()/
+    # manual_seed_all, no real model) can SIGSEGV natively on this system
+    # (verified 2026-09-25 on labuai - see utils/gpu_memory.py's own
+    # comment for the fuller writeup of this class of bug).
+    if "tensorflow" in sys.modules:
         import tensorflow as tf
 
         tf.random.set_seed(seed)
-    except Exception:
-        pass
