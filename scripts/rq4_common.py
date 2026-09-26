@@ -113,10 +113,15 @@ def append_result(method: str, model: str, dataset: str, k: int, seed: int,
     PARTIAL_JSON.write_text(json.dumps(all_rows, indent=2, default=str))
 
 
-def build_model_and_assignment(model_name: str, dataset_id: str, seed: int, k: int, top_n_words: int = 10):
+def build_model_and_assignment(model_name: str, dataset_id: str, seed: int, k: int,
+                                top_n_words: int = 10, max_docs: int | None = None):
     """Fit `model_name` on `dataset_id`, return (documents, labels, clusters,
     topics, feature_space). Shared by both experiments so fastopic/hicot/vaebm
-    are built identically (same k, seed, vocab_size) everywhere in RQ4."""
+    are built identically (same k, seed, vocab_size) everywhere in RQ4.
+
+    max_docs (smoke-test only): deterministically truncate to the first
+    max_docs documents before fitting - same truncation for every backbone,
+    so a smoke test still compares them fairly, just on a toy subset."""
     from vaebm_benchmark.datasets.simple_registry import load_dataset
     from vaebm_benchmark.experiment.cluster_runner import CLUSTER_MODEL_BUILDERS
     from vaebm_benchmark.experiment.scientific_models import assignment_source_for_model
@@ -125,6 +130,9 @@ def build_model_and_assignment(model_name: str, dataset_id: str, seed: int, k: i
 
     set_all_seeds(seed)
     documents, labels, num_classes = load_dataset(dataset_id)
+    if max_docs is not None:
+        documents, labels = documents[:max_docs], labels[:max_docs]
+        k = min(k, max(2, len(set(labels))))
     model = CLUSTER_MODEL_BUILDERS[model_name](k, seed, 5000)
     model.fit(documents)
 

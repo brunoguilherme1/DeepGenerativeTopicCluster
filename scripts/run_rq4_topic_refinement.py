@@ -163,6 +163,7 @@ def main():
     p.add_argument("--llm-model", default="mistralai/Mistral-7B-Instruct-v0.3")
     p.add_argument("--quantization", default="4bit", choices=["4bit", "none"])
     p.add_argument("--max-new-tokens", type=int, default=200)
+    p.add_argument("--max-docs", type=int, default=None, help="Smoke-test only: truncate each dataset to the first N docs.")
     args = p.parse_args()
 
     from vaebm_benchmark.llm.client import LLMClient
@@ -188,7 +189,7 @@ def main():
             status, error = "ok", None
             try:
                 documents, labels, clusters, topics, _ = common.build_model_and_assignment(
-                    model_name, dataset_id, args.seed, args.k, top_n_words=TOP_N)
+                    model_name, dataset_id, args.seed, args.k, top_n_words=TOP_N, max_docs=args.max_docs)
                 tokenized_corpus = [d.split() for d in documents]
 
                 base_metrics = compute_topic_metrics(topics, tokenized_corpus)
