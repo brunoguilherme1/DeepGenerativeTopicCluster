@@ -126,11 +126,13 @@ def main():
     p.add_argument("--llm-model", required=True)
     p.add_argument("--quantization", default="4bit", choices=["4bit", "8bit", "none"])
     p.add_argument("--max-new-tokens", type=int, default=200)
+    p.add_argument("--device", default="auto", help="Passed straight to LLMClient (e.g. 'auto' or 'cuda:0').")
     args = p.parse_args()
 
     from vaebm_benchmark.llm.client import LLMClient
 
-    client = LLMClient(model_name=args.llm_model, quantization=args.quantization, max_new_tokens=args.max_new_tokens)
+    client = LLMClient(model_name=args.llm_model, quantization=args.quantization,
+                        max_new_tokens=args.max_new_tokens, device=args.device)
     report = run_gate(client)
 
     print(f"=== Sanity gate: {args.llm_model} ({args.quantization}) ===")
