@@ -310,7 +310,7 @@ def main():
             try:
                 documents, labels, base_clusters, topics, _ = common.build_model_and_assignment(
                     model_name, dataset_id, args.seed, args.k, top_n_words=10, max_docs=args.max_docs)
-                tokenized_corpus = [d.split() for d in documents]
+                tokenized_corpus = [d.lower().split() for d in documents]
                 doc_emb = common.get_doc_embeddings(dataset_id, documents)
 
                 base_topic_words = cluster_top_words(tokenized_corpus, base_clusters)

@@ -113,7 +113,7 @@ def normalize_topic_words(topics: list) -> list[list[str]]:
         for w in topic:
             if isinstance(w, (tuple, list)):
                 w = w[0]
-            words.append(str(w))
+            words.append(str(w).lower())  # lowercase: backbones tokenize/case differently internally
         normalized.append(words)
     return normalized
 
@@ -193,8 +193,19 @@ def compute_full_metric_suite(topics: list[list[str]] | None, tokenized_corpus: 
 
     result: dict = {}
     if topics and len(topics) >= 2:
-        cv, _ = coherence(topics, tokenized_corpus, top_n=10, measure="c_v")
-        npmi, _ = coherence(topics, tokenized_corpus, top_n=10, measure="c_npmi")
+        # gensim's CoherenceModel builds its own Dictionary from `texts` alone
+        # and crashes ("unable to interpret topic as either a list of tokens
+        # or a list of ids") if any single topic's words are ALL absent from
+        # it - which happens in practice since a backbone's internal
+        # vocabulary/tokenization (e.g. HiCOT's) doesn't always fully overlap
+        # with this script's own naive whitespace-split reference corpus.
+        # Appending the topics themselves as extra pseudo-documents guarantees
+        # dictionary coverage for every topic word; with 18k+ real documents
+        # vs. <=50 tiny synthetic ones this is a negligible dilution of real
+        # corpus statistics, applied identically for every backbone.
+        augmented_corpus = tokenized_corpus + topics
+        cv, _ = coherence(topics, augmented_corpus, top_n=10, measure="c_v")
+        npmi, _ = coherence(topics, augmented_corpus, top_n=10, measure="c_npmi")
         result["cv"] = cv
         result["npmi"] = npmi
         result["td"] = topic_diversity(topics, top_n=10)

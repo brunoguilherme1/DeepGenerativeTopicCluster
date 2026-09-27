@@ -174,7 +174,7 @@ def main():
             try:
                 documents, labels, clusters, topics, _ = common.build_model_and_assignment(
                     model_name, dataset_id, args.seed, args.k, top_n_words=TOP_N, max_docs=args.max_docs)
-                tokenized_corpus = [d.split() for d in documents]
+                tokenized_corpus = [d.lower().split() for d in documents]
                 doc_emb = common.get_doc_embeddings(dataset_id, documents)
 
                 # Document assignments are untouched by design in Experiment A -
