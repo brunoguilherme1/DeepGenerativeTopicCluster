@@ -347,8 +347,11 @@ def main():
             common.append_result(METHOD, model_name, dataset_id, args.k, args.seed, args.llm_model,
                                   run_stats, time.perf_counter() - start, status, error,
                                   base_metrics, refined_metrics, extra)
-            done.add(combo_key)
-            common.save_checkpoint(done)
+            if status == "ok":
+                done.add(combo_key)
+                common.save_checkpoint(done)
+            else:
+                common.log(f"NOT marking {combo_key} done - will retry on next run")
 
     common.log(f"=== RQ4-B ({METHOD}) done ===")
 
