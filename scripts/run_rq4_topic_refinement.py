@@ -138,22 +138,6 @@ def refine_topics(topics: list[list[str]], vocabulary: list[str], w2v, llm_clien
     return refined
 
 
-def compute_topic_metrics(topics: list[list[str]], reference_corpus: list[list[str]]) -> dict:
-    from vaebm_benchmark.metrics.topic_quality import coherence, topic_diversity, irbo
-
-    cv, _ = coherence(topics, reference_corpus, top_n=TOP_N, measure="c_v")
-    npmi, _ = coherence(topics, reference_corpus, top_n=TOP_N, measure="c_npmi")
-    td = topic_diversity(topics, top_n=TOP_N)
-    irbo_score = irbo(topics, top_n=TOP_N)
-    return {"cv": cv, "npmi": npmi, "td": td, "irbo": irbo_score}
-
-
-def compute_cluster_reference_metrics(clusters, labels) -> dict:
-    from vaebm_benchmark.metrics.clustering_quality import compute_clustering_metrics
-
-    return compute_clustering_metrics(clusters, labels, ["purity", "nmi"])
-
-
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--models", nargs="+", required=True)
@@ -177,7 +161,7 @@ def main():
 
     for dataset_id in args.datasets:
         for model_name in args.models:
-            combo_key = f"{METHOD}:{model_name}:{dataset_id}"
+            combo_key = common.build_combo_key(METHOD, model_name, dataset_id, args.k, args.seed, args.max_docs)
             if combo_key in done:
                 common.log(f"SKIP {combo_key} (already in checkpoint)")
                 continue
@@ -185,29 +169,37 @@ def main():
             start = time.perf_counter()
             run_stats = common.new_run_stats()
             common.log(f"START {combo_key}")
-            metrics: dict = {}
+            base_metrics, refined_metrics, extra = None, None, {}
             status, error = "ok", None
             try:
                 documents, labels, clusters, topics, _ = common.build_model_and_assignment(
                     model_name, dataset_id, args.seed, args.k, top_n_words=TOP_N, max_docs=args.max_docs)
                 tokenized_corpus = [d.split() for d in documents]
+                doc_emb = common.get_doc_embeddings(dataset_id, documents)
 
-                base_metrics = compute_topic_metrics(topics, tokenized_corpus)
-                cluster_metrics = compute_cluster_reference_metrics(clusters, labels)
+                # Document assignments are untouched by design in Experiment A -
+                # clustering metrics are computed on the SAME `clusters` both
+                # times, as a consistency/sanity check (should come out identical).
+                base_metrics = common.compute_full_metric_suite(topics, tokenized_corpus, clusters, labels, doc_emb)
 
                 vocabulary = build_vocabulary(tokenized_corpus)
                 w2v = build_word2vec(tokenized_corpus, args.seed)
                 refined_topics = refine_topics(topics, vocabulary, w2v, llm_client, cache, run_stats)
-                llm_metrics = compute_topic_metrics(refined_topics, tokenized_corpus)
+                refined_metrics = common.compute_full_metric_suite(refined_topics, tokenized_corpus, clusters, labels, doc_emb)
 
-                metrics = {
-                    "base": base_metrics, "llm": llm_metrics,
-                    "delta": {k_: llm_metrics[k_] - base_metrics[k_] for k_ in base_metrics},
-                    "purity": cluster_metrics["purity"], "nmi": cluster_metrics["nmi"],
-                    "base_topics": topics, "refined_topics": refined_topics,
+                unexpected_cluster_drift = {
+                    k_: (base_metrics.get(k_), refined_metrics.get(k_))
+                    for k_ in common.EXTERNAL_METRIC_KEYS + common.INTERNAL_METRIC_KEYS
+                    if base_metrics.get(k_) != refined_metrics.get(k_)
                 }
-                common.log(f"OK   {combo_key} cv {base_metrics['cv']:.4f}->{llm_metrics['cv']:.4f} "
-                           f"td {base_metrics['td']:.4f}->{llm_metrics['td']:.4f} "
+                if unexpected_cluster_drift:
+                    common.log(f"WARNING {combo_key} clustering metrics changed despite unchanged assignments "
+                               f"(should be impossible - investigate): {unexpected_cluster_drift}")
+                extra = {"base_topics": topics, "refined_topics": refined_topics,
+                         "unexpected_cluster_drift": unexpected_cluster_drift}
+
+                common.log(f"OK   {combo_key} cv {base_metrics['cv']:.4f}->{refined_metrics['cv']:.4f} "
+                           f"td {base_metrics['td']:.4f}->{refined_metrics['td']:.4f} "
                            f"llm_calls={run_stats['llm_calls']} cache_hits={run_stats['cache_hits']}")
             except Exception as exc:  # noqa: BLE001
                 status, error = "error", f"{exc}"
@@ -215,8 +207,9 @@ def main():
                 import traceback
                 traceback.print_exc()
 
-            common.append_result(METHOD, model_name, dataset_id, args.k, args.seed,
-                                  run_stats, time.perf_counter() - start, status, error, metrics)
+            common.append_result(METHOD, model_name, dataset_id, args.k, args.seed, args.llm_model,
+                                  run_stats, time.perf_counter() - start, status, error,
+                                  base_metrics, refined_metrics, extra)
             done.add(combo_key)
             common.save_checkpoint(done)
 

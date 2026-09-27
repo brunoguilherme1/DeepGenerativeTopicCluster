@@ -124,26 +124,6 @@ def numbered_texts(texts: list[str]) -> str:
     return "\n".join(f"{i + 1}. {t[:DOC_CHAR_LIMIT]}" for i, t in enumerate(texts))
 
 
-def get_sbert(_cache: dict = {}):
-    if "model" not in _cache:
-        from sentence_transformers import SentenceTransformer
-        _cache["model"] = SentenceTransformer(SBERT_MODEL_NAME)
-    return _cache["model"]
-
-
-_DOC_EMBED_CACHE: dict = {}
-
-
-def get_doc_embeddings(dataset_id: str, documents: list[str]) -> np.ndarray:
-    """Cached per dataset_id: identical documents recur across every backbone
-    fit on the same dataset_id, so embeddings are computed once and reused -
-    this also guarantees every backbone sees the exact same representation."""
-    if dataset_id not in _DOC_EMBED_CACHE:
-        sbert = get_sbert()
-        _DOC_EMBED_CACHE[dataset_id] = sbert.encode(documents, show_progress_bar=False, normalize_embeddings=True)
-    return _DOC_EMBED_CACHE[dataset_id]
-
-
 def cosine_sim_matrix(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     a = a / (np.linalg.norm(a, axis=-1, keepdims=True) + 1e-12)
     b = b / (np.linalg.norm(b, axis=-1, keepdims=True) + 1e-12)
@@ -180,7 +160,7 @@ def stage2_redundancy_adjudication(coherent_clusters: dict, llm_client, cache, r
     if not ids:
         return {}, {}
     summaries = [coherent_clusters[c]["summary"] for c in ids]
-    sbert = get_sbert()
+    sbert = common.get_sbert()
     emb = sbert.encode(summaries, show_progress_bar=False, normalize_embeddings=True)
     sim = cosine_sim_matrix(emb, emb)
 
@@ -216,7 +196,7 @@ def stage3_label_grounding(group_summary: dict, llm_client, cache, run_stats):
         .strip().strip(".").splitlines()[0][:60]
         for gid in group_ids
     }
-    sbert = get_sbert()
+    sbert = common.get_sbert()
     label_texts = [raw_labels[g] for g in group_ids]
     emb = sbert.encode(label_texts, show_progress_bar=False, normalize_embeddings=True)
     sim = cosine_sim_matrix(emb, emb)
@@ -294,32 +274,6 @@ def cluster_top_words(tokenized_docs: list[list[str]], cluster_ids: list[int], t
     return topics
 
 
-def compute_external_internal_metrics(clusters, labels, doc_emb) -> dict:
-    from vaebm_benchmark.metrics.clustering_quality import compute_clustering_metrics, compute_geometry_metrics
-
-    external_ids = ["acc", "nmi", "ari", "ami", "homogeneity", "completeness", "v_measure", "purity"]
-    geometry_ids = ["silhouette", "davies_bouldin", "calinski_harabasz"]
-    external = compute_clustering_metrics(clusters, labels, external_ids)
-    try:
-        geometry = compute_geometry_metrics(doc_emb, clusters, geometry_ids)
-    except Exception as exc:  # noqa: BLE001
-        geometry = {m: None for m in geometry_ids}
-        geometry["error"] = f"{exc}"
-    return {**external, **geometry}
-
-
-def compute_topic_metrics_if_meaningful(topics: list[list[str]], tokenized_corpus: list[list[str]]) -> dict:
-    from vaebm_benchmark.metrics.topic_quality import coherence, topic_diversity, irbo
-
-    if len(topics) < 2:
-        return {}
-    cv, _ = coherence(topics, tokenized_corpus, top_n=10, measure="c_v")
-    npmi, _ = coherence(topics, tokenized_corpus, top_n=10, measure="c_npmi")
-    td = topic_diversity(topics, top_n=10)
-    irbo_score = irbo(topics, top_n=10)
-    return {"cv": cv, "npmi": npmi, "td": td, "irbo": irbo_score}
-
-
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--models", nargs="+", required=True)
@@ -343,7 +297,7 @@ def main():
 
     for dataset_id in args.datasets:
         for model_name in args.models:
-            combo_key = f"{METHOD}:{model_name}:{dataset_id}"
+            combo_key = common.build_combo_key(METHOD, model_name, dataset_id, args.k, args.seed, args.max_docs)
             if combo_key in done:
                 common.log(f"SKIP {combo_key} (already in checkpoint)")
                 continue
@@ -351,17 +305,16 @@ def main():
             start = time.perf_counter()
             run_stats = common.new_run_stats()
             common.log(f"START {combo_key}")
-            metrics: dict = {}
+            base_metrics, refined_metrics, extra = None, None, {}
             status, error = "ok", None
             try:
                 documents, labels, base_clusters, topics, _ = common.build_model_and_assignment(
                     model_name, dataset_id, args.seed, args.k, top_n_words=10, max_docs=args.max_docs)
                 tokenized_corpus = [d.split() for d in documents]
-                doc_emb = get_doc_embeddings(dataset_id, documents)
+                doc_emb = common.get_doc_embeddings(dataset_id, documents)
 
-                base_metrics = compute_external_internal_metrics(base_clusters, labels, doc_emb)
                 base_topic_words = cluster_top_words(tokenized_corpus, base_clusters)
-                base_metrics.update(compute_topic_metrics_if_meaningful(base_topic_words, tokenized_corpus))
+                base_metrics = common.compute_full_metric_suite(base_topic_words, tokenized_corpus, base_clusters, labels, doc_emb)
 
                 cluster_ids = sorted(set(base_clusters))
                 stage1 = stage1_coherence_verification(cluster_ids, base_clusters, documents, doc_emb, llm_client, cache, run_stats)
@@ -372,23 +325,18 @@ def main():
                 final_labels = stage3_label_grounding(group_summary, llm_client, cache, run_stats)
                 final_clusters, group_index = reassign_discarded_documents(base_clusters, coherent_clusters, cluster_to_group, doc_emb)
 
-                llm_metrics = compute_external_internal_metrics(final_clusters.tolist(), labels, doc_emb)
                 final_topic_words = cluster_top_words(tokenized_corpus, final_clusters.tolist())
-                llm_metrics.update(compute_topic_metrics_if_meaningful(final_topic_words, tokenized_corpus))
+                refined_metrics = common.compute_full_metric_suite(final_topic_words, tokenized_corpus, final_clusters.tolist(), labels, doc_emb)
 
-                delta = {k_: (llm_metrics[k_] - base_metrics[k_])
-                          for k_ in base_metrics if isinstance(base_metrics.get(k_), (int, float)) and isinstance(llm_metrics.get(k_), (int, float))}
-
-                metrics = {
-                    "base": base_metrics, "llm": llm_metrics, "delta": delta,
+                extra = {
                     "n_base_clusters": len(cluster_ids), "n_discarded_incoherent": n_discarded,
                     "n_final_clusters": len(group_index),
                     "final_labels": {str(k_): v for k_, v in final_labels.items()},
                     "group_summaries": {str(k_): v for k_, v in group_summary.items()},
                 }
                 common.log(f"OK   {combo_key} base_clusters={len(cluster_ids)} discarded={n_discarded} "
-                           f"final_clusters={len(group_index)} acc {base_metrics.get('acc'):.4f}->{llm_metrics.get('acc'):.4f} "
-                           f"nmi {base_metrics.get('nmi'):.4f}->{llm_metrics.get('nmi'):.4f} "
+                           f"final_clusters={len(group_index)} acc {base_metrics.get('acc'):.4f}->{refined_metrics.get('acc'):.4f} "
+                           f"nmi {base_metrics.get('nmi'):.4f}->{refined_metrics.get('nmi'):.4f} "
                            f"llm_calls={run_stats['llm_calls']} cache_hits={run_stats['cache_hits']}")
             except Exception as exc:  # noqa: BLE001
                 status, error = "error", f"{exc}"
@@ -396,8 +344,9 @@ def main():
                 import traceback
                 traceback.print_exc()
 
-            common.append_result(METHOD, model_name, dataset_id, args.k, args.seed,
-                                  run_stats, time.perf_counter() - start, status, error, metrics)
+            common.append_result(METHOD, model_name, dataset_id, args.k, args.seed, args.llm_model,
+                                  run_stats, time.perf_counter() - start, status, error,
+                                  base_metrics, refined_metrics, extra)
             done.add(combo_key)
             common.save_checkpoint(done)
 
