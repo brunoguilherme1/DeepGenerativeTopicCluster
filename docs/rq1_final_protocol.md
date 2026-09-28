@@ -47,7 +47,13 @@ applicable) is reported alongside VAE-BM in the MAIN table, not the
 appendix, per the critique finding that this ablation is necessary to
 separate VAE-BM's own contribution from the embedder's.
 
-## Decision rule (hard freeze at 21:30 local time)
+## Decision rule (hard freeze at 22:30 UTC / dgx001 clock, ~= 19:30 America/Sao_Paulo)
+
+Per-combo runtime in the prior research rounds was ~40-120s, so the full
+46-combo sweep (20 seeds x 2 K for each of 20NG/AGNews/SearchSnippets/
+GoogleNews, 6 for IMDB) is expected to finish well inside this window; the
+freeze exists as a safety net against unexpected slow-downs, not because the
+sweep is expected to still be running.
 
 - For any (dataset, K) cell with >=3 finished seeds by the freeze time:
   report mean +/- std, computed only over the seeds that finished.
