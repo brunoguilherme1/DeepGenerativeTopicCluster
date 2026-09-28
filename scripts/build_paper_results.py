@@ -16,6 +16,7 @@ Run from the repo root:
 """
 from __future__ import annotations
 
+import csv
 import json
 from pathlib import Path
 
@@ -39,6 +40,15 @@ def add(experiment, model, dataset, k, seed, metrics, status, error, source_file
 
 def load(name):
     return json.loads((DATA / name).read_text(encoding="utf-8"))
+
+
+def _f(x):
+    """CSV values come in as strings (or already-empty) - '' means the
+    metric wasn't computed for this row (e.g. a cluster-task trial has no
+    accuracy/f1, a classification-task trial has no purity/nmi)."""
+    if x is None or x == "":
+        return None
+    return float(x)
 
 
 # ---------------------------------------------------------------- cluster --
@@ -132,6 +142,55 @@ for _mo in ("fastopic", "hicot", "bertopic"):
         if (DATA / _fname).exists():
             ingest_cluster_final_rows(_fname, _env,
                                        f"{_mo}_cluster_fullmetrics_20260921 ({_mo} x 12 plain datasets, full 11-metric battery, {_env})")
+
+
+# RQ3 (2026-09-28): cross-domain generalization - all 5 models (vaebm,
+# bertopic, fastopic, hicot, lda) evaluated by the SAME held-out cluster
+# protocol on 7 datasets (20ng, bbc_news, m10, stack_overflow, biomedical,
+# tweet, banking77). These 7 dataset ids overlap with the "locked
+# architecture" 12-dataset cluster sweep ingested above (same dataset
+# names, same `labuai` environment for several models e.g. vaebm/lda) -
+# deliberately kept as SEPARATE rows, never merged/overwritten, by giving
+# this ingestion its own distinct `sweep` string below: the dedup step at
+# the bottom of this file keys on (experiment, model, dataset, k,
+# environment, sweep), so a different sweep value is sufficient on its
+# own to keep both bodies of results in the final manifest side by side.
+# Look for `notes` containing "RQ3" (or this sweep name) to tell an RQ3
+# row apart from the generic 12-dataset sweep's row for the same
+# model/dataset.
+def ingest_rq3_cross_domain(fname, environment, sweep):
+    path = REPO_ROOT / fname
+    with open(path, newline="", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    metric_keys = ("cv", "npmi", "td", "irbo", "acc", "nmi", "ari", "ami",
+                   "homogeneity", "completeness", "v_measure", "purity",
+                   "silhouette", "davies_bouldin", "calinski_harabasz")
+    for r in rows:
+        metrics = {m: _f(r.get(m)) for m in metric_keys}
+        k = int(r["k"]) if r.get("k") not in (None, "") else None
+        seed = int(r["seed"]) if r.get("seed") not in (None, "") else 42
+        notes = (f"RQ3 cross-domain generalization (not the 12-dataset locked-architecture "
+                 f"sweep, despite the same dataset id); assignment_source={r.get('assignment_source')}")
+        if r.get("selected_config"):
+            # fastopic/hicot rows here come from a small unsupervised
+            # hyperparameter search (no label/oracle selection) - keep
+            # exactly which config was picked, for provenance.
+            notes += f"; selected_config={r['selected_config']}"
+        add("cluster", r["model"], r["dataset"], k, seed, metrics,
+            r.get("status"), r.get("error"), fname, environment, sweep,
+            "none", notes=notes)
+
+
+# NOTE: results/rq3/rq3_results.csv is not under paper_data/ (unlike every
+# other source ingested in this file) - it's a fresh RQ3-specific results
+# directory at the repo root, not (yet) rsync'd into paper_data/. fname
+# here is repo-root-relative rather than paper_data-relative for that
+# reason; source_file below reflects that as-is, still fully traceable.
+# A concurrent process (scripts/rq3_hicot_completion_rerun.py) may still
+# be updating this CSV's hicot rows on labuai - whatever is on disk at
+# ingestion time is what gets ingested; this script does not wait for it.
+ingest_rq3_cross_domain("results/rq3/rq3_results.csv", "labuai",
+                         "rq3_cross_domain_generalization_20260928")
 
 # ------------------------------------------------------------ classification --
 
@@ -237,6 +296,63 @@ if (DATA / "futurelab_new" / "hicot_classif_stopword_fix_20260921.json").exists(
     ingest_classification_final_rows("futurelab_new/hicot_classif_stopword_fix_20260921.json", "futurelab",
                                       "hicot_classif_stopword_fix_20260921 (hicot x 12 plain datasets, stopword fix, --split random)",
                                       model_filter={"hicot"})
+
+# ------------------------------------------------------------------ rq2 --
+# RQ2 (2026-09-28): FASTopic-protocol representation-quality comparison -
+# VAE-BM and HiCOT run through FASTopic's own exact protocol (K=50,
+# official/reconstructed TopMost artifacts) on FASTopic's 3 named datasets
+# (fastopic_20ng, fastopic_nyt, fastopic_wos_reconstructed), both cluster
+# (Purity/NMI) and classification (Accuracy/F1) tasks - see
+# scripts/run_hicot_vaebm_fastopic_search.py and
+# paper_data/labuai_full_results/RESULTS_SUMMARY.md \S3 for the sweep this
+# is drawn from. Each (dataset, model, task) triple in trials.csv has 3
+# (vaebm: mini_baseline/gte_baseline/gte_frozen) or 2 (hicot: paper_default/
+# wider_units) configs - one is picked per (dataset, model, task) to
+# represent "the" RQ2 result:
+#   - vaebm -> gte_baseline: RESULTS_SUMMARY.md \S3 explicitly names
+#     "VAE-BM's best config (GTE-large embedder)" for this exact table and
+#     notes freeze_embedding_branch=True "consistently hurt VAE-BM in this
+#     sweep" (ruling out gte_frozen); this also matches FASTopic's own
+#     Appendix F recommended embedder choice.
+#   - hicot -> paper_default: no explicit designation for HiCOT exists in
+#     RESULTS_SUMMARY.md \S3 (its table there only reports VAE-BM's
+#     numbers) - paper_default (HiCOT's own documented-default
+#     hyperparameters, see HICOT_GRID in run_hicot_vaebm_fastopic_search.py)
+#     is used here as the analogous "official"/non-swept choice. This pick
+#     is more ambiguous than VAE-BM's and is called out again in each row's
+#     notes field below.
+_RQ2_SELECTED_CONFIG = {"vaebm": "gte_baseline", "hicot": "paper_default"}
+
+
+def ingest_rq2_fastopic_protocol_representation(fname, environment, sweep):
+    path = DATA / fname
+    with open(path, newline="", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    for r in rows:
+        if r["config_name"] != _RQ2_SELECTED_CONFIG.get(r["model"]):
+            continue
+        task = r["task"]  # "cluster" or "classification"
+        if task == "cluster":
+            metrics = {"purity": _f(r.get("purity")), "nmi": _f(r.get("nmi"))}
+        else:
+            metrics = {"accuracy": _f(r.get("accuracy")), "f1": _f(r.get("f1"))}
+        notes = (f"RQ2 FASTopic-protocol representation quality; config={r['config_name']} "
+                 f"selected to represent this (dataset,model,task) out of "
+                 f"{{mini_baseline,gte_baseline,gte_frozen}} (vaebm) / "
+                 f"{{paper_default,wider_units}} (hicot). vaebm's gte_baseline per "
+                 f"paper_data/labuai_full_results/RESULTS_SUMMARY.md \\S3 'best config "
+                 f"(GTE-large embedder)'; hicot's paper_default chosen as the closest analog "
+                 f"(its own documented-default hyperparameters) - no explicit HiCOT "
+                 f"designation was found in RESULTS_SUMMARY.md, so this pick is ours, not "
+                 f"drawn from an existing written decision.")
+        # FASTopic's own protocol fixes K=50 for all 3 of these datasets.
+        add(task, r["model"], r["dataset"], 50, 42, metrics, r["status"], r.get("error"),
+            fname, environment, sweep, "none", notes=notes)
+
+
+ingest_rq2_fastopic_protocol_representation(
+    "labuai_full_results/hicot_vaebm_fastopic_search/trials.csv", "labuai",
+    "rq2_fastopic_protocol_representation_quality_20260922")
 
 # ---------------------------------------------------------------- topic --
 
