@@ -23,10 +23,13 @@ DATASETS_A = ["20ng", "agnews_short", "search_snippets"]
 DATASETS_B = ["20ng", "agnews_short", "search_snippets"]
 
 
-def load_last(fname):
+def load_last(fname, method_prefix):
     """Dedup by (backbone, dataset), keeping the last row with status=ok
     if any exists (matches this project's own "last ok wins" convention),
-    else the last row seen."""
+    else the last row seen. Experiment A and B share the same output
+    filenames (both scripts write to results/rq4_llm/), distinguished
+    only by the "method" column - filtering on it is mandatory, not
+    optional, once both experiments' rows land in the same file."""
     path = RQ4_DIR / fname
     if not path.exists():
         return {}
@@ -34,6 +37,8 @@ def load_last(fname):
     out = {}
     for r in rows:
         if not r.get("backbone") or not r.get("dataset"):
+            continue
+        if not (r.get("method") or "").startswith(method_prefix):
             continue
         key = (r["backbone"], r["dataset"])
         if key not in out or r.get("status") == "ok" or (r.get("base_cv") not in (None, "")):
@@ -49,8 +54,8 @@ def f(x):
 
 
 def main():
-    a = load_last("partial_results.csv")
-    b = load_last("expB_partial_results.csv")
+    a = load_last("partial_results.csv", "2025_topic_refinement")
+    b = load_last("partial_results.csv", "2026_cluster_refinement")
 
     lines = ["=== RQ4 Completion Status (Qwen2.5-7B-Instruct, 4-bit throughout) ===\n"]
     lines.append("Experiment A (topic-word refinement, C_V):")

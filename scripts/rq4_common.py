@@ -140,6 +140,23 @@ def build_model_and_assignment(model_name: str, dataset_id: str, seed: int, k: i
         documents, labels = documents[:max_docs], labels[:max_docs]
         k = min(k, max(2, len(set(labels))))
     model = CLUSTER_MODEL_BUILDERS[model_name](k, seed, 5000)
+    if model_name == "hicot":
+        # CLUSTER_MODEL_BUILDERS["hicot"] (cluster_runner._build_hicot) does
+        # not forward dataset_id, so it always uses HiCOTAdapter's own class
+        # default (weight_loss_DT=250.0, upstream's argparse default) - 25-
+        # 500x outside HiCOT's own documented range ({0.5,0.7,1,2,5,10},
+        # Findings ACL 2025 Appendix G.1/G.2) and the same root cause fixed
+        # in scripts/rq2_hicot_quality_fix.py and scripts/rq3_hicot_dt_fix.py.
+        # Found 2026-09-28 that RQ4 was still using this degenerate default
+        # (base NMI 0.073 on 20ng here vs. 0.291 from RQ3's own fixed config
+        # on the identical dataset). Applying RQ3's small unsupervised-C_V-
+        # selected fix here, ONLY on this RQ4 code path (never touching the
+        # shared build_hicot()/CLUSTER_MODEL_BUILDERS used by the existing
+        # 12-dataset suite, which is untouched and still validated).
+        _hicot_dt_fix = {"20ng": (50.0, 1.0)}  # (ECR, DT), from rq3_results.csv
+        ecr, dt = _hicot_dt_fix.get(dataset_id, (40.0, 2.0))  # paper-range default otherwise
+        model.weight_loss_ECR = ecr
+        model.weight_loss_DT = dt
     model.fit(documents)
 
     assignment_source = assignment_source_for_model(model_name)

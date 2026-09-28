@@ -373,15 +373,15 @@ VAE-BM   & 0.468$\to$0.452 & 0.785$\to$0.778 & missing \\
 \midrule
 \multicolumn{4}{l}{\textit{Experiment B (NMI: base $\to$ refined)}} \\
 FASTopic & 0.269$\to$0.313 & missing & missing \\
-HiCOT    & in progress & missing & missing \\
-VAE-BM   & missing & missing & missing \\
+HiCOT    & 0.073$\to$0.075 & missing & missing \\
+VAE-BM   & in progress & missing & missing \\
 \bottomrule
 \end{tabular}
 \caption{RQ4 results obtained by paper-freeze time. ``missing'' cells are queued but not yet run (single-GPU Colab throughput was the binding constraint); ``in progress'' was mid-run at freeze time. We report this honestly as a partial result rather than hold the paper for full completion.}
 \label{tab:rq4_partial}
 \end{table}
 
-Where complete, Experiment A shows the LLM refinement is a genuinely mixed intervention, not a uniform improvement: it helps FASTopic on AGNews and SearchSnippets (+0.021, +0.014 $C_V$) but slightly hurts it on 20NG ($-0.011$), and slightly hurts both HiCOT and VAE-BM on every backbone/dataset pair completed so far ($-0.008$ to $-0.030$). Experiment B's one completed cell (FASTopic on 20NG) shows a larger effect in the other direction: NMI improves from 0.269 to 0.313 and Accuracy from 0.238 to 0.310 after only 124 LLM calls (fewer than Experiment A's 500, since cluster-level refinement touches far fewer decision points than per-topic word lists). We do not generalize this single cell to other backbones or datasets; the remaining Experiment B cells are the open question this result raises, not yet an answered one.
+Where complete, Experiment A shows the LLM refinement is a genuinely mixed intervention, not a uniform improvement: it helps FASTopic on AGNews and SearchSnippets (+0.021, +0.014 $C_V$) but slightly hurts it on 20NG ($-0.011$), and slightly hurts both HiCOT and VAE-BM on every backbone/dataset pair completed so far ($-0.008$ to $-0.030$). Experiment B's two completed cells (both on 20NG) point the same direction but at very different magnitudes: FASTopic improves substantially (NMI 0.269$\to$0.313, Accuracy 0.238$\to$0.310, 124 LLM calls), while HiCOT improves only marginally (NMI 0.073$\to$0.075, Accuracy 0.093$\to$0.095, 51 LLM calls) from a much lower starting point -- consistent with HiCOT's own severely undertrained 20NG clustering going in (\S\ref{sec:rq3}'s M10/Tweet findings are a separate dataset pair, but the same undertraining pattern). Both use far fewer LLM calls than Experiment A's 500, since cluster-level refinement touches far fewer decision points than per-topic word lists. We do not generalize these two cells to other backbones or datasets; the remaining seven Experiment B cells are the open question this result raises, not yet an answered one.
 
 \section{Discussion}
 \label{sec:discussion}

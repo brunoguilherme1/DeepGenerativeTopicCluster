@@ -15,7 +15,7 @@ Experiment B (cluster/document refinement, NMI/ACC):
   [DONE]    fastopic   x 20ng              nmi 0.2690 -> 0.3128  acc 0.2384 -> 0.3095  (llm_calls=124)
   [MISSING] fastopic   x agnews_short
   [MISSING] fastopic   x search_snippets
-  [MISSING] hicot      x 20ng
+  [DONE]    hicot      x 20ng              nmi 0.0734 -> 0.0749  acc 0.0930 -> 0.0946  (llm_calls=51)
   [MISSING] hicot      x agnews_short
   [MISSING] hicot      x search_snippets
   [MISSING] vaebm      x 20ng
