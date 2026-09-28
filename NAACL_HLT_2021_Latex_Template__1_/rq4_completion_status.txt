@@ -1,0 +1,23 @@
+=== RQ4 Completion Status (Qwen2.5-7B-Instruct, 4-bit throughout) ===
+
+Experiment A (topic-word refinement, C_V):
+  [DONE]    fastopic   x 20ng              cv 0.3807 -> 0.3696  (delta=-0.0112, llm_calls=500)
+  [DONE]    fastopic   x agnews_short      cv 0.6852 -> 0.7066  (delta=+0.0214, llm_calls=500)
+  [DONE]    fastopic   x search_snippets   cv 0.6726 -> 0.6867  (delta=+0.0141, llm_calls=500)
+  [DONE]    hicot      x 20ng              cv 0.5260 -> 0.5182  (delta=-0.0077, llm_calls=500)
+  [DONE]    hicot      x agnews_short      cv 0.8393 -> 0.8094  (delta=-0.0298, llm_calls=500)
+  [MISSING] hicot      x search_snippets
+  [DONE]    vaebm      x 20ng              cv 0.4678 -> 0.4519  (delta=-0.0160, llm_calls=500)
+  [DONE]    vaebm      x agnews_short      cv 0.7849 -> 0.7781  (delta=-0.0068, llm_calls=500)
+  [MISSING] vaebm      x search_snippets
+
+Experiment B (cluster/document refinement, NMI/ACC):
+  [DONE]    fastopic   x 20ng              nmi 0.2690 -> 0.3128  acc 0.2384 -> 0.3095  (llm_calls=124)
+  [MISSING] fastopic   x agnews_short
+  [MISSING] fastopic   x search_snippets
+  [MISSING] hicot      x 20ng
+  [MISSING] hicot      x agnews_short
+  [MISSING] hicot      x search_snippets
+  [MISSING] vaebm      x 20ng
+  [MISSING] vaebm      x agnews_short
+  [MISSING] vaebm      x search_snippets

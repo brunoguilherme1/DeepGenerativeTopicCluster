@@ -1,0 +1,18 @@
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{lccccccc}
+\toprule
+\textbf{Model} & 20NG & Banking77 & BBC News & Biomedical & M10 & StackOverflow & Tweet \\
+\midrule
+LDA & 0.264 & 0.413 & 0.606 & 0.102 & 0.139 & 0.219 & 0.738 \\
+BERTopic & 0.548 & 0.814 & 0.798 & 0.387 & 0.502 & 0.708 & 0.881 \\
+FASTopic & 0.463 & 0.537 & 0.838 & 0.331 & 0.385 & 0.406 & 0.842 \\
+HiCOT & 0.291 & 0.466 & 0.600 & 0.316 & 0.375 & 0.403 & 0.067 \\
+GloCOM & 0.484 & 0.692 & 0.707 & 0.410 & 0.408 & 0.660 & 0.795 \\
+VAE-BM (ours) & 0.557 & 0.808 & 0.877 & 0.417 & 0.545 & 0.791 & 0.877 \\
+\bottomrule
+\end{tabular}
+\caption{RQ3: cross-domain generalization (NMI) across 7 out-of-distribution datasets. HiCOT's tweet result reflects a genuine negative finding: after both a training-budget fix and a dedicated weight\_loss\_DT sensitivity rerun (Appendix~\ref{sec:rq3_dt_ablation}), HiCOT still recovers only 12/89 requested clusters on this dataset, so the undertraining here is not attributable to weight\_loss\_DT alone.}
+\label{tab:rq3_cross_domain}
+\end{table*}

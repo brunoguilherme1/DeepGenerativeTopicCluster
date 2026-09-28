@@ -192,6 +192,34 @@ def ingest_rq3_cross_domain(fname, environment, sweep):
 ingest_rq3_cross_domain("results/rq3/rq3_results.csv", "labuai",
                          "rq3_cross_domain_generalization_20260928")
 
+
+# RQ3 GloCOM addition (2026-09-28): same 7 cross-domain datasets, full
+# 15-metric suite, small paper-grounded epochs search (see
+# scripts/rq3_glocom_add.py). These CSVs have no "model" column (the file
+# is GloCOM-only by construction), so it's injected here.
+def ingest_rq3_glocom(fname, environment, sweep):
+    path = REPO_ROOT / fname
+    if not path.exists():
+        return
+    with open(path, newline="", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    metric_keys = ("cv", "npmi", "td", "irbo", "acc", "nmi", "ari", "ami",
+                   "homogeneity", "completeness", "v_measure", "purity",
+                   "silhouette", "davies_bouldin", "calinski_harabasz")
+    for r in rows:
+        metrics = {m: _f(r.get(m)) for m in metric_keys}
+        k = int(r["k"]) if r.get("k") not in (None, "") else None
+        seed = int(r["seed"]) if r.get("seed") not in (None, "") else 42
+        add("cluster", "glocom", r["dataset"], k, seed, metrics,
+            r.get("status"), r.get("error"), fname, environment, sweep,
+            "none", notes=f"RQ3 GloCOM addition; selected_epochs={r.get('selected_epochs')}")
+
+
+for _rq3_glocom_fname in ("results/rq3_glocom/rq3_glocom_a.csv",
+                          "results/rq3_glocom/rq3_glocom_b.csv",
+                          "results/rq3_glocom/rq3_glocom_results_labuai.csv"):
+    ingest_rq3_glocom(_rq3_glocom_fname, "mixed", "rq3_glocom_addition_20260928")
+
 # ------------------------------------------------------------ classification --
 
 def ingest_classification_final_rows(fname, environment, sweep, model_filter=None):
@@ -354,6 +382,49 @@ ingest_rq2_fastopic_protocol_representation(
     "labuai_full_results/hicot_vaebm_fastopic_search/trials.csv", "labuai",
     "rq2_fastopic_protocol_representation_quality_20260922")
 
+
+# RQ2 corrections (2026-09-28): HiCOT's weight_loss_DT quality fix
+# (rq2_hicot_quality_fix.py), GloCOM addition (rq2_glocom_add.py), and
+# VAE-BM's TRUE locked-config rerun (rq2_vaebm_locked_config.py, replacing
+# the deviating gte_baseline/units=50/unfrozen row selected above - see
+# docs/rq1_final_protocol.md). Ingested AFTER the trials.csv pick above,
+# so "last ok wins" dedup lets these correctly supersede it for
+# (hicot, *) and (vaebm, *) while leaving nothing else disturbed.
+def ingest_rq2_fix_csv(fname, environment, sweep, model_name=None, notes_prefix=""):
+    path = REPO_ROOT / fname
+    if not path.exists():
+        return
+    with open(path, newline="", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    for r in rows:
+        task = r["task"]
+        if task == "cluster":
+            metrics = {"purity": _f(r.get("purity")), "nmi": _f(r.get("nmi")), "cv": _f(r.get("cv"))}
+        else:
+            metrics = {"accuracy": _f(r.get("accuracy")), "f1": _f(r.get("f1"))}
+        model = model_name or r.get("model")
+        notes = notes_prefix
+        if r.get("selected_config"):
+            notes += f" selected_config={r['selected_config']}"
+        if r.get("selected_epochs"):
+            notes += f" selected_epochs={r['selected_epochs']}"
+        add(task, model, r["dataset"], int(r["k"]), int(r.get("seed", 42)), metrics,
+            r.get("status"), r.get("error"), fname, environment, sweep, "none", notes=notes)
+
+
+ingest_rq2_fix_csv("results/rq2_hicot_fix/rq2_hicot_fix_results.csv", "mixed",
+                    "rq2_hicot_quality_fix_20260928", model_name="hicot",
+                    notes_prefix="RQ2 HiCOT weight_loss_DT quality fix (paper-range grid, C_V-selected).")
+ingest_rq2_fix_csv("results/rq2_glocom/rq2_glocom_results.csv", "labuai",
+                    "rq2_glocom_addition_20260928", model_name="glocom",
+                    notes_prefix="RQ2 GloCOM addition.")
+ingest_rq2_fix_csv("results/rq2_vaebm_locked/rq2_vaebm_locked_results.csv", "mixed",
+                    "rq2_vaebm_locked_config_20260928", model_name="vaebm",
+                    notes_prefix="RQ2 VAE-BM TRUE locked config (gte-large, frozen, units=1024, "
+                                 "alpha=0, lambda_relevance=0.1) - supersedes the earlier "
+                                 "gte_baseline (units=50, unfrozen) pick, which deviated from "
+                                 "main.tex's own stated method.")
+
 # ---------------------------------------------------------------- topic --
 
 def ingest_topic_final_rows(fname, environment, sweep):
@@ -368,6 +439,53 @@ def ingest_topic_final_rows(fname, environment, sweep):
 
 ingest_topic_final_rows("futurelab/sbert11_topic_final.json", "futurelab",
                          "sbert11_ecrtm_hicot (11 SBERT embedder variants x 15 datasets x K in {50,100}, ecrtm_hicot protocol, Palmetto/Wikipedia C_V)")
+
+
+# RQ1 FINAL multi-seed rerun (2026-09-28, docs/rq1_final_protocol.md):
+# global lambda_relevance=0.1 (not per-dataset-tuned), disclosed epochs=1,
+# Palmetto-only C_V, multiple seeds. Aggregates into ONE row per
+# (dataset, k) with mean/std over whichever seeds had finished at
+# ingestion time - this script does not wait for the sweep to complete;
+# rerun it after more seeds land to update these rows. A cell with only
+# 1-2 finished seeds is explicitly labeled "single seed"/"n=2" in notes,
+# per the protocol doc's decision rule (never silently presented as a
+# multi-seed mean).
+def ingest_rq1_final_multiseed(glob_pattern, environment, sweep):
+    import glob as _glob
+    metric_keys = ("cv", "purity", "nmi", "td")
+    groups: dict[tuple, list] = {}
+    for fpath in _glob.glob(str(REPO_ROOT / glob_pattern)):
+        try:
+            rows = json.loads(Path(fpath).read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        for r in rows:
+            if r.get("model") != "vaebm" or r.get("status") != "ok":
+                continue
+            groups.setdefault((r["dataset"], r["k"]), []).append(r)
+
+    mean = lambda xs: sum(xs) / len(xs)
+    std = lambda xs: (sum((x - mean(xs)) ** 2 for x in xs) / len(xs)) ** 0.5 if len(xs) > 1 else 0.0
+    for (dataset, k), group_rows in groups.items():
+        metrics = {}
+        for m in metric_keys:
+            vals = [r[m] for r in group_rows if r.get(m) is not None]
+            if not vals:
+                continue
+            metrics[m] = mean(vals)
+            metrics[f"{m}_mean"] = mean(vals)
+            metrics[f"{m}_std"] = std(vals)
+        metrics["n_seeds"] = len(group_rows)
+        seeds_used = sorted(r["seed"] for r in group_rows)
+        label = "single seed" if len(group_rows) == 1 else (f"n={len(group_rows)}" if len(group_rows) == 2 else f"mean+/-std over {len(group_rows)} seeds")
+        notes = (f"RQ1 FINAL (global lambda=0.1, epochs=1 disclosed, Palmetto-only): "
+                 f"{label} ({seeds_used}).")
+        add("topic", "vaebm", dataset, k, None, metrics, "ok", "",
+            glob_pattern, environment, sweep, "none", notes=notes)
+
+
+ingest_rq1_final_multiseed("results/rq1_final_*/experiment_results.json", "futurelab",
+                            "rq1_final_multiseed_global_lambda_20260928")
 
 _VAEBM_TOPIC_SMOKE = [
     ("vaebm", 0.45482458807428267, 0.5030775761434787, 0.4438131996070811, 0.108),

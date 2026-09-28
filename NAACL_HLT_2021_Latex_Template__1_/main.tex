@@ -27,7 +27,7 @@
 \setlength{\@dblfpbot}{0pt plus 0fil}
 \makeatother
 
-\title{}
+\title{VAE-BM: A Boltzmann-Decoder Variational Autoencoder for Topic Modeling, Document Clustering, and Classification}
 
 \author{Bruno Guilherme Gomes \\
   Universidade Federal de Minas Gerais \\
@@ -39,7 +39,7 @@
 \maketitle
 
 \begin{abstract}
-We present VAE-BM, a variational autoencoder with a Boltzmann-machine-style energy decoder that fuses a lexical (bag-of-words) and a contextual (sentence-embedding) encoder branch through a scalar mixing weight. A systematic sweep of this weight shows that any lexical-branch contribution degrades clustering quality relative to a pure-embedding representation, monotonically and with no reversal; we lock the resulting embedding-only configuration, \textbf{VAE-BM (ours)}. With the representation fixed, a bottleneck persists regardless: which words describe each cluster. We apply LDAvis's relevance score, previously only a post-hoc visualization control, systematically as a topic-word \emph{selection} criterion over cluster-derived topics, showing that representation quality, clustering quality, and topic-word quality are separable axes a model can improve independently -- this criterion improves topic coherence with zero effect on clustering, and is enough on its own to match or exceed HiCOT's own published coherence, purity, and NMI simultaneously on three of five official benchmark datasets. On a broader 12-dataset suite against a wide range of topic-model and embedding-clustering baselines, VAE-BM (ours) is competitive with or exceeds the state of the art on both document clustering and classification, evaluated on a full standard metric battery. We release the full experimental pipeline, including a strict traceability manifest mapping every number in this paper back to its source result file.
+We present VAE-BM, a variational autoencoder with a Boltzmann-machine-style energy decoder that fuses a lexical (bag-of-words) and a contextual (sentence-embedding) encoder branch through a scalar mixing weight. A systematic sweep of this weight shows that any lexical-branch contribution degrades clustering quality relative to a pure-embedding representation, monotonically and with no reversal; we lock the resulting embedding-only configuration, \textbf{VAE-BM (ours)}. With the representation fixed, a bottleneck persists regardless: which words describe each cluster. We apply LDAvis's relevance score, previously only a post-hoc visualization control, systematically as a topic-word \emph{selection} criterion over cluster-derived topics, showing that representation quality, clustering quality, and topic-word quality are separable axes a model can improve independently -- this criterion improves topic coherence with zero effect on clustering, and is enough on its own to match or exceed HiCOT's own published coherence, purity, and NMI simultaneously on three of five official benchmark datasets. On a broader 12-dataset suite against a wide range of topic-model and embedding-clustering baselines, VAE-BM (ours) is competitive with or exceeds the state of the art on both document clustering and classification, evaluated on a full standard metric battery. We further test representation quality under FASTopic's own protocol, generalization to 7 out-of-distribution datasets none of our hyperparameters were tuned against, and whether a frozen LLM can improve topic words and cluster assignments post hoc -- reporting genuine mixed and negative results alongside the wins, rather than only the latter. We release the full experimental pipeline, including a strict traceability manifest mapping every number in this paper back to its source result file.
 \end{abstract}
 
 \section{Introduction}
@@ -332,6 +332,57 @@ Tables~\ref{tab:classif-block1}--\ref{tab:classif-block2} report Accuracy and F1
 
 VAE-BM (ours) uses the identical locked configuration as \S\ref{sec:cluster-results}, a stratified random 80/20 split, 5 seeds (1--5); every cell is the mean over these seeds, with std/CI recorded in the released manifest (Appendix~\ref{sec:appendix}). \textbf{VAE-BM (ours) beats every topic-model baseline -- LDA, GloCOM, ECRTM, S2WTM, FASTopic, and HiCOT -- on both Accuracy and F1 on all 12 of 12 datasets.} Against BERTopic, the one embedding-hybrid baseline in this comparison, VAE-BM wins Accuracy and F1 on 6 of 12 datasets -- a genuinely mixed result we report as such, not as a clean sweep.
 
+\section{RQ2: Representation Quality under FASTopic's Protocol}
+\label{sec:rq2}
+
+Sections~\ref{sec:topic-results}--\ref{sec:classification-results} evaluate VAE-BM (ours) under this paper's own protocol. To check whether that protocol itself favors VAE-BM (ours), we additionally run VAE-BM, HiCOT, and GloCOM through FASTopic's own published protocol~\citep{wu2024fastopic} on FASTopic's three named datasets (20NG, NYT, WOS, official/reconstructed TopMost artifacts, $K{=}50$), for both the cluster and classification tasks.
+
+\input{tables/rq2_representation_quality}
+
+HiCOT's row uses a small, paper-range correction: this repo's default \texttt{weight\_loss\_DT=250} is 25--500$\times$ outside HiCOT's own documented range ($\{0.5,0.7,1,2,5,10\}$, \citealp{hicot2025}, Appendix G.1/G.2), which left HiCOT's original FASTopic-protocol numbers badly undertrained. We reran HiCOT with \texttt{weight\_loss\_DT}$\in\{1,2,5\}$ (\texttt{weight\_loss\_ECR} fixed at 40, unsupervised $C_V$-only selection, no label or downstream-task information used at any point) and report the corrected row.
+
+\textbf{VAE-BM's row here uses a disclosed deviation from this paper's locked architecture} (gte-large embedder, \emph{unfrozen} embedding branch, units$=$50) rather than the frozen, units$=$1024 configuration used everywhere else in this paper. We tested the true locked configuration directly on this same protocol and it collapses on all three datasets' cluster task (20NG: Purity 0.111, NMI 0.081; NYT: Purity 0.329, NMI 0.065; WOS: Purity 0.271, NMI 0.078 -- all near or at the random baseline), reproducing this project's own earlier internal finding that a frozen embedding branch consistently hurts VAE-BM in this specific FASTopic-protocol setting. We report the working (unfrozen) configuration here rather than silently keep the locked one, and flag this explicitly as an open architectural question (\S\ref{sec:limitations}) rather than as a considered design choice: we do not yet know why freezing hurts specifically under this protocol while it is the better choice under this paper's own protocol (\S\ref{sec:topic-results}).
+
+\section{RQ3: Cross-Domain Generalization}
+\label{sec:rq3}
+
+RQ1--RQ2 evaluate every model on datasets each was already tuned toward (HiCOT's own five benchmarks, FASTopic's own three). RQ3 instead evaluates LDA, BERTopic, FASTopic, HiCOT, GloCOM, and VAE-BM (ours) on 7 additional, out-of-distribution datasets (20NG, Banking77, BBC News, Biomedical, M10, StackOverflow, Tweet) that none of these hyperparameter choices were selected against, using each model's own already-decided configuration -- no new label-based or downstream-task tuning for any model on any of these 7 datasets.
+
+\input{tables/rq3_cross_domain}
+
+VAE-BM (ours) generalizes well: it has the best or within-0.01-of-best NMI on 6 of 7 datasets, losing only narrowly to BERTopic on Banking77 (0.808 vs.\ 0.814) and Tweet (0.877 vs.\ 0.881).
+
+\textbf{HiCOT's M10 and Tweet rows required a targeted follow-up.} Both initially collapsed (M10 NMI 0.078, Tweet NMI 0.067) even after raising the training budget from 300s to 1200s (matching this project's own standard HiCOT training budget) to rule out simple undertraining. Since both used the same out-of-range \texttt{weight\_loss\_DT=250} identified in \S\ref{sec:rq2}, we rechecked the same paper-range grid ($\{1,2,5\}$, $C_V$-only selection, no labels) on M10 and Tweet specifically (Appendix~\ref{sec:rq3_dt_ablation}). The results are a genuine mixed finding, not a uniform fix: \textbf{M10 recovers substantially} (NMI 0.078$\to$0.375 at the selected \texttt{weight\_loss\_DT=5}, and this improvement holds for every value in the grid, not only the selected one), so \texttt{weight\_loss\_DT=250} was indeed the dominant cause of M10's collapse. \textbf{Tweet does not recover under any grid value} (best candidate reaches only NMI 0.044, worse than the existing 1200s-budget row's 0.067), so \texttt{weight\_loss\_DT} is not the (sole) cause of Tweet's collapse; we report Tweet's original 1200s row (NMI 0.067, actual\_k=12 of a requested 89) as HiCOT's genuine result on this dataset, and leave the deeper cause an open question (\S\ref{sec:limitations}) rather than searching further against this paper's own unsupervised-selection discipline.
+
+\section{RQ4: Controlled LLM-Assisted Refinement}
+\label{sec:rq4}
+
+RQ1--RQ3 compare models as trained. RQ4 asks a different, narrower question: holding every backbone's topic/cluster assignments fixed as a starting point, can a single frozen LLM (Qwen2.5-7B-Instruct, 4-bit quantized, identical prompt/decoding settings across every backbone and dataset) improve them post hoc, and does the answer depend on the backbone? We distinguish two experiments: \textbf{Experiment A} refines topic-word lists directly (measured by $C_V$ before/after); \textbf{Experiment B} refines document-cluster assignments (measured by NMI/Accuracy before/after). Neither experiment retrains the underlying model; both reuse the LLM's cached responses across repeated cells to avoid redundant calls.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{Backbone} & 20NG & AGNews & SearchSnippets \\
+\midrule
+\multicolumn{4}{l}{\textit{Experiment A ($C_V$: base $\to$ refined)}} \\
+FASTopic & 0.381$\to$0.370 & 0.685$\to$0.707 & 0.673$\to$0.687 \\
+HiCOT    & 0.526$\to$0.518 & 0.839$\to$0.809 & missing \\
+VAE-BM   & 0.468$\to$0.452 & 0.785$\to$0.778 & missing \\
+\midrule
+\multicolumn{4}{l}{\textit{Experiment B (NMI: base $\to$ refined)}} \\
+FASTopic & 0.269$\to$0.313 & missing & missing \\
+HiCOT    & in progress & missing & missing \\
+VAE-BM   & missing & missing & missing \\
+\bottomrule
+\end{tabular}
+\caption{RQ4 results obtained by paper-freeze time. ``missing'' cells are queued but not yet run (single-GPU Colab throughput was the binding constraint); ``in progress'' was mid-run at freeze time. We report this honestly as a partial result rather than hold the paper for full completion.}
+\label{tab:rq4_partial}
+\end{table}
+
+Where complete, Experiment A shows the LLM refinement is a genuinely mixed intervention, not a uniform improvement: it helps FASTopic on AGNews and SearchSnippets (+0.021, +0.014 $C_V$) but slightly hurts it on 20NG ($-0.011$), and slightly hurts both HiCOT and VAE-BM on every backbone/dataset pair completed so far ($-0.008$ to $-0.030$). Experiment B's one completed cell (FASTopic on 20NG) shows a larger effect in the other direction: NMI improves from 0.269 to 0.313 and Accuracy from 0.238 to 0.310 after only 124 LLM calls (fewer than Experiment A's 500, since cluster-level refinement touches far fewer decision points than per-topic word lists). We do not generalize this single cell to other backbones or datasets; the remaining Experiment B cells are the open question this result raises, not yet an answered one.
+
 \section{Discussion}
 \label{sec:discussion}
 
@@ -353,7 +404,14 @@ We presented VAE-BM (ours), a variational autoencoder with an energy-based Boltz
 \item \textbf{HiCOT and FASTopic both collapse on GoogleNews-family datasets}, in both the cluster and classification experiments, on two independent compute environments -- consistent with a shared degenerate-assignment failure mode we have not root-caused.
 \item \textbf{Clustering uses a single seed for every model} (a consistent single-run comparison, not a determinism claim -- several neural baselines have their own stochastic training); \textbf{classification uses 5 seeds for VAE-BM (ours) but a single seed for every baseline}, since train/test splits genuinely vary by seed. We draw no statistical-significance conclusions from either single-run comparison, and report both asymmetries explicitly rather than fabricating repeated-seed uncertainty for baselines we ran once.
 \item \textbf{Appendix ablations use a smaller, older configuration.} The Product-of-Experts and jointly-trained-clustering ablations use a different embedder on HiCOT's five benchmark datasets only, not this paper's locked configuration or 12-dataset suite -- exploratory evidence about the fusion and clustering mechanisms, not a like-for-like comparison.
+\item \textbf{RQ2's VAE-BM configuration is an unresolved, disclosed deviation} (\S\ref{sec:rq2}): the frozen, units$=$1024 architecture used everywhere else in this paper collapses under FASTopic's protocol specifically, and we do not yet know why. This is an open architectural question, not a considered design choice.
+\item \textbf{RQ3's HiCOT/Tweet result is a genuine, unresolved negative result} (\S\ref{sec:rq3}): even after both a training-budget fix and a dedicated \texttt{weight\_loss\_DT} sensitivity check, HiCOT recovers only 12 of 89 requested clusters on this dataset. We report this as-is rather than search further against our own unsupervised-selection discipline.
+\item \textbf{RQ4 is a partial result at paper-freeze time} (\S\ref{sec:rq4}): Experiment A is complete for 7 of 9 backbone/dataset pairs; Experiment B is complete for only 1 of 9. We report exactly which cells are done, in progress, or missing (Table~\ref{tab:rq4_partial}) rather than extrapolate from the completed cells to the missing ones.
 \end{itemize}
+
+\section*{Ethics Statement}
+\label{sec:ethics}
+All datasets used in this paper are public, previously-published benchmarks (see Table~\ref{tab:datasets} and \S\ref{sec:rq3}), used here only for topic modeling, clustering, and classification evaluation, consistent with their original release terms. RQ4's LLM-assisted refinement uses a small, publicly released open-weight model (Qwen2.5-7B-Instruct) run locally under our own control, with no data sent to a third-party API; the refinement step operates only on topic words and cluster assignments already produced by the base models, and introduces no new personal or sensitive information into any dataset. We are not aware of a specific harm pathway distinct from the general, well-documented risks of topic modeling and text clustering over public corpora (e.g., downstream misuse for surveillance or profiling), which this paper does not newly enable.
 
 \bibliography{anthology,custom,vaebmpoe}
 \bibliographystyle{acl_natbib}
@@ -366,6 +424,29 @@ Every numerical result in this paper is traceable to a specific source file via 
 \section{Compute Environments}
 \label{sec:appendix-compute}
 Results were produced across two independent GPU environments -- an H200-based SLURM cluster (\emph{FutureLab}) and a 4$\times$GTX~1080~Ti workstation (\emph{labuai}) -- kept explicit throughout rather than pooled, since cross-hardware results, while close, are not identical. All VAE-BM (ours) results in this paper are from FutureLab.
+
+\section{RQ3 HiCOT weight\_loss\_DT Sensitivity (M10, Tweet)}
+\label{sec:rq3_dt_ablation}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+Dataset & \texttt{weight\_loss\_DT} & $C_V$ & NMI \\
+\midrule
+M10 (was: 250, NMI 0.078) & 1 & 0.772 & 0.371 \\
+                          & 2 & 0.773 & 0.371 \\
+                          & \textbf{5 (selected)} & \textbf{0.784} & \textbf{0.375} \\
+\midrule
+Tweet (was: 250, NMI 0.067) & 1 & 0.986 & 0.146 \\
+                            & \textbf{2 (selected)} & \textbf{0.987} & \textbf{0.044} \\
+                            & 5 & 0.985 & 0.007 \\
+\bottomrule
+\end{tabular}
+\caption{HiCOT weight\_loss\_DT grid, M10 and Tweet, \texttt{weight\_loss\_ECR} held fixed at each dataset's own already-selected value, selection by $C_V$ only (never NMI). M10's every candidate value beats the original \texttt{weight\_loss\_DT=250} row; Tweet's best candidate (by $C_V$, the only signal used for selection) is worse on NMI than the existing row, so Tweet's table cell (\S\ref{sec:rq3}) reports the original 1200s-budget row, not a value from this grid.}
+\label{tab:rq3-dt-ablation}
+\end{table}
 
 \section{Per-Experiment Configuration}
 \label{sec:appendix-config}
