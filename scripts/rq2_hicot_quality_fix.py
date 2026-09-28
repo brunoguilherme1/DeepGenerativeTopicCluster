@@ -29,6 +29,7 @@ Usage:
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import sys
@@ -149,10 +150,15 @@ def classification_metrics(protocol, dataset_id: str, config: dict):
 def main():
     from vaebm_benchmark.protocols.fastopic_protocol import FASTopicProtocol
 
-    protocol = FASTopicProtocol(smoke_test=False)
-    log(f"=== RQ2 HiCOT quality fix start datasets={DATASETS} k={K} seed={SEED} grid={GRID} ===")
+    p = argparse.ArgumentParser()
+    p.add_argument("--datasets", nargs="+", default=None, help="Limit to specific dataset(s) (default: all 3).")
+    args = p.parse_args()
+    datasets = args.datasets if args.datasets else DATASETS
 
-    for dataset_id in DATASETS:
+    protocol = FASTopicProtocol(smoke_test=False)
+    log(f"=== RQ2 HiCOT quality fix start datasets={datasets} k={K} seed={SEED} grid={GRID} ===")
+
+    for dataset_id in datasets:
         log(f"--- searching hicot:{dataset_id} ({len(GRID)} configs, cluster task, C_V-only selection) ---")
         best_config, best_metrics, best_cv, best_model = None, None, -1e18, None
         for config in GRID:
