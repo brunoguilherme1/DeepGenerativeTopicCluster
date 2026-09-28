@@ -22,6 +22,7 @@ Usage:
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import sys
@@ -54,14 +55,26 @@ def log_completion(row: dict) -> None:
 
 
 def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("--datasets", nargs="+", default=None,
+                    help="Limit to specific dataset(s) (default: all HiCOT rows). Same selected config, "
+                         "only the training budget changes - not a re-selection.")
+    p.add_argument("--max-fit-seconds", type=int, default=COMPLETION_MAX_FIT_SECONDS,
+                    help="Override the completion budget (default: %(default)s, the codebase's standard).")
+    args = p.parse_args()
+    max_fit_seconds = args.max_fit_seconds
+
     rows = list(csv.DictReader(open(RESULTS_CSV)))
     hicot_rows = {r["dataset"]: r for r in rows if r["model"] == "hicot"}
-    print(f"Found {len(hicot_rows)} HiCOT rows to complete (uniform 1200s budget, same selected config).")
+    if args.datasets:
+        hicot_rows = {k: v for k, v in hicot_rows.items() if k in args.datasets}
+    print(f"Found {len(hicot_rows)} HiCOT rows to complete (uniform {max_fit_seconds}s budget, same selected config).")
 
     for dataset_id, old_row in hicot_rows.items():
         config = json.loads(old_row["selected_config"])
         k = int(old_row["k"])
-        print(f"\n=== Completing hicot:{dataset_id} config={config} (was actual_k={old_row['actual_k']}, nmi={old_row['nmi']}) ===", flush=True)
+        print(f"\n=== Completing hicot:{dataset_id} config={config} (was actual_k={old_row['actual_k']}, nmi={old_row['nmi']}) "
+              f"budget={max_fit_seconds}s ===", flush=True)
 
         documents, labels, k_check = load_dataset_and_k(dataset_id)
         assert k_check == k, f"k mismatch for {dataset_id}: {k} vs {k_check}"
@@ -75,7 +88,7 @@ def main():
             # Build with the completion budget instead of the search's 300s cap.
             model = HiCOTAdapter(
                 n_clusters=k, voc_size=VOC_SIZE, epochs=50, sinkhorn_max_iter=100,
-                max_fit_seconds=COMPLETION_MAX_FIT_SECONDS, random_state=42, **config,
+                max_fit_seconds=max_fit_seconds, random_state=42, **config,
             )
             metrics = fit_and_evaluate("hicot", model, documents, labels, dataset_id)
             runtime_s = time.perf_counter() - start
