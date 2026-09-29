@@ -4,20 +4,20 @@ Experiment A (topic-word refinement, C_V):
   [DONE]    fastopic   x 20ng              cv 0.3807 -> 0.3696  (delta=-0.0112, llm_calls=500)
   [DONE]    fastopic   x agnews_short      cv 0.6852 -> 0.7066  (delta=+0.0214, llm_calls=500)
   [DONE]    fastopic   x search_snippets   cv 0.6726 -> 0.6867  (delta=+0.0141, llm_calls=500)
-  [DONE]    hicot      x 20ng              cv 0.5260 -> 0.5182  (delta=-0.0077, llm_calls=500)
-  [DONE]    hicot      x agnews_short      cv 0.8393 -> 0.8094  (delta=-0.0298, llm_calls=500)
-  [MISSING] hicot      x search_snippets
+  [DONE]    hicot      x 20ng              cv 0.7285 -> 0.7113  (delta=-0.0173, llm_calls=500)
+  [DONE]    hicot      x agnews_short      cv 0.9196 -> 0.8936  (delta=-0.0261, llm_calls=498)
+  [DONE]    hicot      x search_snippets   cv 0.9246 -> 0.8995  (delta=-0.0251, llm_calls=500)
   [DONE]    vaebm      x 20ng              cv 0.4678 -> 0.4519  (delta=-0.0160, llm_calls=500)
   [DONE]    vaebm      x agnews_short      cv 0.7849 -> 0.7781  (delta=-0.0068, llm_calls=500)
-  [MISSING] vaebm      x search_snippets
+  [DONE]    vaebm      x search_snippets   cv 0.7012 -> 0.7001  (delta=-0.0012, llm_calls=500)
 
 Experiment B (cluster/document refinement, NMI/ACC):
   [DONE]    fastopic   x 20ng              nmi 0.2690 -> 0.3128  acc 0.2384 -> 0.3095  (llm_calls=124)
-  [MISSING] fastopic   x agnews_short
+  [DONE]    fastopic   x agnews_short      nmi 0.2804 -> 0.3245  acc 0.2464 -> 0.3514  (llm_calls=126)
   [MISSING] fastopic   x search_snippets
-  [DONE]    hicot      x 20ng              nmi 0.0734 -> 0.0749  acc 0.0930 -> 0.0946  (llm_calls=51)
-  [MISSING] hicot      x agnews_short
+  [DONE]    hicot      x 20ng              nmi 0.3105 -> 0.3535  acc 0.2338 -> 0.2902  (llm_calls=131)
+  [DONE]    hicot      x agnews_short      nmi 0.3417 -> 0.3651  acc 0.1289 -> 0.2107  (llm_calls=130)
   [MISSING] hicot      x search_snippets
-  [MISSING] vaebm      x 20ng
-  [MISSING] vaebm      x agnews_short
+  [DONE]    vaebm      x 20ng              nmi 0.4074 -> 0.3987  acc 0.3018 -> 0.3548  (llm_calls=134)
+  [DONE]    vaebm      x agnews_short      nmi 0.3255 -> 0.3352  acc 0.0974 -> 0.1254  (llm_calls=142)
   [MISSING] vaebm      x search_snippets
