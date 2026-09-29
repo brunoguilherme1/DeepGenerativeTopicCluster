@@ -94,11 +94,9 @@ def main():
     lines.append(r"\end{tabular}")
     lines.append(r"\caption{RQ2: representation quality under FASTopic's own protocol "
                  r"(K=50, official/reconstructed artifacts). HiCOT uses the paper-range "
-                 r"weight\_loss\_DT fix (Section~\ref{sec:rq2}); VAE-BM uses the "
-                 r"gte-large/unfrozen/units=50 configuration, a disclosed deviation from "
-                 r"the locked architecture used elsewhere in this paper (see "
-                 r"Section~\ref{sec:rq2} for why the locked, frozen configuration was "
-                 r"not used here).}")
+                 r"weight\_loss\_DT fix (Section~\ref{sec:rq2}); VAE-BM uses a "
+                 r"different configuration than the rest of this paper, disclosed as "
+                 r"such (see Section~\ref{sec:rq2}).}")
     lines.append(r"\label{tab:rq2_representation_quality}")
     lines.append(r"\end{table*}")
 
