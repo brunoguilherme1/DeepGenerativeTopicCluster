@@ -18,7 +18,7 @@ FASTopic & 0.477 & 0.637 & \underline{0.541} & 0.552 & 0.628 & 0.647 & 0.637 & 0
 HiCOT & 0.175 & 0.160 & 0.023 & 0.126 & 0.100 & 0.401 & 0.160 & 0.176 & -0.064 & 1.606 & \underline{2121.97} \\
 BERTopic & \underline{0.623} & \textbf{0.881} & 0.479 & \textbf{0.846} & \textbf{0.950} & 0.821 & \textbf{0.881} & \textbf{0.932} & 0.118 & 2.597 & 25.00 \\
 \midrule
-\textbf{VAE-BM} & \textbf{0.648}$^{\mathrm{LU}}$ & \underline{0.877}$^{\mathrm{LU}}$ & \textbf{0.550}$^{\mathrm{LU}}$ & \underline{0.842}$^{\mathrm{LU}}$ & \underline{0.934}$^{\mathrm{LU}}$ & \underline{0.826}$^{\mathrm{LU}}$ & \underline{0.877}$^{\mathrm{LU}}$ & \underline{0.910}$^{\mathrm{LU}}$ & 0.137$^{\mathrm{LU}}$ & 2.716$^{\mathrm{LU}}$ & 25.46$^{\mathrm{LU}}$ \\
+\textbf{VAE-BM (ours)} & \textbf{0.648}$^{\mathrm{LU}}$ & \underline{0.877}$^{\mathrm{LU}}$ & \textbf{0.550}$^{\mathrm{LU}}$ & \underline{0.842}$^{\mathrm{LU}}$ & \underline{0.934}$^{\mathrm{LU}}$ & \underline{0.826}$^{\mathrm{LU}}$ & \underline{0.877}$^{\mathrm{LU}}$ & \underline{0.910}$^{\mathrm{LU}}$ & 0.137$^{\mathrm{LU}}$ & 2.716$^{\mathrm{LU}}$ & 25.46$^{\mathrm{LU}}$ \\
 \midrule
 \multicolumn{12}{l}{\textit{StackOv.}} \\
 LDA & 0.305$^{\mathrm{LU}}$ & 0.219$^{\mathrm{LU}}$ & 0.149$^{\mathrm{LU}}$ & 0.217$^{\mathrm{LU}}$ & 0.218$^{\mathrm{LU}}$ & 0.220$^{\mathrm{LU}}$ & 0.219$^{\mathrm{LU}}$ & 0.319$^{\mathrm{LU}}$ & 0.141$^{\mathrm{LU}}$ & 1.536$^{\mathrm{LU}}$ & 1041.82$^{\mathrm{LU}}$ \\
@@ -29,7 +29,7 @@ FASTopic & 0.255 & 0.240 & 0.125 & 0.237 & 0.235 & 0.245 & 0.240 & 0.269 & 0.029
 HiCOT & 0.375 & 0.355 & 0.254 & 0.353 & 0.337 & 0.375 & 0.355 & 0.379 & 0.148 & 1.606 & 1947.85 \\
 BERTopic & \textbf{0.761} & \underline{0.708} & \underline{0.645} & \underline{0.707} & \underline{0.708} & \underline{0.708} & \underline{0.708} & \textbf{0.761} & 0.075 & 4.214 & 292.34 \\
 \midrule
-\textbf{VAE-BM} & \underline{0.725}$^{\mathrm{LU}}$ & \textbf{0.791}$^{\mathrm{LU}}$ & \textbf{0.665}$^{\mathrm{LU}}$ & \textbf{0.790}$^{\mathrm{LU}}$ & \textbf{0.781}$^{\mathrm{LU}}$ & \textbf{0.801}$^{\mathrm{LU}}$ & \textbf{0.791}$^{\mathrm{LU}}$ & \underline{0.760}$^{\mathrm{LU}}$ & 0.078$^{\mathrm{LU}}$ & 3.579$^{\mathrm{LU}}$ & 358.76$^{\mathrm{LU}}$ \\
+\textbf{VAE-BM (ours)} & \underline{0.725}$^{\mathrm{LU}}$ & \textbf{0.791}$^{\mathrm{LU}}$ & \textbf{0.665}$^{\mathrm{LU}}$ & \textbf{0.790}$^{\mathrm{LU}}$ & \textbf{0.781}$^{\mathrm{LU}}$ & \textbf{0.801}$^{\mathrm{LU}}$ & \textbf{0.791}$^{\mathrm{LU}}$ & \underline{0.760}$^{\mathrm{LU}}$ & 0.078$^{\mathrm{LU}}$ & 3.579$^{\mathrm{LU}}$ & 358.76$^{\mathrm{LU}}$ \\
 \bottomrule
 \end{tabular}
 }

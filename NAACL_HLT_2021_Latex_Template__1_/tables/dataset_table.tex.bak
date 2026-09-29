@@ -1,0 +1,34 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Datasets used in this paper. The five HiCOT benchmark datasets are used only for the Topic Modeling experiment (\S\ref{sec:topic-results}), matching HiCOT's own official protocol; the twelve plain datasets below them are used for both Document Clustering and Classification (\S\ref{sec:cluster-results}--\S\ref{sec:classification-results}). Document counts and class counts are read from the classification experiment's own train+test split sizes.}
+\label{tab:datasets}
+\adjustbox{max width=\linewidth}{
+\begin{tabular}{lrrl}
+\toprule
+Dataset & Docs & Classes & Domain \\
+\midrule
+\multicolumn{4}{l}{\textit{Topic Modeling only}} \\
+20NG-H & 18846 & 20 & News/forum (HiCOT artifact) \\
+AGNews-H & 12500 & 4 & News (HiCOT artifact) \\
+GNews-H & 11019 & 152 & News (HiCOT artifact, short text) \\
+IMDB-H & 50000 & 2 & Movie reviews (HiCOT artifact) \\
+SearchSnip.-H & 12294 & 8 & Web search (HiCOT artifact) \\
+\midrule
+\multicolumn{4}{l}{\textit{Clustering and Classification}} \\
+20NG & 18846 & 20 & News/forum \\
+AGNews & 8000 & 4 & News \\
+GNews-T & 11108 & 152 & News titles (short text) \\
+IMDB & 50000 & 2 & Movie reviews \\
+SearchSnip. & 12340 & 8 & Web search (short text) \\
+BBCNews & 2225 & 5 & News \\
+Tweet & 2472 & 89 & Tweets (short text) \\
+StackOv. & 20000 & 20 & Q\&A titles (short text) \\
+Biomed. & 20000 & 20 & Biomedical abstracts (short text) \\
+Banking77 & 13069 & 77 & Customer-service intents \\
+M10 & 8355 & 10 & Publication abstracts (short text) \\
+Pascal-Fl. & 4834 & 20 & Image captions (short text) \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
