@@ -25,7 +25,7 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 RESULTS_DIR = REPO_ROOT / "results" / "rq1_gte_kmeans_ablation"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 RESULTS_CSV = RESULTS_DIR / "classification_results.csv"
-FIELDS = ["dataset", "k", "seed", "accuracy", "f1", "runtime_s", "status", "error"]
+FIELDS = ["dataset", "k", "seed", "embedder", "accuracy", "f1", "runtime_s", "status", "error"]
 K = 50
 SEED = 42
 
@@ -42,6 +42,7 @@ def append_result(row: dict) -> None:
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--datasets", nargs="+", required=True)
+    p.add_argument("--embedder", default="thenlper/gte-large")
     args = p.parse_args()
 
     from vaebm_benchmark.models.sbert_kmeans_adapter import SBERTKMeansAdapter
@@ -53,7 +54,7 @@ def main():
         start = time.perf_counter()
         try:
             train_docs, train_labels, test_docs, test_labels, _num_classes = load_hicot_split(dataset_id)
-            model = SBERTKMeansAdapter(n_clusters=K, embedder="thenlper/gte-large", random_state=SEED)
+            model = SBERTKMeansAdapter(n_clusters=K, embedder=args.embedder, random_state=SEED)
             model.fit(train_docs)
             train_emb = model.get_document_embeddings(train_docs)
             test_emb = model.get_document_embeddings(test_docs)
@@ -63,13 +64,13 @@ def main():
             acc = accuracy_score(test_labels, preds)
             f1 = f1_score(test_labels, preds, average="macro")
             runtime_s = time.perf_counter() - start
-            print(f"OK {dataset_id} acc={acc:.4f} f1={f1:.4f} runtime={runtime_s:.1f}s", flush=True)
-            append_result({"dataset": dataset_id, "k": K, "seed": SEED, "accuracy": acc, "f1": f1,
+            print(f"OK {dataset_id} embedder={args.embedder} acc={acc:.4f} f1={f1:.4f} runtime={runtime_s:.1f}s", flush=True)
+            append_result({"dataset": dataset_id, "k": K, "seed": SEED, "embedder": args.embedder, "accuracy": acc, "f1": f1,
                             "runtime_s": runtime_s, "status": "ok", "error": None})
         except Exception as exc:  # noqa: BLE001
             runtime_s = time.perf_counter() - start
             print(f"ERROR {dataset_id} error={exc!r}", flush=True)
-            append_result({"dataset": dataset_id, "k": K, "seed": SEED, "runtime_s": runtime_s,
+            append_result({"dataset": dataset_id, "k": K, "seed": SEED, "embedder": args.embedder, "runtime_s": runtime_s,
                             "status": "error", "error": f"{exc}"})
             import traceback
             traceback.print_exc()
